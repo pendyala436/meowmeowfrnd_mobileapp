@@ -46,7 +46,9 @@ jobs:
               cd \"\$APP_DIR\"
               git fetch origin main
               git checkout main
-              git pull --ff-only origin main
+              # Discard local server edits so deploy always matches GitHub main.
+              git reset --hard origin/main
+              git clean -fd --exclude=.env --exclude=.env.production --exclude='.env.*'
 
               echo '==> Applying pending DB migrations'
               chmod +x scripts/unix/apply-pending-migrations.sh
