@@ -1,0 +1,63 @@
+{
+  "packageId": "in.co.meowmeow",
+  "host": "www.meow-meow.co.in",
+  "name": "Meow Meow Frnd App",
+  "launcherName": "Meow Frnd",
+  "display": "standalone",
+  "themeColor": "#00000000",
+  "themeColorDark": "#00000000",
+  "navigationColor": "#00000000",
+  "navigationColorDark": "#00000000",
+  "navigationDividerColor": "#00000000",
+  "navigationDividerColorDark": "#00000000",
+  "backgroundColor": "#FF2B85",
+  "enableNotifications": true,
+  "startUrl": "/",
+  "iconUrl": "https://www.meow-meow.co.in/meow-meow-logo.png",
+  "maskableIconUrl": "https://www.meow-meow.co.in/meow-meow-logo.png",
+  "monochromeIconUrl": "https://www.meow-meow.co.in/meow-meow-logo.png",
+  "shortcuts": [
+    {
+      "name": "Chat",
+      "shortName": "Chat",
+      "url": "/dashboard?tab=chat",
+      "iconUrl": "https://www.meow-meow.co.in/meow-meow-logo.png",
+      "chosenIconUrl": "https://www.meow-meow.co.in/meow-meow-logo.png"
+    },
+    {
+      "name": "Private Groups",
+      "shortName": "Groups",
+      "url": "/private-groups",
+      "iconUrl": "https://www.meow-meow.co.in/meow-meow-logo.png",
+      "chosenIconUrl": "https://www.meow-meow.co.in/meow-meow-logo.png"
+    },
+    {
+      "name": "Wallet",
+      "shortName": "Wallet",
+      "url": "/wallet",
+      "iconUrl": "https://www.meow-meow.co.in/meow-meow-logo.png",
+      "chosenIconUrl": "https://www.meow-meow.co.in/meow-meow-logo.png"
+    }
+  ],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://www.meow-meow.co.in/manifest.json",
+  "fallbackType": "customtabs",
+  "features": {
+    "locationDelegation": { "enabled": true },
+    "playBilling": { "enabled": false }
+  },
+  "alphaDependencies": { "enabled": false },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://www.meow-meow.co.in/",
+  "minSdkVersion": 23,
+  "orientation": "portrait",
+  "appVersionName": "1.0.3",
+  "appVersionCode": 6,
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./android.keystore",
+    "alias": "android"
+  }
+}

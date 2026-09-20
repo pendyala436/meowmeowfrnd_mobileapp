@@ -1,0 +1,54 @@
+GOOGLE PLAY LISTING — Meow Meow Frnd App
+Package: in.co.meowmeow
+
+SHORT DESCRIPTION (max 80 characters)
+--------------------------------------
+Chat, match & make friends worldwide with Meow Meow Frnd App.
+
+(Alternative, 79 chars)
+Find friends worldwide — chat, match, private groups & voice calls.
+
+
+FULL DESCRIPTION
+----------------
+Meow Meow Frnd App helps you connect, chat, and build meaningful friendships with people around the world.
+
+Whether you want a friendly conversation, a new connection, or to explore group chats, Meow Meow Frnd App makes it simple, fun, and safe.
+
+KEY FEATURES
+
+• Global friend matching — discover people based on language, interests, and availability
+• 1-to-1 chat — send messages and voice notes with auto-translation support
+• Private groups — join or host group voice and video conversations
+• Online users — see who is available to chat right now
+• Verified profiles — safer connections with profile verification
+• Multi-language support — connect across languages and cultures
+• Wallet & rewards — manage coins and earnings securely in-app
+• Privacy first — you control your visibility and personal information
+
+WHO IS IT FOR?
+
+Meow Meow Frnd App is for adults 18+ who want genuine chat-based friendships and social connections without the pressure of traditional dating apps.
+
+WHY MEOW MEOW FRND APP?
+
+• Clean, modern pink-branded experience
+• Built for mobile — fast, lightweight, and easy to use
+• Connect globally from your phone
+• Safe community guidelines and moderation
+
+Download Meow Meow Frnd App today and find your purrfect match!
+
+Privacy Policy: https://www.meow-meow.co.in/legal-documents/privacy-policy.txt
+Terms of Service: https://www.meow-meow.co.in/legal-documents/terms-of-service.txt
+
+Contact: privacy@meowmeow.app
+
+
+ASSET CHECKLIST
+---------------
+App icon (512×512):     rajeshrajesh/play-store/app-icon-512.png
+Feature graphic (1024×500): rajeshrajesh/play-store/feature-graphic.png
+Phone screenshots:      rajeshrajesh/play-store/phone-screenshots/01-chat.png … 04-global.png
+
+TIP: Replace phone screenshots with real in-app captures from your phone for best Play Store approval.

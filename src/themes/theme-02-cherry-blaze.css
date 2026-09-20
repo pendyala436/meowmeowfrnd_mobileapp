@@ -1,0 +1,185 @@
+@layer base {
+  [data-theme="cherry-blaze"] {
+
+
+    /* Surface Neutral */
+    --background: 12 88% 46%;
+    --foreground: 0 0% 100%;
+
+    --card: 12 88% 56%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 12 88% 56%;
+    --popover-foreground: 0 0% 100%;
+
+    /* Primary - Cherry Blaze */
+    --primary: 12 88% 46%;              /* #DD370E */
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 12 88% 59%;      /* #F25F3A */
+
+    /* Secondary - tinted wash of primary */
+    --secondary: 12 80% 60%;                /* #FEEFEC */
+    --secondary-foreground: 0 0% 100%;     /* #822C17 */
+
+    /* Muted - neutral, theme-independent */
+    --muted: 12 40% 52%;
+    --muted-foreground: 0 0% 92%;
+
+    /* Accent - Verified/Action Blue (fixed across all themes) */
+    --accent: 218 75% 60%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 4 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 12 48% 64%;
+    --input: 12 40% 52%;
+    --ring: 12 88% 46%;
+
+    --radius: 0.75rem;
+    --radius-card: 1.75rem;
+    --radius-card-lg: 2rem;
+
+    /* Semantic Status Colors */
+    --success: 88 50% 53%;                       /* Online Status Green #8BC34A */
+    --success-foreground: 0 0% 100%;
+    --warning: 43 100% 50%;                      /* Crown/Superlike Gold #FFB800 */
+    --warning-foreground: 0 0% 100%;
+    --info: 218 75% 60%;                         /* Verified/Action Blue #4C84E5 */
+    --info-foreground: 0 0% 100%;
+
+    --gold: 43 100% 50%;
+    --gold-foreground: 0 0% 100%;
+
+    --verified: 218 75% 60%;
+    --verified-foreground: 0 0% 100%;
+
+    /* VIP / Premium Purple - Cherry Blaze accent pairing */
+    --vip: 212 55% 46%;                  /* #3571B6 */
+    --vip-foreground: 0 0% 100%;
+
+    /* Glassmorphism Base */
+    --glass-bg: 0 0% 100%;
+    --glass-opacity: 0.2;
+    --glass-blur: 12px;
+
+    /* Status indicators */
+    --online: 88 50% 53%;
+    --online-foreground: 0 0% 100%;
+    --offline: 220 15% 60%;
+    --offline-foreground: 0 0% 100%;
+    --busy: 43 100% 50%;
+    --busy-foreground: 0 0% 100%;
+    --away: 43 100% 50%;
+    --away-foreground: 0 0% 100%;
+
+    /* Gender colors */
+    --male: 218 75% 60%;
+    --female: 12 88% 46%;
+
+    /* Theme gradients */
+    --gradient-primary: radial-gradient(circle at 100% 0%, hsl(var(--primary-glow)) 0%, hsl(var(--primary)) 100%);
+    --gradient-hero: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--primary-glow)) 100%);
+    --gradient-aurora: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.8));
+    --gradient-gold: linear-gradient(135deg, hsl(var(--gold)), hsl(35 100% 55%));
+    --gradient-vip: linear-gradient(135deg, hsl(var(--vip)), hsl(var(--vip) / 0.8));
+
+    --shadow-soft: 0 4px 20px -4px hsl(0 0% 0% / 0.15);
+    --shadow-card: 0px 10px 25px hsl(var(--primary) / 0.3);
+    --shadow-glow: 0 0 40px hsl(var(--primary) / 0.25);
+
+    /* Sidebar */
+    --sidebar-background: 215 28% 17%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 12 88% 46%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 212 55% 46%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 215 25% 25%;
+    --sidebar-ring: 12 88% 46%;
+  }
+
+  [data-theme="cherry-blaze"].dark {
+
+
+    --background: 12 88% 48%;
+    --foreground: 0 0% 100%;
+
+    --card: 12 88% 58%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 12 88% 58%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 12 88% 54%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 12 88% 67%;
+
+    --secondary: 12 80% 42%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 12 40% 36%;
+    --muted-foreground: 0 0% 92%;
+
+    --accent: 218 75% 65%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 4 65% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 12 48% 50%;
+    --input: 12 40% 36%;
+    --ring: 12 88% 54%;
+
+    --success: 88 50% 55%;
+    --success-foreground: 0 0% 100%;
+    --warning: 43 100% 55%;
+    --warning-foreground: 0 0% 100%;
+    --info: 218 75% 65%;
+    --info-foreground: 0 0% 100%;
+
+    --gold: 43 100% 55%;
+    --gold-foreground: 0 0% 100%;
+
+    --verified: 218 75% 65%;
+    --verified-foreground: 0 0% 100%;
+
+    --vip: 212 55% 56%;
+    --vip-foreground: 0 0% 100%;
+
+    --glass-bg: 220 26% 9%;
+    --glass-opacity: 0.35;
+    --glass-blur: 12px;
+
+    --online: 88 50% 55%;
+    --online-foreground: 220 26% 9%;
+    --offline: 220 15% 45%;
+    --offline-foreground: 0 0% 100%;
+    --busy: 43 100% 55%;
+    --busy-foreground: 0 0% 100%;
+    --away: 43 100% 55%;
+    --away-foreground: 0 0% 100%;
+
+    --male: 218 75% 65%;
+    --female: 12 88% 54%;
+
+    --gradient-primary: radial-gradient(circle at 100% 0%, hsl(var(--primary-glow)) 0%, hsl(var(--primary)) 100%);
+    --gradient-hero: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--primary-glow)) 100%);
+    --gradient-aurora: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.8));
+    --gradient-gold: linear-gradient(135deg, hsl(var(--gold)), hsl(35 100% 60%));
+    --gradient-vip: linear-gradient(135deg, hsl(var(--vip)), hsl(var(--vip) / 0.8));
+
+    --shadow-soft: 0 4px 20px -4px hsl(0 0% 0% / 0.35);
+    --shadow-card: 0px 10px 25px hsl(var(--primary) / 0.4);
+    --shadow-glow: 0 0 40px hsl(var(--primary) / 0.4);
+
+    --sidebar-background: 220 30% 7%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 12 88% 54%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 212 55% 56%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 220 20% 18%;
+    --sidebar-ring: 12 88% 54%;
+  }
+}

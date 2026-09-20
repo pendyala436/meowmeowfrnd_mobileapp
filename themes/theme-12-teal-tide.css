@@ -1,0 +1,190 @@
+/* ====================================================================
+   FRND Theme: Teal Tide (12/30)
+   Generated theme file - drop-in replacement for the :root / .dark
+   theme block in src/index.css. Covers every UI object/token used
+   across the app (buttons, cards, badges, status dots, gradients,
+   shadows, sidebar, gender colors, glass surfaces, VIP/gold/verified
+   accents).
+   ==================================================================== */
+
+@layer base {
+  :root {
+    /* Surface Neutral */
+    --background: 0 0% 100%;
+    --foreground: 215 28% 17%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 215 28% 17%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 28% 17%;
+
+    /* Primary - Teal Tide */
+    --primary: 132 88% 52%;              /* #19F044 */
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 132 88% 65%;      /* #57F477 */
+
+    /* Secondary - tinted wash of primary */
+    --secondary: 132 90% 96%;                /* #ECFEEF */
+    --secondary-foreground: 132 70% 30%;     /* #17822C */
+
+    /* Muted - neutral, theme-independent */
+    --muted: 220 14% 95%;
+    --muted-foreground: 220 9% 46%;
+
+    /* Accent - Verified/Action Blue (fixed across all themes) */
+    --accent: 218 75% 60%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 4 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 20% 90%;
+    --input: 220 20% 92%;
+    --ring: 132 88% 52%;
+
+    --radius: 0.75rem;
+    --radius-card: 1.75rem;
+    --radius-card-lg: 2rem;
+
+    /* Semantic Status Colors */
+    --success: 88 50% 53%;                       /* Online Status Green #8BC34A */
+    --success-foreground: 0 0% 100%;
+    --warning: 43 100% 50%;                      /* Crown/Superlike Gold #FFB800 */
+    --warning-foreground: 215 28% 17%;
+    --info: 218 75% 60%;                         /* Verified/Action Blue #4C84E5 */
+    --info-foreground: 0 0% 100%;
+
+    --gold: 43 100% 50%;
+    --gold-foreground: 215 28% 17%;
+
+    --verified: 218 75% 60%;
+    --verified-foreground: 0 0% 100%;
+
+    /* VIP / Premium Purple - Teal Tide accent pairing */
+    --vip: 332 55% 40%;                  /* #9E2E62 */
+    --vip-foreground: 0 0% 100%;
+
+    /* Glassmorphism Base */
+    --glass-bg: 0 0% 100%;
+    --glass-opacity: 0.2;
+    --glass-blur: 12px;
+
+    /* Status indicators */
+    --online: 88 50% 53%;
+    --online-foreground: 0 0% 100%;
+    --offline: 220 15% 60%;
+    --offline-foreground: 0 0% 100%;
+    --busy: 43 100% 50%;
+    --busy-foreground: 215 28% 17%;
+    --away: 43 100% 50%;
+    --away-foreground: 215 28% 17%;
+
+    /* Gender colors */
+    --male: 218 75% 60%;
+    --female: 132 88% 52%;
+
+    /* Theme gradients */
+    --gradient-primary: radial-gradient(circle at 100% 0%, hsl(var(--primary-glow)) 0%, hsl(var(--primary)) 100%);
+    --gradient-hero: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--secondary)) 100%);
+    --gradient-aurora: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.8));
+    --gradient-gold: linear-gradient(135deg, hsl(var(--gold)), hsl(35 100% 55%));
+    --gradient-vip: linear-gradient(135deg, hsl(var(--vip)), hsl(var(--vip) / 0.8));
+
+    --shadow-soft: 0 4px 20px -4px hsl(var(--foreground) / 0.08);
+    --shadow-card: 0px 10px 25px hsl(var(--primary) / 0.3);
+    --shadow-glow: 0 0 40px hsl(var(--primary) / 0.25);
+
+    /* Sidebar */
+    --sidebar-background: 215 28% 17%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 132 88% 52%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 332 55% 40%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 215 25% 25%;
+    --sidebar-ring: 132 88% 52%;
+  }
+
+  .dark {
+    --background: 220 26% 9%;
+    --foreground: 210 20% 96%;
+
+    --card: 220 24% 13%;
+    --card-foreground: 210 20% 96%;
+
+    --popover: 220 26% 11%;
+    --popover-foreground: 210 20% 96%;
+
+    --primary: 132 88% 60%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 132 88% 73%;
+
+    --secondary: 132 40% 22%;
+    --secondary-foreground: 132 100% 88%;
+
+    --muted: 220 20% 20%;
+    --muted-foreground: 220 12% 65%;
+
+    --accent: 218 75% 65%;
+    --accent-foreground: 220 26% 9%;
+
+    --destructive: 4 65% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 20% 20%;
+    --input: 220 20% 20%;
+    --ring: 132 88% 60%;
+
+    --success: 88 50% 55%;
+    --success-foreground: 220 26% 9%;
+    --warning: 43 100% 55%;
+    --warning-foreground: 220 26% 9%;
+    --info: 218 75% 65%;
+    --info-foreground: 220 26% 9%;
+
+    --gold: 43 100% 55%;
+    --gold-foreground: 220 26% 9%;
+
+    --verified: 218 75% 65%;
+    --verified-foreground: 220 26% 9%;
+
+    --vip: 332 55% 50%;
+    --vip-foreground: 0 0% 100%;
+
+    --glass-bg: 220 26% 9%;
+    --glass-opacity: 0.35;
+    --glass-blur: 12px;
+
+    --online: 88 50% 55%;
+    --online-foreground: 220 26% 9%;
+    --offline: 220 15% 45%;
+    --offline-foreground: 0 0% 100%;
+    --busy: 43 100% 55%;
+    --busy-foreground: 220 26% 9%;
+    --away: 43 100% 55%;
+    --away-foreground: 220 26% 9%;
+
+    --male: 218 75% 65%;
+    --female: 132 88% 60%;
+
+    --gradient-primary: radial-gradient(circle at 100% 0%, hsl(var(--primary-glow)) 0%, hsl(var(--primary)) 100%);
+    --gradient-hero: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--secondary)) 100%);
+    --gradient-aurora: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.8));
+    --gradient-gold: linear-gradient(135deg, hsl(var(--gold)), hsl(35 100% 60%));
+    --gradient-vip: linear-gradient(135deg, hsl(var(--vip)), hsl(var(--vip) / 0.8));
+
+    --shadow-soft: 0 4px 20px -4px hsl(0 0% 0% / 0.4);
+    --shadow-card: 0px 10px 25px hsl(var(--primary) / 0.4);
+    --shadow-glow: 0 0 40px hsl(var(--primary) / 0.4);
+
+    --sidebar-background: 220 30% 7%;
+    --sidebar-foreground: 210 20% 96%;
+    --sidebar-primary: 132 88% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 332 55% 50%;
+    --sidebar-accent-foreground: 210 20% 96%;
+    --sidebar-border: 220 20% 18%;
+    --sidebar-ring: 132 88% 60%;
+  }
+}

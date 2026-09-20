@@ -1,0 +1,71 @@
+{
+  "packageId": "in.co.meowmeow",
+  "host": "www.meow-meow.co.in",
+  "name": "Meow Meow Frnd App",
+  "launcherName": "Meow Frnd",
+  "display": "standalone",
+  "themeColor": "#000000",
+  "themeColorDark": "#000000",
+  "navigationColor": "#000000",
+  "navigationColorDark": "#000000",
+  "navigationDividerColor": "#000000",
+  "navigationDividerColorDark": "#000000",
+  "backgroundColor": "#FF2B85",
+  "enableNotifications": true,
+  "startUrl": "/",
+  "iconUrl": "https://www.meow-meow.co.in/meow-meow-logo.png",
+  "maskableIconUrl": "https://www.meow-meow.co.in/icons/icon-512x512-maskable.png",
+  "monochromeIconUrl": "https://www.meow-meow.co.in/meow-meow-logo.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./android.keystore",
+    "alias": "android"
+  },
+  "appVersionName": "1.0.2",
+  "appVersionCode": 7,
+  "shortcuts": [
+    {
+      "name": "Chat",
+      "shortName": "Chat",
+      "url": "/dashboard?tab=chat",
+      "chosenIconUrl": "https://www.meow-meow.co.in/meow-meow-logo.png"
+    },
+    {
+      "name": "Private Groups",
+      "shortName": "Groups",
+      "url": "/private-groups",
+      "chosenIconUrl": "https://www.meow-meow.co.in/meow-meow-logo.png"
+    },
+    {
+      "name": "Wallet",
+      "shortName": "Wallet",
+      "url": "/wallet",
+      "chosenIconUrl": "https://www.meow-meow.co.in/meow-meow-logo.png"
+    }
+  ],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://www.meow-meow.co.in/manifest.json",
+  "fallbackType": "customtabs",
+  "features": {
+    "locationDelegation": {
+      "enabled": true
+    },
+    "playBilling": {
+      "enabled": false
+    }
+  },
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://www.meow-meow.co.in/",
+  "minSdkVersion": 23,
+  "orientation": "portrait",
+  "fingerprints": [],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "displayOverride": [],
+  "appVersion": "1.0.2"
+}
