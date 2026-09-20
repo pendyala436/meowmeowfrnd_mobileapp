@@ -963,7 +963,7 @@ const TermsAgreementScreen = () => {
       }
 
       // Build complete profile data including ALL registration fields
-      const profileData: any = {
+      const profileData: Record<string, unknown> = {
         user_id: user.id,
         email: email, // Store email in profiles table
         full_name: fullName,
@@ -1004,11 +1004,11 @@ const TermsAgreementScreen = () => {
       };
 
       // Save to profiles table (upsert with retry for resilience)
-      let profileError: any = null;
+      let profileError: { message?: string } | null = null;
       for (let attempt = 1; attempt <= 3; attempt++) {
         const { error } = await supabase
           .from("profiles")
-          .upsert(profileData, { onConflict: "user_id" });
+          .upsert(profileData as never, { onConflict: "user_id" });
         profileError = error;
         if (!error) break;
         if (attempt < 3) await new Promise((r) => setTimeout(r, 1000 * attempt));

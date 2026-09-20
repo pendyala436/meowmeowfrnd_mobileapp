@@ -108,7 +108,7 @@ const ForgotPasswordScreen = () => {
         title: "Account verified!",
         description: "You can now set a new password. The link expires in 10 minutes.",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Verification failed",
         description: classifyError(error, "send the reset link").message,

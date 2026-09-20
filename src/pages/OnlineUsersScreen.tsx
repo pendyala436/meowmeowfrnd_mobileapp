@@ -6,6 +6,7 @@ import MeowLogo from "@/components/MeowLogo";
 import { useToast } from "@/hooks/use-toast";
 import { Heart, X, ArrowLeft, Circle, Languages, Loader2, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import type { RealtimeChangePayload } from "@/types/supabase-helpers";
 import { isVisibilityStatusChange } from "@/lib/presence";
 
 import {
@@ -48,6 +49,7 @@ const OnlineUsersScreen = () => {
       if (loadTimeoutRef.current) clearTimeout(loadTimeoutRef.current);
       cleanup();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, []);
 
   useEffect(() => {
@@ -68,7 +70,7 @@ const OnlineUsersScreen = () => {
           schema: "public",
           table: "user_status",
         },
-        (payload) => {
+        (payload: RealtimeChangePayload) => {
           if (
             !isVisibilityStatusChange(
               payload as {
@@ -137,7 +139,7 @@ const OnlineUsersScreen = () => {
         return;
       }
 
-      const onlineUserIds = onlineStatus.map((s) => s.user_id);
+      const onlineUserIds = onlineStatus.map((s: { user_id: string }) => s.user_id);
 
       // Fetch profiles of online users with opposite gender (must have photo)
       let query = supabase
@@ -153,10 +155,17 @@ const OnlineUsersScreen = () => {
 
       const { data: profiles } = await query;
 
-      const validProfiles = (profiles || []).filter(
-        (profile) => profile.photo_url && profile.photo_url.trim() !== "",
+      type OnlineProfile = {
+        user_id: string;
+        full_name: string | null;
+        photo_url: string | null;
+        gender: string | null;
+        preferred_language: string | null;
+      };
+      const validProfiles = ((profiles || []) as OnlineProfile[]).filter(
+        (profile: OnlineProfile) => profile.photo_url && profile.photo_url.trim() !== "",
       );
-      const validUserIds = validProfiles.map((p) => p.user_id);
+      const validUserIds = validProfiles.map((p: OnlineProfile) => p.user_id);
 
       // Batch fetch languages for all users in a single query
       const { data: allLanguages } =
@@ -174,7 +183,7 @@ const OnlineUsersScreen = () => {
         }
       }
 
-      const users: OnlineUser[] = validProfiles.map((profile) => ({
+      const users: OnlineUser[] = validProfiles.map((profile: OnlineProfile) => ({
         userId: profile.user_id,
         avatar: profile.photo_url!,
         fullName: profile.full_name || "Anonymous",

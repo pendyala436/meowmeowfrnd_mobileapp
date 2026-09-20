@@ -40,7 +40,7 @@ export function ScoreTab({ currentUserId }: { currentUserId: string }) {
       setError(rpcError.message || "Could not load scores");
       setRows([]);
     } else {
-      const list = (Array.isArray(data) ? data : []) as ScoreRow[];
+      const list = (Array.isArray(data) ? data : []) as unknown as ScoreRow[];
       setRows(
         list.map((r) => ({
           ...r,

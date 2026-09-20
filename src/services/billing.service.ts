@@ -157,7 +157,7 @@ export async function billMinute(
     p_man_id: manId,
     p_woman_id: womanId,
     p_man_count: manCount,
-    p_minute_index: minuteIndex ?? null,
+    p_minute_index: minuteIndex,
   });
   if (error) {
     console.error("[billing] RPC error", { sessionType, sessionId, minuteIndex, error });
@@ -242,8 +242,8 @@ export async function sendGift(
     p_woman_id: womanId,
     p_amount: giftPrice,
     p_type: "gift",
-    p_description: description ?? null,
-    p_reference_id: referenceId ?? null,
+    p_description: description,
+    p_reference_id: referenceId,
   });
   if (error) return { success: false, error: error.message };
   return (data as unknown as GiftTipResult) ?? { success: false, error: "No response" };
@@ -260,8 +260,7 @@ export async function sendTip(
     p_woman_id: womanId,
     p_amount: amount,
     p_type: "tip",
-    p_description: description ?? null,
-    p_reference_id: null,
+    p_description: description,
   });
   if (error) return { success: false, error: error.message };
   return (data as unknown as GiftTipResult) ?? { success: false, error: "No response" };
@@ -300,11 +299,11 @@ export async function listStatements(options?: {
   offset?: number;
 }): Promise<StatementRow[]> {
   const { data, error } = await supabase.rpc("admin_list_statements", {
-    p_gender: options?.gender ?? null,
-    p_year: options?.year ?? null,
-    p_month: options?.month ?? null,
-    p_payout_status: options?.payoutStatus ?? null,
-    p_user_id: options?.userId ?? null,
+    p_gender: options?.gender,
+    p_year: options?.year,
+    p_month: options?.month,
+    p_payout_status: options?.payoutStatus,
+    p_user_id: options?.userId,
     p_limit: options?.limit ?? 100,
     p_offset: options?.offset ?? 0,
   });
@@ -323,10 +322,10 @@ export async function updatePayout(
 ): Promise<{ success: boolean; error?: string }> {
   const { data, error } = await supabase.rpc("admin_update_payout", {
     p_statement_id: statementId,
-    p_status: updates.status ?? null,
-    p_pdf_url: updates.pdfUrl ?? null,
-    p_excel_url: updates.excelUrl ?? null,
-    p_notes: updates.notes ?? null,
+    p_status: updates.status,
+    p_pdf_url: updates.pdfUrl,
+    p_excel_url: updates.excelUrl,
+    p_notes: updates.notes,
   });
   if (error) return { success: false, error: error.message };
   return (data as { success: boolean }) ?? { success: true };
@@ -334,8 +333,8 @@ export async function updatePayout(
 
 export async function runMonthlyClosing(year?: number, month?: number) {
   const { data, error } = await supabase.rpc("run_monthly_closing", {
-    p_year: year ?? null,
-    p_month: month ?? null,
+    p_year: year,
+    p_month: month,
   });
   if (error) return { success: false, error: error.message };
   return data as { success: boolean; [k: string]: unknown };

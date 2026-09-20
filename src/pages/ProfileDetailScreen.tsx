@@ -1,3 +1,4 @@
+import type { RealtimeChangePayload, StatusQueryResult } from "@/types/supabase-helpers";
 import { useState, useEffect } from "react";
 import { fetchPublicProfile } from "@/lib/profile-queries";
 import { useNavigate, useParams } from "react-router-dom";
@@ -88,6 +89,7 @@ const ProfileDetailScreen = () => {
     if (userId) {
       loadProfile(userId);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [userId]);
 
   // Real-time subscription for online status
@@ -104,14 +106,15 @@ const ProfileDetailScreen = () => {
           table: "user_status",
           filter: `user_id=eq.${userId}`,
         },
-        (payload: any) => {
-          if (payload.new) {
+        (payload) => {
+          const row = payload.new as { is_online?: boolean; last_seen?: string | null } | null;
+          if (row) {
             setProfile((prev) =>
               prev
                 ? {
                     ...prev,
-                    isOnline: payload.new.is_online,
-                    lastSeen: payload.new.last_seen,
+                    isOnline: Boolean(row.is_online),
+                    lastSeen: String(row.last_seen ?? ""),
                   }
                 : null,
             );
@@ -208,11 +211,12 @@ const ProfileDetailScreen = () => {
       setIsLiked(!!matchResult.data);
 
       // Use age from profile (date_of_birth is not exposed in public profile for privacy)
-      let age: number | null = profileData.age || null;
+      const age: number | null = profileData.age || null;
 
-      const allLanguages = languagesResult.data?.map((l) => l.language_name) || [];
+      const allLanguages =
+        languagesResult.data?.map((l: { language_name: string }) => l.language_name) || [];
       let motherTongue = profileData.preferred_language || allLanguages[0] || "Not specified";
-      let optionalLanguages = allLanguages.filter((l) => l !== motherTongue);
+      const optionalLanguages = allLanguages.filter((l: string) => l !== motherTongue);
 
       if (currentLanguage !== "English") {
         const textsToTranslate = [
@@ -227,12 +231,12 @@ const ProfileDetailScreen = () => {
         const translatedCountry = translated[1] || profileData.country || "Unknown";
         const translatedState = translated[2] || profileData.state || "";
         const translatedOptionalLangs = optionalLanguages.map(
-          (_, i) => translated[3 + i] || optionalLanguages[i],
+          (_: string, i: number) => translated[3 + i] || optionalLanguages[i],
         );
 
         setProfile({
           userId: targetUserId,
-          userCode: (profileData as any).user_code ?? null,
+          userCode: (profileData as { user_code?: string | null }).user_code ?? null,
           fullName: profileData.full_name || "Anonymous",
           avatar: profileData.photo_url || "",
           age,
@@ -252,7 +256,7 @@ const ProfileDetailScreen = () => {
       } else {
         setProfile({
           userId: targetUserId,
-          userCode: (profileData as any).user_code ?? null,
+          userCode: (profileData as { user_code?: string | null }).user_code ?? null,
           fullName: profileData.full_name || "Anonymous",
           avatar: profileData.photo_url || "",
           age,

@@ -87,6 +87,7 @@ export const VoiceRecorder = ({
       console.error("Microphone access error:", err);
       onError?.("Microphone permission denied or unavailable");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, []);
 
   const stopAndSend = useCallback(async () => {
@@ -142,7 +143,7 @@ export const VoiceRecorder = ({
       const blobType =
         blob.type || (ext === "m4a" ? "audio/mp4" : ext === "ogg" ? "audio/ogg" : "audio/webm");
       let uploadedPath = filePath;
-      let { error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from("meowmeow-app-attachment")
         .upload(filePath, blob, { contentType: blobType, upsert: false });
 
@@ -187,7 +188,7 @@ export const VoiceRecorder = ({
       }
       console.log("VoiceRecorder: Message insert successful", inserted);
 
-      onVoiceSent?.(inserted as any);
+      onVoiceSent?.(inserted as never);
     } catch (err) {
       console.error("VoiceRecorder: Voice send error:", err);
       onError?.(`Voice send failed: ${err instanceof Error ? err.message : String(err)}`);

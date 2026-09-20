@@ -432,11 +432,11 @@ export const useAppCall = (
       let stream: MediaStream;
       try {
         stream = await acquireMedia(callType);
-      } catch (err: any) {
+      } catch (err: unknown) {
         const msg =
-          err?.name === "NotFoundError"
+          (err instanceof Error ? err.name : "") === "NotFoundError"
             ? "No microphone/camera found. Please connect your device."
-            : err?.name === "NotReadableError"
+            : (err instanceof Error ? err.name : "") === "NotReadableError"
               ? "Device in use by another app. Please close other apps."
               : `Allow microphone${callType === "video" ? " and camera" : ""} access.`;
         toast({ title: "Permission denied", description: msg, variant: "destructive" });
@@ -475,18 +475,28 @@ export const useAppCall = (
         ch.send({ type: "broadcast", event: "offer", payload: { sdp: pc.localDescription } });
       });
 
-      ch.on("broadcast", { event: "answer" }, async ({ payload }: any) => {
-        try {
-          await pcRef.current?.setRemoteDescription(new RTCSessionDescription(payload.sdp));
-          await flushIceCandidateQueue();
-        } catch (e) {
-          console.error("[AppCall] setRemoteDescription error:", e);
-        }
-      });
+      ch.on(
+        "broadcast",
+        { event: "answer" },
+        async ({ payload }: { payload: Record<string, unknown> }) => {
+          try {
+            await pcRef.current?.setRemoteDescription(
+              new RTCSessionDescription(payload.sdp as RTCSessionDescriptionInit),
+            );
+            await flushIceCandidateQueue();
+          } catch (e) {
+            console.error("[AppCall] setRemoteDescription error:", e);
+          }
+        },
+      );
 
-      ch.on("broadcast", { event: "ice_candidate" }, async ({ payload }: any) => {
-        await handleIceCandidate(payload.candidate);
-      });
+      ch.on(
+        "broadcast",
+        { event: "ice_candidate" },
+        async ({ payload }: { payload: Record<string, unknown> }) => {
+          await handleIceCandidate(payload.candidate as RTCIceCandidateInit);
+        },
+      );
 
       ch.on("broadcast", { event: "call_declined" }, () => {
         toast({ title: "Call declined", description: `${targetName} declined the call.` });
@@ -525,7 +535,7 @@ export const useAppCall = (
         call_type: callType,
         rate_per_minute: rate,
         started_at: null,
-      } as any);
+      } as never);
       if (insertError) {
         console.error("[AppCall] session insert failed", insertError);
         toast({
@@ -550,6 +560,7 @@ export const useAppCall = (
         }
       }, 60_000);
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
     [
       currentUserId,
       currentUserGender,
@@ -579,9 +590,9 @@ export const useAppCall = (
       let stream: MediaStream;
       try {
         stream = await acquireMedia(callType);
-      } catch (err: any) {
+      } catch (err: unknown) {
         const msg =
-          err?.name === "NotFoundError"
+          (err instanceof Error ? err.name : "") === "NotFoundError"
             ? "No microphone/camera found."
             : `Allow microphone${callType === "video" ? " and camera" : ""} to accept.`;
         toast({ title: "Permission denied", description: msg, variant: "destructive" });
@@ -614,20 +625,30 @@ export const useAppCall = (
       const ch = supabase.channel(`call:${callId}`);
       channelRef.current = ch;
 
-      ch.on("broadcast", { event: "offer" }, async ({ payload }: any) => {
-        const pc = createPC(callId, callType);
-        pcRef.current = pc;
-        stream.getTracks().forEach((t) => pc.addTrack(t, stream));
-        await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp));
-        await flushIceCandidateQueue();
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
-        ch.send({ type: "broadcast", event: "answer", payload: { sdp: pc.localDescription } });
-      });
+      ch.on(
+        "broadcast",
+        { event: "offer" },
+        async ({ payload }: { payload: Record<string, unknown> }) => {
+          const pc = createPC(callId, callType);
+          pcRef.current = pc;
+          stream.getTracks().forEach((t) => pc.addTrack(t, stream));
+          await pc.setRemoteDescription(
+            new RTCSessionDescription(payload.sdp as RTCSessionDescriptionInit),
+          );
+          await flushIceCandidateQueue();
+          const answer = await pc.createAnswer();
+          await pc.setLocalDescription(answer);
+          ch.send({ type: "broadcast", event: "answer", payload: { sdp: pc.localDescription } });
+        },
+      );
 
-      ch.on("broadcast", { event: "ice_candidate" }, async ({ payload }: any) => {
-        await handleIceCandidate(payload.candidate);
-      });
+      ch.on(
+        "broadcast",
+        { event: "ice_candidate" },
+        async ({ payload }: { payload: Record<string, unknown> }) => {
+          await handleIceCandidate(payload.candidate as RTCIceCandidateInit);
+        },
+      );
 
       ch.on("broadcast", { event: "call_ended" }, () => {
         if (!endingRef.current) {

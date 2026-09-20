@@ -1,3 +1,4 @@
+import type { NavigatorWithDeviceMemory, NavigatorWithStandalone } from "@/types/supabase-helpers";
 import { toast } from "sonner";
 /**
  * usePWA.ts
@@ -202,13 +203,13 @@ export function usePWA() {
     const isEdge = /edge|edg/.test(ua);
     const isSamsungInternet = /samsungbrowser/.test(ua);
     const isOpera = /opr|opera/.test(ua);
-    const isBrave = /brave/.test(ua) || !!(navigator as any).brave;
+    const isBrave = /brave/.test(ua) || !!(navigator as NavigatorWithDeviceMemory).brave;
     const isUCBrowser = /ucbrowser|ucweb/.test(ua);
 
     // Check if already installed
     const isStandalone =
       window.matchMedia("(display-mode: standalone)").matches ||
-      (window.navigator as any).standalone === true ||
+      (navigator as NavigatorWithStandalone).standalone === true ||
       document.referrer.includes("android-app://");
 
     // Determine install method based on platform/browser
@@ -226,14 +227,15 @@ export function usePWA() {
     // Feature Detection
     const isPushSupported = "PushManager" in window && "serviceWorker" in navigator;
     const isBackgroundSyncSupported = "SyncManager" in window;
-    const isPeriodicSyncSupported = "PeriodicSyncManager" in (navigator as any);
+    const isPeriodicSyncSupported =
+      "PeriodicSyncManager" in (navigator as NavigatorWithDeviceMemory);
     const isShareTargetSupported = "share" in navigator;
     const isBadgingSupported = "setAppBadge" in navigator;
     const isWakeLockSupported = "wakeLock" in navigator;
     const isFileSystemSupported = "showOpenFilePicker" in window;
 
     // Connection info
-    const connection = (navigator as any).connection;
+    const connection = (navigator as NavigatorWithDeviceMemory).connection;
     const connectionType = connection?.effectiveType || "unknown";
     const isSlowConnection = connectionType === "2g" || connectionType === "slow-2g";
 
@@ -278,7 +280,7 @@ export function usePWA() {
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
 
-    const connection = (navigator as any).connection as
+    const connection = (navigator as NavigatorWithDeviceMemory).connection as
       | {
           effectiveType?: string;
           addEventListener?: (type: string, listener: () => void) => void;
@@ -371,7 +373,7 @@ export function usePWA() {
     const alreadyStandalone =
       typeof window !== "undefined" &&
       (window.matchMedia("(display-mode: standalone)").matches ||
-        (window.navigator as any).standalone === true);
+        (navigator as NavigatorWithStandalone).standalone === true);
 
     if (alreadyStandalone) {
       // Already installed — no-op, no error
@@ -427,10 +429,10 @@ export function usePWA() {
       }
       // User dismissed — that's fine, no error toast
       return false;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Install failed:", error);
       // Only show a real error if it's something other than the user cancelling
-      const msg = String(error?.message || error || "").toLowerCase();
+      const msg = String(error instanceof Error ? error.message : error || "").toLowerCase();
       if (!msg.includes("cancel") && !msg.includes("dismiss") && !msg.includes("user gesture")) {
         toast.error("Installation unavailable", {
           description:
@@ -538,6 +540,7 @@ export function usePWA() {
       });
       return false;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, []);
 
   // Subscribe to push notifications
@@ -568,12 +571,22 @@ export function usePWA() {
 
       // Save subscription to Supabase
       const subscriptionJSON = subscription.toJSON();
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      if (
+        !userId ||
+        !subscriptionJSON.endpoint ||
+        !subscriptionJSON.keys?.p256dh ||
+        !subscriptionJSON.keys?.auth
+      ) {
+        console.error("Failed to save push subscription: missing user or keys");
+        return subscription;
+      }
       const { error } = await supabase.from("push_subscriptions").upsert(
         {
-          user_id: (await supabase.auth.getUser()).data.user?.id,
-          endpoint: subscriptionJSON.endpoint!,
-          p256dh: subscriptionJSON.keys!.p256dh!,
-          auth: subscriptionJSON.keys!.auth!,
+          user_id: userId,
+          endpoint: subscriptionJSON.endpoint,
+          p256dh: subscriptionJSON.keys.p256dh,
+          auth: subscriptionJSON.keys.auth,
           user_agent: navigator.userAgent,
         },
         { onConflict: "user_id,endpoint" },
@@ -624,9 +637,9 @@ export function usePWA() {
 
       try {
         if (count > 0) {
-          await (navigator as any).setAppBadge(count);
+          await (navigator as NavigatorWithDeviceMemory).setAppBadge(count);
         } else {
-          await (navigator as any).clearAppBadge();
+          await (navigator as NavigatorWithDeviceMemory).clearAppBadge();
         }
         return true;
       } catch (error) {

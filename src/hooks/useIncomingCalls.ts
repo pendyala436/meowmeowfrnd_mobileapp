@@ -1,3 +1,5 @@
+import type { CallRow } from "@/types/supabase-helpers";
+import type { WindowWithWebkitAudio } from "@/types/supabase-helpers";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { shouldBlockIncoming } from "./useSessionPriority";
@@ -20,7 +22,9 @@ const warmAudioContext = () => {
   audioContextWarmed = true;
   try {
     if (!ringAudioContext || ringAudioContext.state === "closed") {
-      ringAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      ringAudioContext = new (
+        window.AudioContext || (window as WindowWithWebkitAudio).webkitAudioContext
+      )();
     }
     // Resume suspended context (iOS requires user gesture)
     if (ringAudioContext.state === "suspended") {
@@ -45,7 +49,9 @@ if (typeof document !== "undefined") {
 const playRingSound = () => {
   try {
     if (!ringAudioContext || ringAudioContext.state === "closed") {
-      ringAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      ringAudioContext = new (
+        window.AudioContext || (window as WindowWithWebkitAudio).webkitAudioContext
+      )();
     }
     // GEN-001 FIX: Resume if suspended (iOS Safari)
     if (ringAudioContext.state === "suspended") {
@@ -85,6 +91,9 @@ const playRingSound = () => {
     console.error("Ring sound error:", e);
   }
 };
+
+const callIdOf = (call: { call_id?: string; id?: string }): string =>
+  String(call.call_id ?? call.id ?? "");
 
 export const startRingLoop = () => {
   if (ringIntervalId) return;
@@ -148,7 +157,7 @@ export const useIncomingCalls = (currentUserId: string | null, userGender?: "mal
           filter: `${filterColumn}=eq.${currentUserId}`,
         },
         async (payload) => {
-          const call = payload.new as any;
+          const call = payload.new as CallRow;
 
           if (call.status === "ringing" || call.status === "connecting") {
             // Priority check: block incoming call if already in a P3 session
@@ -161,32 +170,37 @@ export const useIncomingCalls = (currentUserId: string | null, userGender?: "mal
               await supabase
                 .from("video_call_sessions")
                 .update({ status: "declined", end_reason: "busy" })
-                .eq("call_id", call.call_id);
+                .eq("call_id", callIdOf(call));
               return;
             }
 
             // Skip if this is a call the current user initiated (by call_id tracking)
-            if (outgoingCallIds.has(call.call_id)) {
-              console.log("[IncomingCalls] Skipping own outgoing call (by call_id):", call.call_id);
+            if (outgoingCallIds.has(callIdOf(call))) {
+              console.log(
+                "[IncomingCalls] Skipping own outgoing call (by call_id):",
+                callIdOf(call),
+              );
               return;
             }
 
-            const callerId = call[callerColumn];
+            const callerId = String(
+              (call as unknown as Record<string, unknown>)[callerColumn] ?? "",
+            );
 
             // Skip if the caller is the current user — this means WE initiated it
             if (callerId === currentUserId) {
               console.log(
                 "[IncomingCalls] Skipping own outgoing call (caller is self):",
-                call.call_id,
+                callIdOf(call),
               );
               return;
             }
 
             // Additional check: if the call_id contains our user ID as initiator pattern
-            if (call.call_id && call.call_id.startsWith(`call_${currentUserId}_`)) {
+            if (callIdOf(call) && callIdOf(call).startsWith(`call_${currentUserId}_`)) {
               console.log(
                 "[IncomingCalls] Skipping own outgoing call (call_id pattern):",
-                call.call_id,
+                callIdOf(call),
               );
               return;
             }
@@ -214,7 +228,7 @@ export const useIncomingCalls = (currentUserId: string | null, userGender?: "mal
             }
 
             setIncomingCall({
-              callId: call.call_id,
+              callId: callIdOf(call),
               callerUserId: callerId,
               callerName,
               callerPhoto,
@@ -231,10 +245,12 @@ export const useIncomingCalls = (currentUserId: string | null, userGender?: "mal
           filter: `${filterColumn}=eq.${currentUserId}`,
         },
         (payload) => {
-          const call = payload.new as any;
+          const call = payload.new as CallRow;
           if (
-            ["ended", "declined", "missed", "timeout_cleanup"].includes(call.status) &&
-            incomingCallRef.current?.callId === call.call_id
+            ["ended", "declined", "missed", "timeout_cleanup"].includes(
+              String(call.status ?? ""),
+            ) &&
+            incomingCallRef.current?.callId === callIdOf(call)
           ) {
             setIncomingCall(null);
           }
@@ -275,14 +291,14 @@ export const useIncomingCalls = (currentUserId: string | null, userGender?: "mal
 
         // Only process calls less than 35 seconds old
         if (callAge <= 35000) {
-          const callerId = call[callerColumn];
+          const callerId = String((call as unknown as Record<string, unknown>)[callerColumn] ?? "");
           if (
             callerId !== currentUserId &&
-            !outgoingCallIds.has(call.call_id) &&
-            !call.call_id?.startsWith(`call_${currentUserId}_`)
+            !outgoingCallIds.has(callIdOf(call)) &&
+            !callIdOf(call)?.startsWith(`call_${currentUserId}_`)
           ) {
             const callType = call.call_type === "audio" ? "audio_call" : "video_call";
-            if (!shouldBlockIncoming(callType as any)) {
+            if (!shouldBlockIncoming(callType as never)) {
               // Fetch caller info
               const { fetchPublicProfile } = await import("@/lib/profile-queries");
               const callerProfile = await fetchPublicProfile(callerId);
@@ -305,7 +321,7 @@ export const useIncomingCalls = (currentUserId: string | null, userGender?: "mal
               consecutiveEmpty = 0;
               pollIntervalMs = 3000;
               setIncomingCall({
-                callId: call.call_id,
+                callId: callIdOf(call),
                 callerUserId: callerId,
                 callerName,
                 callerPhoto,

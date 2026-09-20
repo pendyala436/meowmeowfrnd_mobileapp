@@ -12,6 +12,7 @@ import {
   clearRoleCache,
   LOGIN_GENDER_VERIFY_ENABLED,
 } from "@/components/ProtectedRoute";
+import { getErrorMessage } from "@/lib/errors";
 
 const AuroraBackground = lazy(() => import("@/components/AuroraBackground"));
 
@@ -211,10 +212,10 @@ const GenderVerifyScreen = () => {
       markGenderVerified(userId);
       clearRoleCache();
       navigate("/captcha", { replace: true });
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast({
         title: "Could not save gender",
-        description: err?.message || "Please try again.",
+        description: getErrorMessage(err, "Please try again."),
         variant: "destructive",
       });
     } finally {

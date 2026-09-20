@@ -21,6 +21,7 @@ import {
   setUserServiceRoles,
   type ServiceRole,
 } from "@/hooks/useServiceRoles";
+import { getErrorMessage } from "@/lib/errors";
 
 interface Props {
   open: boolean;
@@ -52,7 +53,7 @@ export function AdminServiceRolesDialog({ open, onOpenChange, userId, userName }
     setLoading(true);
     fetchUserServiceRoles(userId)
       .then((roles) => setSelected(new Set(roles)))
-      .catch((err) => toast.error(err.message ?? "Failed to load roles"))
+      .catch((err) => toast.error(getErrorMessage(err, "Failed to load roles")))
       .finally(() => setLoading(false));
   }, [open, userId]);
 
@@ -76,8 +77,8 @@ export function AdminServiceRolesDialog({ open, onOpenChange, userId, userName }
       await setUserServiceRoles(userId, Array.from(selected));
       toast.success("Service roles updated");
       onOpenChange(false);
-    } catch (err: any) {
-      toast.error(err.message ?? "Failed to save roles");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, "Failed to save roles"));
     } finally {
       setSaving(false);
     }

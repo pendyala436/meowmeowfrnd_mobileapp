@@ -1,3 +1,4 @@
+import type { ChatMessageRow } from "@/types/supabase-helpers";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { isTranslatableChatText } from "@/lib/chat-attachments";
@@ -132,7 +133,7 @@ export const useMiniChatMessages = ({
 
       if (data) {
         // Filter out messages deleted for the current user
-        const filtered = data.filter((m: any) => {
+        const filtered = data.filter((m) => {
           if (m.deleted_for_everyone) return false;
           if (m.sender_id === currentUserId && m.deleted_for_sender) return false;
           if (m.receiver_id === currentUserId && m.deleted_for_receiver) return false;
@@ -143,7 +144,7 @@ export const useMiniChatMessages = ({
           return {
             id: m.id,
             ownerId: m.sender_id,
-            message: m.message,
+            message: m.message ?? "",
             createdAt: m.created_at,
           };
         });
@@ -170,7 +171,7 @@ export const useMiniChatMessages = ({
           filter: `chat_id=eq.${chatId}`,
         },
         async (payload) => {
-          const m = payload.new as any;
+          const m = payload.new as ChatMessageRow;
 
           if (seenIdsRef.current.has(m.id)) return;
           seenIdsRef.current.add(m.id);
@@ -178,7 +179,7 @@ export const useMiniChatMessages = ({
           const newMsg: Message = {
             id: m.id,
             ownerId: m.sender_id,
-            message: m.message,
+            message: m.message ?? "",
             createdAt: m.created_at,
           };
 
@@ -189,7 +190,7 @@ export const useMiniChatMessages = ({
             return [...filtered, newMsg];
           });
 
-          applyTranslation(m.id, m.message, m.sender_id);
+          applyTranslation(m.id, m.message ?? "", m.sender_id);
 
           if (m.sender_id !== currentUserId) {
             setUnreadCount((prev) => prev + (!isMinimized ? 0 : 1));
@@ -208,7 +209,7 @@ export const useMiniChatMessages = ({
           filter: `chat_id=eq.${chatId}`,
         },
         (payload) => {
-          const m = payload.new as any;
+          const m = payload.new as ChatMessageRow;
           if (m.deleted_for_everyone) {
             setMessages((prev) =>
               prev.map((msg) =>
@@ -252,10 +253,10 @@ export const useMiniChatMessages = ({
 
       if (data) {
         const olderMsgs: Message[] = data
-          .map((m: any) => ({
+          .map((m) => ({
             id: m.id,
             ownerId: m.sender_id,
-            message: m.message,
+            message: m.message ?? "",
             createdAt: m.created_at,
           }))
           .reverse();

@@ -1,3 +1,11 @@
+import type {
+  RealtimeChangePayload,
+  ChatMessageRow as RtChatMessage,
+  ChatSessionRow,
+  CallRow,
+  StatusQueryResult,
+  WalletQueryResult,
+} from "@/types/supabase-helpers";
 /**
  * ChatScreen.tsx
  *
@@ -89,7 +97,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useActivityStatus } from "@/hooks/useActivityStatus";
 import VoiceMessagePlayer from "@/components/VoiceMessagePlayer";
 import { ChatMessageInput } from "@/components/chat/ChatMessageInput";
-import { classifyError, ERROR_MESSAGES } from "@/lib/errors";
+import { classifyError, ERROR_MESSAGES, getErrorMessage } from "@/lib/errors";
 import { useMessageSound } from "@/hooks/useMessageSound";
 import { MessageActions } from "@/components/chat/MessageActions";
 import { ReplyPreview } from "@/components/chat/ReplyPreview";
@@ -159,6 +167,18 @@ function formatChatBillingDuration(seconds: number): string {
  *
  * Defines the structure of a chat message object.
  */
+interface ChatMessageRow {
+  id: string;
+  sender_id: string;
+  receiver_id: string;
+  message: string | null;
+  is_read: boolean | null;
+  created_at: string;
+  deleted_for_everyone?: boolean | null;
+  deleted_for_sender?: boolean | null;
+  deleted_for_receiver?: boolean | null;
+}
+
 interface Message {
   id: string; // UUID of the message
   senderId: string; // UUID of sender
@@ -362,10 +382,10 @@ const ChatScreen = () => {
       recRef.current = mr;
       setRecording(true);
       recTimer.current = setInterval(() => setRecordSecs((s) => s + 1), 1000);
-    } catch (e: any) {
+    } catch (e: unknown) {
       toast({
         title: "Mic error",
-        description: e?.message ?? "Cannot access microphone",
+        description: getErrorMessage(e, "Cannot access microphone"),
         variant: "destructive",
       });
     }
@@ -600,7 +620,7 @@ const ChatScreen = () => {
 
   // Map temp message IDs to real DB IDs for translation resolution
   const tempToRealIdRef = useRef<Map<string, string>>(new Map());
-  const walletChannelRef = useRef<any>(null);
+  const walletChannelRef = useRef<import("@supabase/supabase-js").RealtimeChannel | null>(null);
 
   // ============= CHAT BILLING =============
   const handleInsufficientBalance = useCallback(() => {
@@ -652,11 +672,13 @@ const ChatScreen = () => {
 
   const refreshManWallet = useCallback(() => {
     if (!currentUserId || currentUserGender !== "male") return;
-    void supabase.rpc("get_men_wallet_balance", { p_user_id: currentUserId }).then(({ data }) => {
-      if (!data) return;
-      const wd = data as Record<string, number>;
-      setWalletBalance(Number(wd.balance) || 0);
-    });
+    void supabase
+      .rpc("get_men_wallet_balance", { p_user_id: currentUserId })
+      .then(({ data }: { data: unknown }) => {
+        if (!data) return;
+        const wd = data as Record<string, number>;
+        setWalletBalance(Number(wd.balance) || 0);
+      });
   }, [currentUserId, currentUserGender]);
 
   // Only the man's client may call bill_session_minute (auth gate).
@@ -821,6 +843,7 @@ const ChatScreen = () => {
       initializingRef.current = false;
       initializeChat(partnerId);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [partnerId]); // Re-run if partner ID changes
 
   /**
@@ -842,6 +865,7 @@ const ChatScreen = () => {
     jumpToLatest();
     const frame = window.requestAnimationFrame(jumpToLatest);
     return () => window.cancelAnimationFrame(frame);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [isLoading, messages[messages.length - 1]?.id]);
 
   /**
@@ -867,12 +891,12 @@ const ChatScreen = () => {
           table: "chat_messages",
           filter: `chat_id=eq.${chatId.current}`, // Only this chat
         },
-        async (payload: any) => {
+        async (payload: RealtimeChangePayload<RtChatMessage>) => {
           // Extract new message from payload
           const newMsg = payload.new;
 
           if (typeof newMsg.message === "string" && newMsg.message.startsWith(GIFT_PREFIX)) {
-            const parsed = parseGiftMessage(newMsg.message);
+            const parsed = parseGiftMessage(newMsg.message ?? "");
             if (parsed) {
               window.dispatchEvent(new CustomEvent("meow-call-gift", { detail: parsed }));
             }
@@ -906,12 +930,12 @@ const ChatScreen = () => {
                 updated[tempIdx] = {
                   id: newMsg.id,
                   senderId: newMsg.sender_id,
-                  message: newMsg.message,
+                  message: newMsg.message ?? "",
                   translatedMessage: tempMsg.translatedMessage,
                   englishText: tempMsg.englishText,
                   isTranslated: tempMsg.isTranslated,
                   isTranslating: tempMsg.isTranslating,
-                  isRead: newMsg.is_read,
+                  isRead: Boolean(newMsg.is_read),
                   createdAt: newMsg.created_at,
                 };
                 return updated;
@@ -934,15 +958,15 @@ const ChatScreen = () => {
               {
                 id: newMsg.id,
                 senderId: newMsg.sender_id,
-                message: newMsg.message,
-                isRead: newMsg.is_read,
+                message: newMsg.message ?? "",
+                isRead: Boolean(newMsg.is_read),
                 createdAt: newMsg.created_at,
               },
             ];
           });
 
-          if (newMsg.sender_id !== userId && isTranslatableChatText(newMsg.message)) {
-            applyBackgroundTranslation(newMsg.id, newMsg.message, partner?.preferredLanguage);
+          if (newMsg.sender_id !== userId && isTranslatableChatText(newMsg.message ?? "")) {
+            applyBackgroundTranslation(newMsg.id, newMsg.message ?? "", partner?.preferredLanguage);
           }
 
           // Mark received messages as read automatically & play sound
@@ -960,7 +984,7 @@ const ChatScreen = () => {
           table: "chat_messages",
           filter: `chat_id=eq.${chatId.current}`,
         },
-        (payload: any) => {
+        (payload: RealtimeChangePayload<RtChatMessage>) => {
           const updated = payload.new;
           const userId = currentUserIdRef.current;
           // Handle delete for everyone
@@ -980,7 +1004,9 @@ const ChatScreen = () => {
           // Read receipts: partner marked our message as read
           if (typeof updated.is_read === "boolean") {
             setMessages((prev) =>
-              prev.map((m) => (m.id === updated.id ? { ...m, isRead: updated.is_read } : m)),
+              prev.map((m) =>
+                m.id === updated.id ? { ...m, isRead: Boolean(updated.is_read) } : m,
+              ),
             );
           }
         },
@@ -991,6 +1017,7 @@ const ChatScreen = () => {
     return () => {
       supabase.removeChannel(channel);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [activeChatId, applyBackgroundTranslation]); // CHT-01 FIX: Only depend on activeChatId, use refs for everything else
 
   // Issue 2.2: Re-translate history when language loads late — still one paint
@@ -1008,6 +1035,7 @@ const ChatScreen = () => {
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [currentUserLanguage]);
 
   /**
@@ -1034,7 +1062,7 @@ const ChatScreen = () => {
           table: "user_status",
           filter: `user_id=eq.${chatPartner.userId}`,
         },
-        async (payload: any) => {
+        async (payload: RealtimeChangePayload<StatusQueryResult & Record<string, unknown>>) => {
           const newStatus = payload.new;
 
           // Partner went offline - debounce for 15 seconds before acting
@@ -1089,12 +1117,12 @@ const ChatScreen = () => {
           table: "active_chat_sessions",
           filter: `chat_id=eq.${chatId.current}`,
         },
-        (payload: any) => {
+        (payload: RealtimeChangePayload<ChatSessionRow>) => {
           const session = payload.new;
           if (session && (session.status === "active" || session.status === "pending")) {
             setBillingSessionId(session.id);
-            setBillingManId(session.man_user_id);
-            setBillingWomanId(session.woman_user_id);
+            setBillingManId(session.man_user_id ?? "");
+            setBillingWomanId(session.woman_user_id ?? "");
             setBillingSessionStartedAt(
               session.started_at || session.created_at || new Date().toISOString(),
             );
@@ -1111,7 +1139,7 @@ const ChatScreen = () => {
           table: "active_chat_sessions",
           filter: `chat_id=eq.${chatId.current}`,
         },
-        (payload: any) => {
+        (payload: RealtimeChangePayload<ChatSessionRow>) => {
           const session = payload.new;
           if (!session) return;
 
@@ -1122,8 +1150,8 @@ const ChatScreen = () => {
             (session.man_user_id === currentUserId || session.woman_user_id === currentUserId)
           ) {
             setBillingSessionId(session.id);
-            setBillingManId(session.man_user_id);
-            setBillingWomanId(session.woman_user_id);
+            setBillingManId(session.man_user_id ?? "");
+            setBillingWomanId(session.woman_user_id ?? "");
             setBillingSessionStartedAt(
               session.started_at || session.created_at || new Date().toISOString(),
             );
@@ -1227,6 +1255,7 @@ const ChatScreen = () => {
       supabase.removeChannel(statusChannel);
       supabase.removeChannel(sessionChannel);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [chatPartner?.userId, currentUserId, currentUserGender, navigate, toast]);
 
   /**
@@ -1363,7 +1392,7 @@ const ChatScreen = () => {
               table: "wallets",
               filter: `user_id=eq.${user.id}`,
             },
-            (payload: any) => {
+            (payload: RealtimeChangePayload<WalletQueryResult & Record<string, unknown>>) => {
               if (payload.new?.balance !== undefined) {
                 setWalletBalance(Number(payload.new.balance) || 0);
               }
@@ -1430,25 +1459,25 @@ const ChatScreen = () => {
       // ============= MESSAGE HISTORY =============
       if (existingMessages) {
         existingMessages.reverse();
-        const filteredMessages = existingMessages.filter((msg) => {
-          if ((msg as any).deleted_for_everyone) return false;
-          if (msg.sender_id === user.id && (msg as any).deleted_for_sender) return false;
-          if (msg.receiver_id === user.id && (msg as any).deleted_for_receiver) return false;
+        const filteredMessages = existingMessages.filter((msg: ChatMessageRow) => {
+          if (msg.deleted_for_everyone) return false;
+          if (msg.sender_id === user.id && msg.deleted_for_sender) return false;
+          if (msg.receiver_id === user.id && msg.deleted_for_receiver) return false;
           return true;
         });
         const loadedMessages: Message[] = filteredMessages
-          .filter((msg) => !String(msg.message || "").startsWith(GIFT_PREFIX))
-          .map((msg) => ({
+          .filter((msg: ChatMessageRow) => !String(msg.message || "").startsWith(GIFT_PREFIX))
+          .map((msg: ChatMessageRow) => ({
             id: msg.id,
             senderId: msg.sender_id,
-            message: msg.message,
+            message: msg.message || "",
             isRead: msg.is_read || false,
             createdAt: msg.created_at,
           }));
 
         const unreadIds = existingMessages
-          .filter((m) => m.receiver_id === user.id && !m.is_read)
-          .map((m) => m.id);
+          .filter((m: ChatMessageRow) => m.receiver_id === user.id && !m.is_read)
+          .map((m: ChatMessageRow) => m.id);
 
         setMessages(loadedMessages);
 
@@ -1465,7 +1494,7 @@ const ChatScreen = () => {
             .from("chat_messages")
             .update({ is_read: true })
             .in("id", unreadIds)
-            .then(({ error: readError }) => {
+            .then(({ error: readError }: { error: { message: string } | null }) => {
               if (readError)
                 console.warn("[Chat] Failed to mark messages read:", readError.message);
             });
@@ -1510,7 +1539,19 @@ const ChatScreen = () => {
             const { data: started } = await supabase.functions.invoke("chat-manager", {
               body: { action: "start_chat", man_user_id: manUserId, woman_user_id: womanUserId },
             });
-            if ((started as any)?.session) activeSession = (started as any).session;
+            const startedSession = (
+              started as {
+                session?: {
+                  id: string;
+                  man_user_id: string;
+                  woman_user_id: string;
+                  status: string;
+                  started_at?: string;
+                  created_at?: string;
+                };
+              } | null
+            )?.session;
+            if (startedSession) activeSession = startedSession;
           }
           if (activeSession) {
             setBillingSessionId(activeSession.id);
@@ -1621,11 +1662,12 @@ const ChatScreen = () => {
         title: "Friend Request Sent",
         description: `A friend request has been sent to ${chatPartner.fullName}.`,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error sending friend request:", error);
-      const msg = error?.message?.includes("already")
-        ? "A friend request already exists."
-        : "Failed to send friend request";
+      const msg =
+        error instanceof Error && error.message.includes("already")
+          ? "A friend request already exists."
+          : "Failed to send friend request";
       toast({
         title: "Error",
         description: msg,
@@ -1659,7 +1701,7 @@ const ChatScreen = () => {
         title: "Friend Removed",
         description: `${chatPartner.fullName} has been removed from your friends.`,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error removing friend:", error);
       toast({
         title: "Error",
@@ -1712,7 +1754,7 @@ const ChatScreen = () => {
         title: "User Blocked",
         description: `${chatPartner.fullName} has been blocked. You won't receive messages from them.`,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error blocking user:", error);
       toast({
         title: "Could not block user",
@@ -1742,7 +1784,7 @@ const ChatScreen = () => {
         title: "User Unblocked",
         description: `${chatPartner.fullName} has been unblocked.`,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error unblocking user:", error);
       toast({
         title: "Could not unblock user",
@@ -1792,7 +1834,7 @@ const ChatScreen = () => {
 
       // Navigate back to dashboard
       navigate(currentUserGender === "female" ? "/women-dashboard" : "/dashboard");
-    } catch (error: any) {
+    } catch (error: unknown) {
       endedBySelfRef.current = false;
       console.error("Error stopping chat:", error);
       toast({
@@ -1853,7 +1895,7 @@ const ChatScreen = () => {
       .eq("id", messageId)
       .eq("is_read", false);
     if (error) {
-      console.warn("[Chat] markAsRead failed:", error.message);
+      console.warn("[Chat] markAsRead failed:", getErrorMessage(error));
     }
   };
 
@@ -1870,7 +1912,7 @@ const ChatScreen = () => {
             deleted_for_sender: true,
             deleted_for_receiver: true,
             deleted_at: new Date().toISOString(),
-          } as any)
+          } as never)
           .eq("id", messageId);
         if (error) throw error;
         setMessages((prev) => prev.filter((m) => m.id !== messageId));
@@ -1881,7 +1923,7 @@ const ChatScreen = () => {
         const updateField = isMsgSender ? "deleted_for_sender" : "deleted_for_receiver";
         const { error } = await supabase
           .from("chat_messages")
-          .update({ [updateField]: true, deleted_at: new Date().toISOString() } as any)
+          .update({ [updateField]: true, deleted_at: new Date().toISOString() } as never)
           .eq("id", messageId);
         if (error) throw error;
         setMessages((prev) => prev.filter((m) => m.id !== messageId));
@@ -1904,14 +1946,14 @@ const ChatScreen = () => {
       // Mark all messages I sent as deleted_for_sender
       const { error: e1 } = await supabase
         .from("chat_messages")
-        .update({ deleted_for_sender: true, deleted_at: new Date().toISOString() } as any)
+        .update({ deleted_for_sender: true, deleted_at: new Date().toISOString() } as never)
         .eq("chat_id", chatId.current)
         .eq("sender_id", currentUserId);
       if (e1) throw e1;
       // Mark all messages I received as deleted_for_receiver
       const { error: e2 } = await supabase
         .from("chat_messages")
-        .update({ deleted_for_receiver: true, deleted_at: new Date().toISOString() } as any)
+        .update({ deleted_for_receiver: true, deleted_at: new Date().toISOString() } as never)
         .eq("chat_id", chatId.current)
         .eq("receiver_id", currentUserId);
       if (e2) throw e2;
@@ -1942,7 +1984,7 @@ const ChatScreen = () => {
           deleted_for_sender: true,
           deleted_for_receiver: true,
           deleted_at: new Date().toISOString(),
-        } as any)
+        } as never)
         .eq("chat_id", chatId.current);
       if (error) throw error;
       setMessages([]);
@@ -1968,7 +2010,7 @@ const ChatScreen = () => {
       } else {
         await supabase
           .from("message_reactions")
-          .insert({ message_id: messageId, user_id: currentUserId, emoji } as any);
+          .insert({ message_id: messageId, user_id: currentUserId, emoji });
       }
     } catch (err) {
       console.error("Reaction error:", err);
@@ -2000,7 +2042,7 @@ const ChatScreen = () => {
           is_edited: true,
           edited_at: new Date().toISOString(),
           original_message: editingMsg.text,
-        } as any)
+        } as never)
         .eq("id", editingMsg.id);
       setMessages((prev) =>
         prev.map((m) => (m.id === editingMsg.id ? { ...m, message: newText, isEdited: true } : m)),
@@ -2022,7 +2064,7 @@ const ChatScreen = () => {
           is_pinned: !isPinned,
           pinned_at: !isPinned ? new Date().toISOString() : null,
           pinned_by: !isPinned ? currentUserId : null,
-        } as any)
+        } as never)
         .eq("id", messageId);
       setMessages((prev) =>
         prev.map((m) => (m.id === messageId ? { ...m, isPinned: !isPinned } : m)),
@@ -2094,7 +2136,7 @@ const ChatScreen = () => {
     ]);
 
     try {
-      const insertData: any = {
+      const insertData: Record<string, unknown> = {
         chat_id: chatId.current,
         sender_id: currentUserId,
         receiver_id: chatPartner.userId,
@@ -2104,7 +2146,7 @@ const ChatScreen = () => {
         insertData.reply_to_id = replyTo.id;
         setReplyTo(null);
       }
-      const { error } = await supabase.from("chat_messages").insert(insertData);
+      const { error } = await supabase.from("chat_messages").insert(insertData as never);
 
       if (error) {
         setMessages((prev) => prev.filter((m) => m.id !== tempId));
@@ -2839,10 +2881,10 @@ const ChatScreen = () => {
                         title: "Friend Added!",
                         description: `You are now friends with ${chatPartner?.fullName}.`,
                       });
-                    } catch (e: any) {
+                    } catch (e: unknown) {
                       toast({
                         title: "Error",
-                        description: e?.message || "Could not accept request",
+                        description: getErrorMessage(e, "Could not accept request"),
                         variant: "destructive",
                       });
                     } finally {

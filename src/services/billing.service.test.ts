@@ -275,7 +275,6 @@ describe("billing.service", () => {
         p_amount: 20,
         p_type: "tip",
         p_description: "Thanks",
-        p_reference_id: null,
       });
       expect(result.success).toBe(true);
     });

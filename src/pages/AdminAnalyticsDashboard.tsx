@@ -128,13 +128,17 @@ const AdminAnalyticsDashboard = () => {
       const endDate = new Date();
 
       // Try the server-side RPC first
-      const { data, error } = await supabase.rpc("get_analytics_summary" as any, {
+      const { data, error } = await supabase.rpc("get_analytics_summary", {
         p_start_date: startDate.toISOString(),
         p_end_date: endDate.toISOString(),
       });
 
-      if (!error && data && data.totals) {
-        const result = data as any;
+      const result = data as {
+        totals?: Record<string, number | string | null>;
+        gender?: { male?: number; female?: number; other?: number };
+        chart?: Array<Record<string, unknown>>;
+      } | null;
+      if (!error && result?.totals) {
         const totals = result.totals;
         const gender = result.gender;
         const chart = result.chart;
@@ -167,14 +171,16 @@ const AdminAnalyticsDashboard = () => {
           { name: "Other", value: Number(gender?.other) || 0, color: CHART_COLORS.accent },
         ]);
 
-        const chartDataPoints: ChartData[] = (chart || []).map((point: any) => ({
-          date: point.date,
-          users: Number(point.users) || 0,
-          activeUsers: Number(point.activeUsers) || 0,
-          matches: Number(point.matches) || 0,
-          revenue: Number(point.revenue) || 0,
-          messages: Number(point.messages) || 0,
-        }));
+        const chartDataPoints: ChartData[] = (chart || []).map(
+          (point: Record<string, unknown>) => ({
+            date: String(point.date ?? ""),
+            users: Number(point.users) || 0,
+            activeUsers: Number(point.activeUsers) || 0,
+            matches: Number(point.matches) || 0,
+            revenue: Number(point.revenue) || 0,
+            messages: Number(point.messages) || 0,
+          }),
+        );
         setChartData(chartDataPoints);
       } else {
         // Fallback: Direct queries when RPC fails or returns unexpected format
@@ -200,7 +206,7 @@ const AdminAnalyticsDashboard = () => {
               .eq("gender", "female"),
           ]);
 
-        const gc = (r: PromiseSettledResult<any>) =>
+        const gc = (r: PromiseSettledResult<{ count: number | null; error: unknown }>) =>
           r.status === "fulfilled" && !r.value.error ? r.value.count || 0 : 0;
         const totalUsers = gc(usersRes);
         const totalMatches = gc(matchesRes);

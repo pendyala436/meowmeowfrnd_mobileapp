@@ -11,6 +11,7 @@ import { Send, Loader2, Shield, User, Phone, Video } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/errors";
 
 interface Msg {
   id: string;
@@ -68,6 +69,7 @@ export function AdminSideChat({ adminId, targetUserId, targetUserName }: Props) 
     return () => {
       supabase.removeChannel(ch);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [targetUserId]);
 
   useEffect(() => {
@@ -89,8 +91,8 @@ export function AdminSideChat({ adminId, targetUserId, targetUserName }: Props) 
       if (error) throw error;
       setText("");
       fetchMessages();
-    } catch (e: any) {
-      toast.error(e.message ?? "Failed to send");
+    } catch (e: unknown) {
+      toast.error(getErrorMessage(e, "Failed to send"));
     } finally {
       setSending(false);
     }

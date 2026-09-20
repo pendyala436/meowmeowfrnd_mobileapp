@@ -1,3 +1,4 @@
+import type { WindowWithWebkitAudio } from "@/types/supabase-helpers";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import {
@@ -282,7 +283,7 @@ describe("useIdleCallback", () => {
 
   it("falls back to setTimeout when requestIdleCallback missing", () => {
     const original = window.requestIdleCallback;
-    delete (window as any).requestIdleCallback;
+    (window as unknown as { requestIdleCallback?: unknown }).requestIdleCallback = undefined;
 
     const fn = vi.fn();
     renderHook(() => useIdleCallback(fn));

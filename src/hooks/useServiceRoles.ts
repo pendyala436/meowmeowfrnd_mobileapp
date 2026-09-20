@@ -71,6 +71,7 @@ export function useServiceRoles() {
     return () => {
       supabase.removeChannel(channel);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [user?.id, isReady, fetchRoles]);
 
   const canAccess = useCallback(

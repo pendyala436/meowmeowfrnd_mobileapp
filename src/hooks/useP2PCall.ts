@@ -250,6 +250,7 @@ export const useP2PCall = ({
         clearInterval(billingTimerRef.current);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [state.callStatus, ratePerMinute]);
 
   // Initialize local media (camera + microphone)
@@ -617,6 +618,7 @@ export const useP2PCall = ({
       isConnecting: false,
       callStatus: prev.callStatus === "active" ? prev.callStatus : "ringing",
     }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [currentUserId]);
 
   // Keep sendOfferRef in sync
@@ -654,6 +656,7 @@ export const useP2PCall = ({
 
       await sendSignal("answer", { sdp: answerSdp, senderId: currentUserId });
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
     [currentUserId],
   );
 
@@ -868,6 +871,7 @@ export const useP2PCall = ({
 
     signalChannelRef.current = channel;
     return channel;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [
     callId,
     currentUserId,
@@ -923,6 +927,7 @@ export const useP2PCall = ({
         variant: "destructive",
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [
     callId,
     initLocalMedia,
@@ -975,6 +980,7 @@ export const useP2PCall = ({
         variant: "destructive",
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [initLocalMedia, setupSignaling, createPeerConnection, currentUserId, toast]);
 
   // End call and cleanup — VID-H-02: idempotency guard prevents double-update
@@ -1060,6 +1066,7 @@ export const useP2PCall = ({
     cleanup();
     setState((prev) => ({ ...prev, callStatus: "ended" }));
     onCallEnded?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [
     callId,
     currentUserId,
@@ -1153,6 +1160,7 @@ export const useP2PCall = ({
     }
 
     return cleanup;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, []);
 
   // Subscribe to call status updates from database

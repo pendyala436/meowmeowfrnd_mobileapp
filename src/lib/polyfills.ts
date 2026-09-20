@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any --
+ * Browser polyfill interop: feature detection and prototype patching
+ * require loose typing against incomplete DOM / vendor APIs.
+ */
 /**
  * Browser Polyfills
  *
@@ -238,9 +242,9 @@ async function polyfillScrollBehavior(): Promise<void> {
     if (typeof optionsOrX === "object" && optionsOrX.behavior === "smooth") {
       smoothScroll(optionsOrX.left ?? 0, optionsOrX.top ?? 0);
     } else if (typeof optionsOrX === "number") {
-      originalScrollTo.call(window, optionsOrX, y ?? 0);
-    } else {
-      originalScrollTo.call(window, optionsOrX as any);
+      (originalScrollTo as (x: number, y: number) => void).call(window, optionsOrX, y ?? 0);
+    } else if (optionsOrX) {
+      (originalScrollTo as (options?: ScrollToOptions) => void).call(window, optionsOrX);
     }
   };
 

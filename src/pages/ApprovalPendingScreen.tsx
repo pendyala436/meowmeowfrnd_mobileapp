@@ -6,7 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import MeowLogo from "@/components/MeowLogo";
 import { supabase } from "@/integrations/supabase/client";
+import type { RealtimeChangePayload } from "@/types/supabase-helpers";
 import { toast } from "@/hooks/use-toast";
+import { getErrorMessage } from "@/lib/errors";
 
 type ApprovalStatus = "pending" | "approved" | "disapproved" | "inactive";
 
@@ -21,6 +23,7 @@ const ApprovalPendingScreen = () => {
 
   useEffect(() => {
     checkApprovalStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, []);
 
   // Realtime subscription for approval status changes
@@ -37,7 +40,12 @@ const ApprovalPendingScreen = () => {
           table: "profiles",
           filter: `user_id=eq.${userId}`,
         },
-        (payload) => {
+        (
+          payload: RealtimeChangePayload<{
+            approval_status?: string;
+            ai_disapproval_reason?: string | null;
+          }>,
+        ) => {
           const newStatus = payload.new.approval_status as ApprovalStatus;
           const newReason = payload.new.ai_disapproval_reason as string | null;
 
@@ -98,7 +106,7 @@ const ApprovalPendingScreen = () => {
         navigate("/women-dashboard");
         return;
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error checking approval:", error);
       toast({
         title: "Error",
@@ -179,11 +187,14 @@ const ApprovalPendingScreen = () => {
       } else {
         throw new Error(data?.error || "Approval failed");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Reapply error:", error);
       toast({
         title: "Reapproval Failed",
-        description: error?.message || "Failed to process your request. Please try again later.",
+        description: getErrorMessage(
+          error,
+          "Failed to process your request. Please try again later.",
+        ),
         variant: "destructive",
       });
     } finally {

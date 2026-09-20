@@ -1,3 +1,4 @@
+import type { NavigatorWithDeviceMemory } from "@/types/supabase-helpers";
 import { memo, useState, useEffect } from "react";
 
 /**
@@ -12,7 +13,7 @@ const AuroraBackground = memo(() => {
 
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const isLowEndDevice = (navigator as any).deviceMemory && (navigator as any).deviceMemory < 4;
+    const isLowEndDevice = ((navigator as NavigatorWithDeviceMemory).deviceMemory ?? 8) < 4;
     if (prefersReducedMotion || isLowEndDevice) {
       setShouldAnimate(false);
     }

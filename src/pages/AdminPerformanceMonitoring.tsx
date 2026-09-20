@@ -1,4 +1,4 @@
-import { classifyError, ERROR_MESSAGES, logError } from "@/lib/errors";
+import { classifyError, ERROR_MESSAGES, logError, getErrorMessage } from "@/lib/errors";
 import AdminNav from "@/components/AdminNav";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
@@ -30,6 +30,7 @@ import {
   Wifi,
   WifiOff,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -161,7 +162,7 @@ const AdminPerformanceMonitoring = () => {
         }
 
         setAlerts(alertsData || []);
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Error loading data:", error);
         if (!silent) {
           toast.error("Metrics unavailable", {
@@ -187,7 +188,7 @@ const AdminPerformanceMonitoring = () => {
       .on("postgres_changes", { event: "*", schema: "public", table: "system_alerts" }, () => {
         if (isLiveRef.current) loadData(true);
       })
-      .subscribe((status) => {
+      .subscribe((status: string) => {
         if (status === "CHANNEL_ERROR") {
           console.warn("[Performance] Realtime channel error, will auto-reconnect");
         }
@@ -216,7 +217,7 @@ const AdminPerformanceMonitoring = () => {
         ),
       );
       toast.success("Alert resolved");
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error("Alert not resolved", {
         description: classifyError(error, "resolve the alert").message,
       });
@@ -258,7 +259,7 @@ const AdminPerformanceMonitoring = () => {
     title: string;
     value: number;
     unit: string;
-    icon: any;
+    icon: LucideIcon;
     thresholds: { warning: number; critical: number };
   }) => {
     // Normalize: if thresholds exceed 100, scale relative to 1.25× critical so the bar always reflects load
@@ -408,8 +409,8 @@ const AdminPerformanceMonitoring = () => {
                     if (error) throw error;
                     toast.success("Metrics collected successfully");
                     loadData();
-                  } catch (e: any) {
-                    toast.error("Failed to collect metrics", { description: e.message });
+                  } catch (e: unknown) {
+                    toast.error("Failed to collect metrics", { description: getErrorMessage(e) });
                   }
                 }}
               >

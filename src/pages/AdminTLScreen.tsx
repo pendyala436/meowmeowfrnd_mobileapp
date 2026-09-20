@@ -10,7 +10,11 @@ export default function AdminTLScreen() {
   const [adminId, setAdminId] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setAdminId(data.user?.id ?? null));
+    supabase.auth
+      .getUser()
+      .then(({ data }: { data: { user: { id: string } | null } }) =>
+        setAdminId(data.user?.id ?? null),
+      );
   }, []);
 
   if (isLoading) {

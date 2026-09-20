@@ -1,3 +1,4 @@
+import type { RealtimeChangePayload, ChatMessageRow } from "@/types/supabase-helpers";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Phone, PhoneOff, Mic, MicOff, Video, VideoOff, Volume2 } from "lucide-react";
 import { ActiveCall, CallStatus } from "@/hooks/useAppCall";
@@ -90,7 +91,7 @@ export const CallScreen = ({
           table: "chat_messages",
           filter: `chat_id=eq.${chatId}`,
         },
-        (payload: any) => {
+        (payload: RealtimeChangePayload<ChatMessageRow>) => {
           const parsed = parseGiftMessage(payload.new?.message || "");
           if (parsed) addAnimatedGift(parsed);
         },

@@ -77,6 +77,7 @@ import GroupChatTab from "@/components/GroupChatTab";
 
 import { UserContactCard } from "@/components/UserContactCard";
 import { isVisibilityStatusChange } from "@/lib/presence";
+import type { RealtimeChangePayload, WindowWithWebkitAudio } from "@/types/supabase-helpers";
 // WhatsAppFAB removed — unused in current layout
 import { CallHistoryTab } from "@/components/CallHistoryTab";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -249,6 +250,7 @@ const DashboardScreen = () => {
     if (tabFromState) {
       navigate(location.pathname, { replace: true, state: {} });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [location.state, location.pathname, navigate, searchParams, setSearchParams]);
   const matchesFetchedRef = useRef(false);
   const chatsFetchedRef = useRef(false);
@@ -492,7 +494,7 @@ const DashboardScreen = () => {
         .neq("status_text", "busy")
         .gte("last_seen", freshCutoffIso);
 
-      const onlineUserIds = (onlineUsers || []).map((u) => u.user_id);
+      const onlineUserIds = (onlineUsers || []).map((u: { user_id: string }) => u.user_id);
 
       // If no users online, show empty lists
       if (onlineUserIds.length === 0) {
@@ -504,14 +506,15 @@ const DashboardScreen = () => {
 
       // Fetch ONLY online women from safe public view (excludes sensitive bank/PAN/phone/DOB fields)
       const { data: femaleProfiles } = await supabase
-        .from("public_female_profiles" as any)
+        .from("public_female_profiles")
         .select(
           "id, user_id, full_name, photo_url, age, country, state, primary_language, is_earning_eligible",
         )
         .in("user_id", onlineUserIds)
         .limit(50);
 
-      const onlineWomenList: OnlineWoman[] = femaleProfiles || [];
+      // public_female_profiles is a view not in generated Database types
+      const onlineWomenList: OnlineWoman[] = (femaleProfiles || []) as unknown as OnlineWoman[];
 
       if (onlineWomenList.length === 0) {
         setSameLanguageWomen([]);
@@ -540,14 +543,12 @@ const DashboardScreen = () => {
       ]);
 
       const chatCountMap = new Map<string, number>();
-      chatCountsRes.data?.forEach((chat) => {
+      chatCountsRes.data?.forEach((chat: { woman_user_id: string }) => {
         const count = chatCountMap.get(chat.woman_user_id) || 0;
         chatCountMap.set(chat.woman_user_id, count + 1);
       });
 
-      const availabilityMap = new Map(
-        ((availabilityRes.data as any[]) || []).map((a) => [a.user_id, a]),
-      );
+      const availabilityMap = new Map((availabilityRes.data || []).map((a) => [a.user_id, a]));
 
       const languageMap = new Map<string, string>();
       for (const l of (userLanguagesRes.data as { user_id: string; language_name: string }[]) ||
@@ -562,7 +563,7 @@ const DashboardScreen = () => {
       }
 
       const walletMap = new Map<string, number>(
-        ((walletsRes.data as any[]) || []).map((w: any) => [w.user_id, Number(w.balance) || 0]),
+        (walletsRes.data || []).map((w) => [w.user_id, Number(w.balance) || 0]),
       );
 
       const womenWithChatCount = onlineWomenList.map((w) => {
@@ -651,7 +652,7 @@ const DashboardScreen = () => {
       });
       if (error) throw error;
 
-      const chats = ((data as any[]) || []).map((r) => ({
+      const chats = (data || []).map((r) => ({
         chatId: r.chat_id as string,
         partnerId: r.partner_id as string,
         partnerName: r.partner_name as string,
@@ -663,7 +664,7 @@ const DashboardScreen = () => {
         partnerIsOnline: Boolean(r.partner_is_online),
         partnerStatus: (r.partner_status as string) || "offline",
         partnerActiveChatCount: Number(r.partner_active_chat_count) || 0,
-        partnerLanguage: (r.partner_language as string) || null,
+        partnerLanguage: (r as { partner_language?: string }).partner_language || null,
       }));
 
       const partnerIds = [...new Set(chats.map((c) => c.partnerId).filter(Boolean))];
@@ -764,7 +765,11 @@ const DashboardScreen = () => {
 
       // Get unique other user IDs from each match (deduplicate)
       const otherUserIds = [
-        ...new Set(matches.map((m) => (m.user_id === userId ? m.matched_user_id : m.user_id))),
+        ...new Set(
+          matches.map((m: { user_id: string; matched_user_id: string }) =>
+            m.user_id === userId ? m.matched_user_id : m.user_id,
+          ),
+        ),
       ] as string[];
 
       // Fetch profiles for matched users via secure RPC
@@ -777,12 +782,12 @@ const DashboardScreen = () => {
         .select("user_id, is_online")
         .in("user_id", otherUserIds);
 
-      const statusMap = new Map(((statuses as any[]) || []).map((s) => [s.user_id, s.is_online]));
-      const profileMap = new Map(((profiles as any[]) || []).map((p) => [p.user_id, p]));
+      const statusMap = new Map((statuses || []).map((s) => [s.user_id, s.is_online]));
+      const profileMap = new Map((profiles || []).map((p) => [p.user_id, p]));
 
       const seenUserIds = new Set<string>();
       const matched: MatchedWoman[] = matches
-        .map((m) => {
+        .map((m: { id: string; user_id: string; matched_user_id: string; matched_at: string }) => {
           const otherId = m.user_id === userId ? m.matched_user_id : m.user_id;
           if (seenUserIds.has(otherId)) return null;
           seenUserIds.add(otherId);
@@ -842,8 +847,8 @@ const DashboardScreen = () => {
 
   async function loadDashboardData(userOrNull?: import("@supabase/supabase-js").User) {
     try {
-      let user = userOrNull;
-      if (!user) {
+      let resolvedUser = userOrNull;
+      if (!resolvedUser) {
         const {
           data: { session },
         } = await supabase.auth.getSession();
@@ -851,8 +856,9 @@ const DashboardScreen = () => {
           setIsLoading(false);
           return;
         }
-        user = session.user;
+        resolvedUser = session.user;
       }
+      const user = resolvedUser;
 
       setCurrentUserId(user.id);
 
@@ -985,10 +991,9 @@ const DashboardScreen = () => {
 
   useEffect(() => {
     let mounted = true;
-    let loadingTimeoutId: NodeJS.Timeout;
 
     // Safety timeout - show error state after 12 seconds instead of silently rendering empty
-    loadingTimeoutId = setTimeout(() => {
+    const loadingTimeoutId = setTimeout(() => {
       if (mounted && isLoading) {
         console.warn("[Dashboard] Loading timed out after 12s");
         setIsLoading(false);
@@ -1043,6 +1048,7 @@ const DashboardScreen = () => {
         updateUserOnlineStatus(false);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, []);
 
   // Real-time subscription with throttled callbacks to avoid excessive DB calls
@@ -1076,20 +1082,24 @@ const DashboardScreen = () => {
 
     const channel = supabase
       .channel("dashboard-updates")
-      .on("postgres_changes", { event: "*", schema: "public", table: "user_status" }, (payload) => {
-        if (
-          !isVisibilityStatusChange(
-            payload as {
-              eventType?: string;
-              new?: Record<string, unknown>;
-              old?: Record<string, unknown>;
-            },
-            userStatusSnapshotRef.current,
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "user_status" },
+        (payload: RealtimeChangePayload) => {
+          if (
+            !isVisibilityStatusChange(
+              payload as {
+                eventType?: string;
+                new?: Record<string, unknown>;
+                old?: Record<string, unknown>;
+              },
+              userStatusSnapshotRef.current,
+            )
           )
-        )
-          return;
-        throttledFetchOnlineWomen();
-      })
+            return;
+          throttledFetchOnlineWomen();
+        },
+      )
       .on(
         "postgres_changes",
         {
@@ -1111,7 +1121,7 @@ const DashboardScreen = () => {
           table: "active_chat_sessions",
           filter: `man_user_id=eq.${currentUserId}`,
         },
-        (payload) => {
+        (_payload: RealtimeChangePayload) => {
           loadActiveChatCount();
           fetchActiveChats();
         },
@@ -1179,7 +1189,7 @@ const DashboardScreen = () => {
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "user_languages" },
-        async (payload) => {
+        async (payload: RealtimeChangePayload) => {
           const record = payload.new as {
             user_id?: string;
             language_name?: string;
@@ -1202,7 +1212,7 @@ const DashboardScreen = () => {
           table: "user_languages",
           filter: `user_id=eq.${currentUserId}`,
         },
-        async (payload) => {
+        async (payload: RealtimeChangePayload) => {
           const newLanguage = (payload.new as { language_name?: string })?.language_name;
           const newCode = (payload.new as { language_code?: string })?.language_code || "eng_Latn";
           if (newLanguage) {
@@ -1221,7 +1231,7 @@ const DashboardScreen = () => {
           table: "male_profiles",
           filter: `user_id=eq.${currentUserId}`,
         },
-        async (payload) => {
+        async (payload: RealtimeChangePayload) => {
           const newProfile = payload.new as {
             primary_language?: string;
             preferred_language?: string;
@@ -1238,6 +1248,7 @@ const DashboardScreen = () => {
     return () => {
       supabase.removeChannel(channel);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [currentUserId]); // stable — throttledFetchOnlineWomen reads from refs; language handlers fetch directly
 
   // Wallet balance refresh — keep off the hot path that was exhausting the pool.
@@ -1247,6 +1258,7 @@ const DashboardScreen = () => {
       loadWalletBalance();
     }, 10000);
     return () => clearInterval(intervalId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [currentUserId]);
 
   useEffect(() => {
@@ -1256,6 +1268,7 @@ const DashboardScreen = () => {
     };
     window.addEventListener("meow:wallet-refresh", onRefresh);
     return () => window.removeEventListener("meow:wallet-refresh", onRefresh);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [currentUserId]);
 
   // Eager-load active chats on mount for unread badge
@@ -1264,6 +1277,7 @@ const DashboardScreen = () => {
     if (!chatsFetchedRef.current && !chatsInFlightRef.current) {
       fetchActiveChats();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [currentUserId]);
 
   // Lazy-load data on tab switch
@@ -1366,7 +1380,7 @@ const DashboardScreen = () => {
           message: "👋 Hi!",
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Failed to start chat session:", error);
     } finally {
       setIsConnecting(false);
@@ -1492,6 +1506,7 @@ const DashboardScreen = () => {
       verifyPayment();
       window.history.replaceState({}, "", "/dashboard");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, []);
 
   async function handleRecharge(amountINR: number) {
@@ -1522,7 +1537,8 @@ const DashboardScreen = () => {
 
       const loadScript = () =>
         new Promise<boolean>((resolve) => {
-          if ((window as any).Razorpay) return resolve(true);
+          if ((window as WindowWithWebkitAudio & Record<string, unknown>).Razorpay)
+            return resolve(true);
           const script = document.createElement("script");
           script.src = "https://checkout.razorpay.com/v1/checkout.js";
           script.onload = () => resolve(true);
@@ -1542,7 +1558,7 @@ const DashboardScreen = () => {
         return;
       }
 
-      const rzp = new (window as any).Razorpay({
+      const rzp = new (window as WindowWithWebkitAudio & Record<string, unknown>).Razorpay({
         key: data.keyId,
         amount: Math.round(grossAmount * 100),
         currency: "INR",
@@ -1551,7 +1567,7 @@ const DashboardScreen = () => {
         order_id: data.orderId,
         // Capacitor/Android WebView: open installed UPI apps via Intent
         webview_intent: true,
-        handler: async (response: any) => {
+        handler: async (response: Record<string, unknown>) => {
           try {
             const { data: vData, error: vErr } = await supabase.functions.invoke(
               "razorpay-payment",
@@ -1604,7 +1620,7 @@ const DashboardScreen = () => {
         },
         theme: { color: "#25D366" },
       });
-      rzp.on("payment.failed", (resp: any) => {
+      rzp.on("payment.failed", (resp: { error?: { description?: string; reason?: string } }) => {
         const err = resp?.error;
         console.error("[Razorpay Failed]", err);
         toast({

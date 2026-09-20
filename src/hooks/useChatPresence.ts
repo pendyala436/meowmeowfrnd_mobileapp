@@ -101,8 +101,8 @@ export const useChatPresence = ({
       .on("presence", { event: "join" }, refreshFromPresence)
       .on("presence", { event: "leave" }, refreshFromPresence)
       .on("broadcast", { event: "typing" }, (payload) => {
-        const fromId = (payload.payload as any)?.user_id;
-        const isTyping = !!(payload.payload as any)?.typing;
+        const fromId = (payload.payload as Record<string, unknown> | undefined)?.user_id;
+        const isTyping = !!(payload.payload as Record<string, unknown> | undefined)?.typing;
         if (fromId !== partnerId || !isMountedRef.current) return;
         if (isTyping) {
           setPartnerState("typing");
@@ -117,7 +117,7 @@ export const useChatPresence = ({
         }
       })
       .on("broadcast", { event: "left" }, (payload) => {
-        const fromId = (payload.payload as any)?.user_id;
+        const fromId = (payload.payload as Record<string, unknown> | undefined)?.user_id;
         if (fromId !== partnerId || !isMountedRef.current) return;
         // Explicit leave — exit immediately (no presence debounce)
         if (leftDebounceRef.current) clearTimeout(leftDebounceRef.current);

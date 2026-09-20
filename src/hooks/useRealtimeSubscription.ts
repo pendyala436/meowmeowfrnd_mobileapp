@@ -83,7 +83,7 @@ export const useRealtimeSubscription = ({
     // Include unique ID to avoid channel collision when same table subscribed in multiple components
     const channelName = `rt-${table}${filter ? `-${filter}` : ""}-${Math.random().toString(36).slice(2, 8)}`;
 
-    const subscriptionConfig: any = {
+    const subscriptionConfig: Record<string, unknown> = {
       event,
       schema: "public",
       table,
@@ -95,7 +95,7 @@ export const useRealtimeSubscription = ({
 
     channelRef.current = supabase
       .channel(channelName)
-      .on("postgres_changes", subscriptionConfig, () => {
+      .on("postgres_changes", subscriptionConfig as never, () => {
         debouncedUpdate();
       })
       .subscribe();

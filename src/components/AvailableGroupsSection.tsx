@@ -124,6 +124,7 @@ export function AvailableGroupsSection({
     return () => {
       supabase.removeChannel(channel);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [currentUserId]);
 
   const fetchRows = async () => {
@@ -134,7 +135,7 @@ export function AvailableGroupsSection({
         .eq("is_active", true);
       if (hErr) throw hErr;
 
-      const list = (hosts as any[]) || [];
+      const list = hosts || [];
       if (list.length === 0) {
         setRows([]);
         if (activeRowRef.current) await closeActiveCall("Host ended the live session");
@@ -149,11 +150,9 @@ export function AvailableGroupsSection({
       ]);
 
       const groupMap = new Map<string, PrivateGroup>();
-      ((groups as any[]) || []).forEach((g) => groupMap.set(g.id, g));
+      (groups || []).forEach((g) => groupMap.set(g.id, g));
       const hostNumberMap = new Map<string, number | null>();
-      ((hostProfiles as any[]) || []).forEach((p) =>
-        hostNumberMap.set(p.id, p.host_number ?? null),
-      );
+      (hostProfiles || []).forEach((p) => hostNumberMap.set(p.id, p.host_number ?? null));
 
       const built: LiveHostRow[] = list
         .map((h) => {
@@ -268,7 +267,7 @@ export function AvailableGroupsSection({
 
       setActiveGroupStream(preStream);
       setActiveRow(row);
-    } catch (error: any) {
+    } catch (error: unknown) {
       preStream.getTracks().forEach((t) => t.stop());
       toast.error("Could not join host", {
         description: classifyError(error, "join the host").message,

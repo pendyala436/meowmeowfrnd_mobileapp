@@ -30,7 +30,7 @@ const PRIORITY_MAP: Record<SessionType, number> = {
 
 // Global mutable state (singleton across all components)
 let activeSessions: ActiveSession[] = [];
-let listeners: Set<() => void> = new Set();
+const listeners: Set<() => void> = new Set();
 
 const notify = () => {
   listeners.forEach((fn) => fn());

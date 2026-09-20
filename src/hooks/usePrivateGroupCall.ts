@@ -1,3 +1,4 @@
+type SessionWithUnload = { _onBeforeUnload?: () => void };
 import { classifyError, ERROR_MESSAGES, logError } from "@/lib/errors";
 /**
  * usePrivateGroupCall Hook
@@ -309,6 +310,7 @@ export function usePrivateGroupCall({
         });
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
     [createPeerConnection, currentUserId],
   );
 
@@ -335,6 +337,7 @@ export function usePrivateGroupCall({
         });
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, []);
 
   // GRP-F-001 FIX: ICE candidate queue per participant
@@ -966,6 +969,7 @@ export function usePrivateGroupCall({
 
     channelRef.current = channel;
     return channel;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [
     groupId,
     currentUserId,
@@ -1009,8 +1013,8 @@ export function usePrivateGroupCall({
       const { data: rpcData, error: rpcErr } = await supabase.rpc("start_host_session", {
         p_group_id: groupId,
         p_host_name: userName,
-        p_host_photo: userPhoto || null,
-        p_host_language: hostLanguage || null,
+        p_host_photo: userPhoto || undefined,
+        p_host_language: hostLanguage || undefined,
         p_stream_id: sessionId,
       });
 
@@ -1082,7 +1086,7 @@ export function usePrivateGroupCall({
         });
         if (hbErr) {
           console.warn("[GROUP] heartbeat error", hbErr.message);
-        } else if ((hbData as any)?.success === false) {
+        } else if ((hbData as { success?: boolean } | null)?.success === false) {
           console.warn("[GROUP] heartbeat lost session, stopping live");
           if (heartbeatRef.current) {
             clearInterval(heartbeatRef.current);
@@ -1102,7 +1106,8 @@ export function usePrivateGroupCall({
       };
       window.addEventListener("beforeunload", onBeforeUnload);
       // Keep ref so cleanup can remove it
-      (sessionRef.current as any)._onBeforeUnload = onBeforeUnload;
+      if (sessionRef.current)
+        (sessionRef.current as SessionWithUnload)._onBeforeUnload = onBeforeUnload;
 
       setState((prev) => ({
         ...prev,
@@ -1245,7 +1250,7 @@ export function usePrivateGroupCall({
         clearInterval(heartbeatRef.current);
         heartbeatRef.current = null;
       }
-      const onBU = (sessionRef.current as any)?._onBeforeUnload;
+      const onBU = (sessionRef.current as SessionWithUnload | null)?._onBeforeUnload;
       if (onBU) {
         window.removeEventListener("beforeunload", onBU);
       }
@@ -1474,7 +1479,6 @@ export function usePrivateGroupCall({
     return () => {
       cleanupRef.current();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Viewers: leave immediately when this host row goes inactive (broadcast can be missed).

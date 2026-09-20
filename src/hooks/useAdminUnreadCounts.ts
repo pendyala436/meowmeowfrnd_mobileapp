@@ -80,6 +80,7 @@ export function useAdminUnreadCounts(userId: string | null) {
       supabase.removeChannel(broadcastChannel);
       supabase.removeChannel(chatChannel);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [userId]);
 
   return { unreadMessages, unreadChat, refetch: fetchCounts };

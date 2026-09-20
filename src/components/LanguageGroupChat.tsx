@@ -1,3 +1,4 @@
+import type { ChatMessageRow } from "@/types/supabase-helpers";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,7 +21,7 @@ import {
   Mic,
   StopCircle,
 } from "lucide-react";
-import { classifyError, ERROR_MESSAGES, logError } from "@/lib/errors";
+import { classifyError, ERROR_MESSAGES, logError, getErrorMessage } from "@/lib/errors";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { toast as sonnerToast } from "sonner";
@@ -129,11 +130,11 @@ export const LanguageGroupChat = ({
 
   // Load messages and members
   useEffect(() => {
-    if (languageName) {
-      loadCommunityData();
-      const cleanup = subscribeToMessages();
-      return cleanup;
-    }
+    if (!languageName) return;
+    loadCommunityData();
+    const cleanup = subscribeToMessages();
+    return cleanup;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [languageName, currentUserId]);
 
   // Auto-scroll to bottom
@@ -167,7 +168,7 @@ export const LanguageGroupChat = ({
         const { fetchPublicProfiles } = await import("@/lib/profile-queries");
         const profiles = await fetchPublicProfiles(senderIds as string[]);
 
-        const profileMap = new Map(((profiles as any[]) || []).map((p) => [p.user_id, p]));
+        const profileMap = new Map((profiles || []).map((p) => [p.user_id, p]));
 
         profileMap.forEach((p, id) => {
           profileCacheRef.current.set(id, {
@@ -267,7 +268,7 @@ export const LanguageGroupChat = ({
           filter: `language_code=eq.${languageName}`,
         },
         async (payload) => {
-          const newMsg = payload.new as any;
+          const newMsg = payload.new as ChatMessageRow;
 
           let senderName = "Unknown";
           let senderPhoto: string | null = null;
@@ -291,11 +292,11 @@ export const LanguageGroupChat = ({
             senderId: newMsg.sender_id,
             senderName,
             senderPhoto,
-            message: newMsg.message,
-            fileUrl: newMsg.file_url,
-            fileType: newMsg.file_type,
-            fileName: newMsg.file_name,
-            fileSize: newMsg.file_size,
+            message: newMsg.message ?? null,
+            fileUrl: newMsg.file_url ?? null,
+            fileType: newMsg.file_type ?? null,
+            fileName: newMsg.file_name ?? null,
+            fileSize: newMsg.file_size ?? null,
             createdAt: newMsg.created_at,
             isOwn: newMsg.sender_id === currentUserId,
           };
@@ -443,7 +444,7 @@ export const LanguageGroupChat = ({
 
       setNewMessage("");
       setSelectedFile(null);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error sending message:", error);
       toast({
         title: "Error",
@@ -564,10 +565,12 @@ export const LanguageGroupChat = ({
         recordSecsRef.current += 1;
         setRecordSecs(recordSecsRef.current);
       }, 1000);
-    } catch (e: any) {
+    } catch (e: unknown) {
       recStreamRef.current?.getTracks().forEach((t) => t.stop());
       recStreamRef.current = null;
-      sonnerToast.error("Mic error", { description: e?.message ?? "Cannot access microphone" });
+      sonnerToast.error("Mic error", {
+        description: getErrorMessage(e, "Cannot access microphone"),
+      });
     }
   };
 
@@ -614,8 +617,8 @@ export const LanguageGroupChat = ({
           fileUrl = signed.data?.signedUrl || null;
         }
         if (fileUrl) break;
-      } catch (e: any) {
-        lastError = e?.message || lastError;
+      } catch (e: unknown) {
+        lastError = (e instanceof Error ? e.message : String(e || "")) || lastError;
       }
     }
 
@@ -730,7 +733,7 @@ export const LanguageGroupChat = ({
     setIsUploading(true);
     try {
       await sendCommunityVoice(blob, ext, mimeType);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("[Community voice] send failed:", err);
       sonnerToast.error("Voice not sent", {
         description: classifyError(err, "send the voice note").message,

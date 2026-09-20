@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, waitFor } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { TestRouter } from "@/test/TestRouter";
 
 const { navigateMock, useAuthReadyMock, fromMock } = vi.hoisted(() => ({
   navigateMock: vi.fn(),
@@ -47,9 +47,9 @@ describe("PrivateGroupsScreen", () => {
     useAuthReadyMock.mockReturnValue({ user: null, isReady: true });
 
     render(
-      <MemoryRouter>
+      <TestRouter>
         <PrivateGroupsScreen />
-      </MemoryRouter>,
+      </TestRouter>,
     );
 
     await waitFor(() => {
@@ -65,9 +65,9 @@ describe("PrivateGroupsScreen", () => {
       .mockReturnValueOnce(chain({ data: null }));
 
     render(
-      <MemoryRouter>
+      <TestRouter>
         <PrivateGroupsScreen />
-      </MemoryRouter>,
+      </TestRouter>,
     );
 
     await waitFor(() => {
@@ -85,9 +85,9 @@ describe("PrivateGroupsScreen", () => {
       .mockReturnValueOnce(chain({ data: null }));
 
     render(
-      <MemoryRouter>
+      <TestRouter>
         <PrivateGroupsScreen />
-      </MemoryRouter>,
+      </TestRouter>,
     );
 
     await waitFor(() => {
@@ -105,9 +105,9 @@ describe("PrivateGroupsScreen", () => {
       .mockReturnValueOnce(chain({ data: { role: "admin" } }));
 
     render(
-      <MemoryRouter>
+      <TestRouter>
         <PrivateGroupsScreen />
-      </MemoryRouter>,
+      </TestRouter>,
     );
 
     await waitFor(() => {
@@ -119,9 +119,9 @@ describe("PrivateGroupsScreen", () => {
     useAuthReadyMock.mockReturnValue({ user: null, isReady: false });
 
     const { container } = render(
-      <MemoryRouter>
+      <TestRouter>
         <PrivateGroupsScreen />
-      </MemoryRouter>,
+      </TestRouter>,
     );
 
     expect(container.querySelector(".animate-spin")).toBeTruthy();
@@ -135,9 +135,9 @@ describe("PrivateGroupsScreen", () => {
     });
 
     render(
-      <MemoryRouter>
+      <TestRouter>
         <PrivateGroupsScreen />
-      </MemoryRouter>,
+      </TestRouter>,
     );
 
     await waitFor(() => {
@@ -162,9 +162,9 @@ describe("PrivateGroupsScreen", () => {
     }));
 
     const { unmount } = render(
-      <MemoryRouter>
+      <TestRouter>
         <PrivateGroupsScreen />
-      </MemoryRouter>,
+      </TestRouter>,
     );
 
     unmount();

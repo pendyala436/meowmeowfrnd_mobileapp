@@ -7,6 +7,12 @@ import { CacheableResponsePlugin } from "workbox-cacheable-response";
 
 declare let self: ServiceWorkerGlobalScope;
 
+/** Background Sync API — not in all TypeScript lib.webworker versions */
+interface SyncEvent extends ExtendableEvent {
+  readonly tag: string;
+  readonly lastChance: boolean;
+}
+
 // ========================================
 // UNIVERSAL PWA SERVICE WORKER
 // Supports: All browsers, all devices, all OS
@@ -221,6 +227,7 @@ if (isLovablePreviewWorker) {
               if ("navigate" in client) {
                 return (client as WindowClient).navigate(url);
               }
+              return undefined;
             });
           }
         }
@@ -228,6 +235,7 @@ if (isLovablePreviewWorker) {
         if (self.clients.openWindow) {
           return self.clients.openWindow(url);
         }
+        return undefined;
       }),
     );
   });
@@ -243,7 +251,7 @@ if (isLovablePreviewWorker) {
   // Supported: Chrome, Edge, Opera, Samsung Internet
   // ========================================
 
-  self.addEventListener("sync", (event) => {
+  self.addEventListener("sync", ((event: SyncEvent) => {
     switch (event.tag) {
       case "sync-messages":
         event.waitUntil(syncMessages());
@@ -254,7 +262,7 @@ if (isLovablePreviewWorker) {
       default:
         console.log("Unknown sync tag:", event.tag);
     }
-  });
+  }) as EventListener);
 
   async function syncMessages() {
     try {
@@ -313,16 +321,18 @@ if (isLovablePreviewWorker) {
   // Supported: Chrome 80+, Edge 80+
   // ========================================
 
-  self.addEventListener("periodicsync", (event: any) => {
+  self.addEventListener("periodicsync", ((
+    event: Event & { waitUntil?: (p: Promise<unknown>) => void; tag?: string },
+  ) => {
     switch (event.tag) {
       case "check-notifications":
-        event.waitUntil(checkForNotifications());
+        event.waitUntil?.(checkForNotifications());
         break;
       case "update-content":
-        event.waitUntil(updateCachedContent());
+        event.waitUntil?.(updateCachedContent());
         break;
     }
-  });
+  }) as EventListener);
 
   async function checkForNotifications() {
     // Placeholder for checking new notifications

@@ -70,11 +70,13 @@ const ConfigError = () => (
 );
 
 // Resilient lazy imports — retry once on chunk failure
-function lazyRetry(factory: () => Promise<{ default: React.ComponentType<any> }>) {
+function lazyRetry(
+  factory: () => Promise<{ default: React.ComponentType<Record<string, unknown>> }>,
+) {
   return lazy(() =>
     factory().catch(
       () =>
-        new Promise<{ default: React.ComponentType<any> }>((resolve) => {
+        new Promise<{ default: React.ComponentType<Record<string, unknown>> }>((resolve) => {
           setTimeout(() => resolve(factory()), 1500);
         }),
     ),
@@ -629,7 +631,12 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
       <ErrorBoundary>
-        <BrowserRouter>
+        <BrowserRouter
+          future={{
+            v7_startTransition: true,
+            v7_relativeSplatPath: true,
+          }}
+        >
           <AppShell />
         </BrowserRouter>
       </ErrorBoundary>

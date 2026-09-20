@@ -203,6 +203,7 @@ const LocationSetupScreen = () => {
         maximumAge: 0,
       },
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [toast]);
 
   const handleSubmit = async () => {

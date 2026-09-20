@@ -525,8 +525,8 @@ export async function translateText(
     const gtx = await translateViaGtx(text, effectiveSource, effectiveTarget);
     if (gtx) return gtx;
     return edgeText || text;
-  } catch (err: any) {
-    if (err?.message === "TranslationTimeout") {
+  } catch (err: unknown) {
+    if (err instanceof Error && err.message === "TranslationTimeout") {
       console.warn("[Translation] Request timed out after 8s");
     } else {
       console.warn("[Translation] Failed:", err);
@@ -586,8 +586,8 @@ export async function translateBatch(
     }
 
     return data?.translations || texts;
-  } catch (err: any) {
-    if (err?.message === "BatchTranslationTimeout") {
+  } catch (err: unknown) {
+    if (err instanceof Error && err.message === "BatchTranslationTimeout") {
       console.warn("[Translation] Batch request timed out after 10s");
     } else {
       console.warn("[Translation] Batch failed:", err);

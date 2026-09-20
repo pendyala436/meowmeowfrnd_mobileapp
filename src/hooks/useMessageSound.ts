@@ -1,3 +1,4 @@
+import type { WindowWithWebkitAudio } from "@/types/supabase-helpers";
 import { useRef, useCallback } from "react";
 
 /**
@@ -19,7 +20,9 @@ export function useMessageSound() {
 
     try {
       if (!audioCtxRef.current) {
-        audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        audioCtxRef.current = new (
+          window.AudioContext || (window as WindowWithWebkitAudio).webkitAudioContext
+        )();
       }
       const ctx = audioCtxRef.current;
       if (ctx.state === "suspended") ctx.resume();

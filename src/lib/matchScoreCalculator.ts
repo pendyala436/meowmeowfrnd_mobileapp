@@ -261,7 +261,7 @@ export function calculateMatchScore(
  * Returns just the numeric score
  */
 export async function getQuickMatchScore(
-  supabase: any,
+  supabase: Pick<typeof import("@/integrations/supabase/client").supabase, "from">,
   currentUserId: string,
   otherUserId: string,
 ): Promise<number> {
@@ -291,8 +291,10 @@ export async function getQuickMatchScore(
       supabase.from("user_languages").select("language_name").eq("user_id", otherUserId),
     ]);
 
-    const currentLanguages = currentLangsResult.data?.map((l: any) => l.language_name) || [];
-    const otherLanguages = otherLangsResult.data?.map((l: any) => l.language_name) || [];
+    const currentLanguages =
+      currentLangsResult.data?.map((l: { language_name: string }) => l.language_name) || [];
+    const otherLanguages =
+      otherLangsResult.data?.map((l: { language_name: string }) => l.language_name) || [];
 
     const result = calculateMatchScore(
       currentProfile,

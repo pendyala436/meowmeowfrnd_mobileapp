@@ -29,12 +29,13 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScrollingAnnouncementsManager } from "@/components/ScrollingAnnouncementsManager";
+import { getErrorMessage } from "@/lib/errors";
 
 type TargetGroup = "all" | "indian_women" | "world_women" | "indian_men" | "world_men";
 
 interface Message {
   id: string;
-  admin_id: string;
+  admin_id: string | null;
   target_group: string;
   target_user_id: string | null;
   sender_role: string;
@@ -143,7 +144,7 @@ const AdminMessaging = () => {
           if (selectedUserRef.current) fetchChatMessages(selectedUserRef.current.user_id);
         },
       )
-      .subscribe((status) => {
+      .subscribe((status: string) => {
         // FIX #17: Error handler for channel
         if (status === "CHANNEL_ERROR") {
           console.warn("[AdminMessaging] Realtime channel error, will auto-reconnect");
@@ -197,7 +198,7 @@ const AdminMessaging = () => {
       }
 
       // Group by user
-      const userIds = [...new Set(userMessages.map((m) => m.sender_id))];
+      const userIds = [...new Set((userMessages as Message[]).map((m) => m.sender_id))];
 
       // Fetch profiles
       const { data: profiles } = await supabase
@@ -205,11 +206,18 @@ const AdminMessaging = () => {
         .select("user_id, full_name, gender, is_indian")
         .in("user_id", userIds);
 
-      const profileMap = new Map(((profiles as any[]) || []).map((p) => [p.user_id, p]));
+      const profileMap = new Map((profiles || []).map((p) => [p.user_id, p]));
 
       const threads: InboxThread[] = userIds.map((uid) => {
-        const userMsgs = userMessages.filter((m) => m.sender_id === uid);
-        const profile = profileMap.get(uid) as any;
+        const userMsgs = (userMessages as Message[]).filter((m) => m.sender_id === uid);
+        const profile = profileMap.get(uid) as
+          | {
+              full_name?: string | null;
+              photo_url?: string | null;
+              gender?: string | null;
+              is_indian?: boolean | null;
+            }
+          | undefined;
         const unread = userMsgs.filter((m) => !m.is_read).length;
         return {
           user_id: uid as string,
@@ -276,8 +284,8 @@ const AdminMessaging = () => {
       if (error) throw error;
       setInboxReply("");
       fetchThreadMessages(selectedThread.user_id);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to send");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, "Failed to send"));
     } finally {
       setIsSending(false);
     }
@@ -329,8 +337,8 @@ const AdminMessaging = () => {
       toast.success(`Message sent to ${GROUP_CONFIG.find((g) => g.key === selectedGroup)?.label}`);
       setBroadcastMessage("");
       fetchBroadcastMessages();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to send");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, "Failed to send"));
     } finally {
       setIsSending(false);
     }
@@ -351,8 +359,8 @@ const AdminMessaging = () => {
       if (error) throw error;
       setChatMessage("");
       fetchChatMessages(selectedUser.user_id);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to send");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, "Failed to send"));
     } finally {
       setIsSending(false);
     }
@@ -376,9 +384,9 @@ const AdminMessaging = () => {
 
       if (error) throw error;
       setSearchResults((data as UserProfile[]) || []);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("[AdminMessaging] search failed:", err);
-      toast.error("Search failed", { description: err?.message || "Try a different query" });
+      toast.error("Search failed", { description: getErrorMessage(err, "Try a different query") });
       setSearchResults([]);
     } finally {
       setIsSearching(false);

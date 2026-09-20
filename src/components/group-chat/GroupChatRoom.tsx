@@ -49,6 +49,7 @@ import {
 import { useKeyboardHeight } from "@/hooks/useKeyboardHeight";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { getErrorMessage } from "@/lib/errors";
 
 interface Props {
   sessionId: string;
@@ -306,6 +307,7 @@ export const GroupChatRoom: React.FC<Props> = ({
       window.clearInterval(poll);
       supabase.removeChannel(ch);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [sessionId, roomId, isHost, onClose]);
 
   const { elapsedSeconds, isBilling, billingActive, activeMenCount, skipReason } =
@@ -377,7 +379,7 @@ export const GroupChatRoom: React.FC<Props> = ({
       sender_gender: viewerGender,
       original_lang: viewerLangName,
       ...payload,
-    } as any);
+    } as never);
     if (!error) return;
     const code = String((error as { code?: string }).code || "");
     const msg = (error.message || "").toLowerCase();
@@ -467,10 +469,10 @@ export const GroupChatRoom: React.FC<Props> = ({
       recRef.current = mr;
       setRecording(true);
       recTimer.current = setInterval(() => setRecordSecs((s) => s + 1), 1000);
-    } catch (e: any) {
+    } catch (e: unknown) {
       toast({
         title: "Mic error",
-        description: e?.message ?? "Cannot access microphone",
+        description: getErrorMessage(e, "Cannot access microphone"),
         variant: "destructive",
       });
     }

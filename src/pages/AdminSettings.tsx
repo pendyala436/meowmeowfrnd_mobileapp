@@ -37,6 +37,7 @@ import {
   Loader2,
   AlertTriangle,
   HardDrive,
+  type LucideIcon,
 } from "lucide-react";
 import AdminNav from "@/components/AdminNav";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
@@ -54,7 +55,7 @@ interface AdminSetting {
   updated_at: string;
 }
 
-const CATEGORY_ICONS: Record<string, any> = {
+const CATEGORY_ICONS: Record<string, LucideIcon> = {
   general: Settings,
   security: Shield,
   chat: MessageSquare,
@@ -114,7 +115,6 @@ const AdminSettings = () => {
     } finally {
       setLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Real-time subscription for settings
@@ -139,36 +139,38 @@ const AdminSettings = () => {
   };
 
   // Mapping from admin_settings keys → app_settings keys for sync
-  const ADMIN_TO_APP_SETTINGS_MAP: Record<string, { key: string; transform?: (v: string) => any }> =
-    {
-      max_message_length: { key: "max_message_length" },
-      max_parallel_connections: { key: "max_parallel_chats" },
-      reconnect_attempts: { key: "max_reconnect_attempts" },
-      min_wallet_balance: { key: "min_withdrawal_balance" },
-      default_theme: { key: "default_theme" },
-      default_language: { key: "default_language" },
-      maintenance_mode: { key: "maintenance_mode" },
-      min_recharge_amount: { key: "min_recharge_amount" },
-      max_recharge_amount: { key: "max_recharge_amount" },
-      min_withdrawal_amount: { key: "min_withdrawal_amount" },
-      chat_rate_per_minute: { key: "chat_rate_per_minute" },
-      platform_fee_percent: { key: "platform_fee_percent" },
-      women_earning_percentage: { key: "women_earning_percentage" },
-      withdrawal_processing_days: {
-        key: "withdrawal_processing_hours",
-        transform: (v) => (parseInt(v) * 24).toString(),
-      },
-      session_timeout_minutes: { key: "session_timeout_minutes" },
-      auto_disconnect_timer: { key: "auto_disconnect_timer" },
-      chat_timeout_seconds: { key: "chat_timeout_seconds" },
-    };
+  const ADMIN_TO_APP_SETTINGS_MAP: Record<
+    string,
+    { key: string; transform?: (v: string) => string | number | boolean | null }
+  > = {
+    max_message_length: { key: "max_message_length" },
+    max_parallel_connections: { key: "max_parallel_chats" },
+    reconnect_attempts: { key: "max_reconnect_attempts" },
+    min_wallet_balance: { key: "min_withdrawal_balance" },
+    default_theme: { key: "default_theme" },
+    default_language: { key: "default_language" },
+    maintenance_mode: { key: "maintenance_mode" },
+    min_recharge_amount: { key: "min_recharge_amount" },
+    max_recharge_amount: { key: "max_recharge_amount" },
+    min_withdrawal_amount: { key: "min_withdrawal_amount" },
+    chat_rate_per_minute: { key: "chat_rate_per_minute" },
+    platform_fee_percent: { key: "platform_fee_percent" },
+    women_earning_percentage: { key: "women_earning_percentage" },
+    withdrawal_processing_days: {
+      key: "withdrawal_processing_hours",
+      transform: (v) => (parseInt(v) * 24).toString(),
+    },
+    session_timeout_minutes: { key: "session_timeout_minutes" },
+    auto_disconnect_timer: { key: "auto_disconnect_timer" },
+    chat_timeout_seconds: { key: "chat_timeout_seconds" },
+  };
 
   /**
    * Sync changed admin_settings to app_settings table so dashboards
    * (which read from app_settings via useAppSettings) stay in sync.
    */
   const syncToAppSettings = async (changedKeys: Record<string, string>) => {
-    const syncPromises: Promise<any>[] = [];
+    const syncPromises: Promise<unknown>[] = [];
 
     for (const [adminKey, value] of Object.entries(changedKeys)) {
       const mapping = ADMIN_TO_APP_SETTINGS_MAP[adminKey];
@@ -182,7 +184,7 @@ const AdminSettings = () => {
           const { error } = await supabase.from("app_settings").upsert(
             {
               setting_key: mapping.key,
-              setting_value: syncValue,
+              setting_value: syncValue as string | number | boolean,
               setting_type: typeof syncValue === "number" ? "number" : "string",
               category: "synced",
               is_public: true,
@@ -281,7 +283,7 @@ const AdminSettings = () => {
           </div>
         );
 
-      case "select":
+      case "select": {
         const options =
           setting.setting_key === "default_theme"
             ? THEME_OPTIONS
@@ -313,6 +315,7 @@ const AdminSettings = () => {
             </Select>
           </div>
         );
+      }
 
       case "number":
         return (

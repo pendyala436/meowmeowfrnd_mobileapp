@@ -316,6 +316,8 @@ interface KYCRecord {
   nominee_dob: string | null;
   nominee_address: string | null;
   declaration_place: string | null;
+  beneficiary_purpose?: string | null;
+  upi_vpa?: string | null;
 }
 
 export function WomenKYCForm() {
@@ -389,6 +391,7 @@ export function WomenKYCForm() {
 
   useEffect(() => {
     loadExistingKYC();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, []);
 
   useEffect(() => {
@@ -493,8 +496,8 @@ export function WomenKYCForm() {
         .eq("user_id", session.user.id)
         .maybeSingle();
       if (profileRow) {
-        setAppId((profileRow as any).app_id ?? null);
-        setAppSno((profileRow as any).app_sno ?? null);
+        setAppId(profileRow.app_id ?? null);
+        setAppSno(profileRow.app_sno ?? null);
       }
 
       const { data, error } = await supabase
@@ -516,39 +519,39 @@ export function WomenKYCForm() {
         // Always restore last saved field values for edit / resubmit
         form.reset({
           full_name_as_per_bank: data.full_name_as_per_bank || "",
-          fathers_name: (data as any).fathers_name || "",
-          mothers_name: (data as any).mothers_name || "",
+          fathers_name: data.fathers_name || "",
+          mothers_name: data.mothers_name || "",
           date_of_birth: data.date_of_birth || "",
           gender: data.gender || "",
-          marital_status: (data as any).marital_status || "",
-          nationality: (data as any).nationality || "Indian",
-          occupation: (data as any).occupation || "",
-          annual_income_range: (data as any).annual_income_range || "",
-          mobile_number: (data as any).mobile_number || "",
-          email_address: (data as any).email_address || "",
-          current_address: (data as any).current_address || "",
-          permanent_address: (data as any).permanent_address || "",
-          city: (data as any).city || "",
-          state: (data as any).state || "",
-          pin_code: (data as any).pin_code || "",
+          marital_status: data.marital_status || "",
+          nationality: data.nationality || "Indian",
+          occupation: data.occupation || "",
+          annual_income_range: data.annual_income_range || "",
+          mobile_number: data.mobile_number || "",
+          email_address: data.email_address || "",
+          current_address: data.current_address || "",
+          permanent_address: data.permanent_address || "",
+          city: data.city || "",
+          state: data.state || "",
+          pin_code: data.pin_code || "",
           country_of_residence: data.country_of_residence || "India",
           bank_name: data.bank_name || "",
-          bank_branch_name: (data as any).bank_branch_name || "",
+          bank_branch_name: data.bank_branch_name || "",
           account_holder_name: data.account_holder_name || "",
           account_number: data.account_number || "",
           ifsc_code: data.ifsc_code || "",
-          account_type: (data as any).account_type || "savings",
-          upi_id: (data as any).upi_id || (data as any).upi_vpa || "",
-          beneficiary_purpose: (data as any).beneficiary_purpose || "others",
-          aadhaar_number: (data as any).aadhaar_number || "",
-          id_type: (data.id_type === "aadhaar" ? "pan" : data.id_type) as any,
+          account_type: data.account_type || "savings",
+          upi_id: data.upi_vpa || "",
+          beneficiary_purpose: data.beneficiary_purpose || "others",
+          aadhaar_number: data.aadhaar_number || "",
+          id_type: (data.id_type === "aadhaar" ? "pan" : data.id_type) as KYCFormData["id_type"],
           id_number: data.id_type === "aadhaar" ? "" : data.id_number || "",
-          address_proof_type: (data as any).address_proof_type || "aadhaar",
-          nominee_name: (data as any).nominee_name || "",
-          nominee_relationship: (data as any).nominee_relationship || "",
-          nominee_dob: (data as any).nominee_dob || "",
-          nominee_address: (data as any).nominee_address || "",
-          declaration_place: (data as any).declaration_place || "",
+          address_proof_type: data.address_proof_type || "aadhaar",
+          nominee_name: data.nominee_name || "",
+          nominee_relationship: data.nominee_relationship || "",
+          nominee_dob: data.nominee_dob || "",
+          nominee_address: data.nominee_address || "",
+          declaration_place: data.declaration_place || "",
           consent_given: data.consent_given ?? false,
         });
         await loadSavedPreviews(record);
@@ -613,7 +616,7 @@ export function WomenKYCForm() {
 
       setUploadingFiles(false);
 
-      const kycData: any = {
+      const kycData: Record<string, unknown> = {
         user_id: userId,
         full_name_as_per_bank: data.full_name_as_per_bank.trim(),
         fathers_name: data.fathers_name?.trim() || null,
@@ -668,7 +671,7 @@ export function WomenKYCForm() {
       // blocked / no-op write and surfaces an actionable message.
       const { data: saved, error } = await supabase
         .from("women_kyc")
-        .upsert({ ...kycData, user_id: userId }, { onConflict: "user_id" })
+        .upsert({ ...kycData, user_id: userId } as never, { onConflict: "user_id" })
         .select("id");
       if (error) throw error;
       if (!saved || saved.length === 0) {
@@ -699,7 +702,7 @@ export function WomenKYCForm() {
           .querySelector("[data-kyc-form-top]")
           ?.scrollIntoView({ behavior: "smooth", block: "start" });
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       const message = classifyError(error, "submit your verification documents").message;
       setSaveBanner({ type: "error", message });
       toast.error("KYC save failed", {
@@ -825,15 +828,13 @@ export function WomenKYCForm() {
             <div>
               <Label className="text-muted-foreground">Beneficiary Purpose</Label>
               <p className="font-medium capitalize">
-                {(existingKYC as any).beneficiary_purpose || "others"}
+                {existingKYC.beneficiary_purpose || "others"}
               </p>
             </div>
-            {((existingKYC as any).upi_id || (existingKYC as any).upi_vpa) && (
+            {existingKYC.upi_vpa && (
               <div>
                 <Label className="text-muted-foreground">UPI VPA</Label>
-                <p className="font-medium">
-                  {(existingKYC as any).upi_id || (existingKYC as any).upi_vpa}
-                </p>
+                <p className="font-medium">{existingKYC.upi_vpa || existingKYC.upi_vpa}</p>
               </div>
             )}
           </div>

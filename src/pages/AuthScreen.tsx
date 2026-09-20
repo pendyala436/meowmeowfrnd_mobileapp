@@ -255,15 +255,16 @@ const AuthScreen = () => {
       ]);
 
       // Login with retry for transient DB timeouts (504/500)
-      let authData: any = null;
-      let lastError: any = null;
+      let authData: Awaited<ReturnType<typeof supabase.auth.signInWithPassword>>["data"] | null =
+        null;
+      let lastError: unknown = null;
       const MAX_RETRIES = 3;
 
       for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
         try {
           const { data, error } = await supabase.auth.signInWithPassword({ email, password });
           if (error) {
-            const status = (error as any)?.status;
+            const status = (error as { status?: number } | null)?.status;
             // Retry on server/timeout errors, NOT on auth errors (wrong password etc.)
             if ((status === 504 || status === 500 || status === 503) && attempt < MAX_RETRIES) {
               console.warn(`[Auth] Login attempt ${attempt} failed with ${status}, retrying...`);
@@ -294,7 +295,7 @@ const AuthScreen = () => {
           }
           authData = data;
           break;
-        } catch (networkErr: any) {
+        } catch (networkErr: unknown) {
           lastError = networkErr;
           if (attempt < MAX_RETRIES) {
             console.warn(`[Auth] Login attempt ${attempt} network error, retrying...`);
@@ -363,7 +364,7 @@ const AuthScreen = () => {
       // Bot protection: math CAPTCHA only (login photo gender verify disabled)
       sessionStorage.setItem("postCaptchaRedirect", destination);
       navigate("/captcha");
-    } catch (error: any) {
+    } catch (error: unknown) {
       const { toast } = await import("@/hooks/use-toast");
       toast({
         title: classifyError(error).title,
@@ -373,6 +374,7 @@ const AuthScreen = () => {
     } finally {
       setIsLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [email, password, navigate, validateEmail, t]);
 
   // Debounced live email-format validation (AJAX-style UX)
@@ -389,6 +391,7 @@ const AuthScreen = () => {
         if (!ok) setErrors((prev) => ({ ...prev, email: t("auth.invalidCredentials") }));
       }, 500);
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
     [t],
   );
 

@@ -30,8 +30,8 @@ const performAdminCheck = async (): Promise<{
   const user = session.user;
 
   // Retry up to 3 times with backoff
-  let roleData: any = null;
-  let roleError: any = null;
+  let roleData: { role?: string } | null = null;
+  let roleError: { message?: string } | null = null;
 
   for (let attempt = 1; attempt <= 3; attempt++) {
     const result = await supabase

@@ -11,6 +11,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { getErrorMessage } from "@/lib/errors";
 
 // --- Type Definitions ---
 
@@ -261,10 +262,10 @@ export const useUserRelationships = (userId: string | null) => {
         toast({ title: "Request Sent", description: result.message });
         await loadRelationships();
         return true;
-      } catch (err: any) {
+      } catch (err: unknown) {
         toast({
           title: "Error",
-          description: err.message || "Failed to send request",
+          description: getErrorMessage(err, "Failed to send request"),
           variant: "destructive",
         });
         return false;
@@ -292,10 +293,10 @@ export const useUserRelationships = (userId: string | null) => {
         toast({ title: "Friend Added!", description: result.message });
         await loadRelationships();
         return true;
-      } catch (err: any) {
+      } catch (err: unknown) {
         toast({
           title: "Error",
-          description: err.message || "Failed to accept",
+          description: getErrorMessage(err, "Failed to accept"),
           variant: "destructive",
         });
         return false;
@@ -323,10 +324,10 @@ export const useUserRelationships = (userId: string | null) => {
         toast({ title: "Request Rejected", description: result.message });
         await loadRelationships();
         return true;
-      } catch (err: any) {
+      } catch (err: unknown) {
         toast({
           title: "Error",
-          description: err.message || "Failed to reject",
+          description: getErrorMessage(err, "Failed to reject"),
           variant: "destructive",
         });
         return false;
@@ -354,10 +355,10 @@ export const useUserRelationships = (userId: string | null) => {
         toast({ title: "Request Canceled", description: result.message });
         await loadRelationships();
         return true;
-      } catch (err: any) {
+      } catch (err: unknown) {
         toast({
           title: "Error",
-          description: err.message || "Failed to cancel",
+          description: getErrorMessage(err, "Failed to cancel"),
           variant: "destructive",
         });
         return false;
@@ -385,10 +386,10 @@ export const useUserRelationships = (userId: string | null) => {
         toast({ title: "Unfriended", description: result.message });
         await loadRelationships();
         return true;
-      } catch (err: any) {
+      } catch (err: unknown) {
         toast({
           title: "Error",
-          description: err.message || "Failed to unfriend",
+          description: getErrorMessage(err, "Failed to unfriend"),
           variant: "destructive",
         });
         return false;
@@ -416,10 +417,10 @@ export const useUserRelationships = (userId: string | null) => {
         toast({ title: "User Blocked", description: result.message });
         await loadRelationships();
         return true;
-      } catch (err: any) {
+      } catch (err: unknown) {
         toast({
           title: "Error",
-          description: err.message || "Failed to block",
+          description: getErrorMessage(err, "Failed to block"),
           variant: "destructive",
         });
         return false;
@@ -447,10 +448,10 @@ export const useUserRelationships = (userId: string | null) => {
         toast({ title: "User Unblocked", description: result.message });
         await loadRelationships();
         return true;
-      } catch (err: any) {
+      } catch (err: unknown) {
         toast({
           title: "Error",
-          description: err.message || "Failed to unblock",
+          description: getErrorMessage(err, "Failed to unblock"),
           variant: "destructive",
         });
         return false;

@@ -34,6 +34,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/errors";
 
 interface ChatRelationshipActionsProps {
   currentUserId: string;
@@ -151,7 +152,7 @@ export const ChatRelationshipActions = ({
   ): Promise<boolean> => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.rpc(fnName as any, params);
+      const { data, error } = await supabase.rpc(fnName, params as never);
       if (error) throw error;
       const result = data as unknown as { success: boolean; error?: string; message?: string };
       if (!result?.success) {
@@ -165,10 +166,10 @@ export const ChatRelationshipActions = ({
       toast({ title: successTitle, description: result.message });
       await loadUserRelationship();
       return true;
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast({
         title: "Error",
-        description: err.message || "Action failed",
+        description: getErrorMessage(err, "Action failed"),
         variant: "destructive",
       });
       return false;
@@ -242,7 +243,7 @@ export const ChatRelationshipActions = ({
             deleted_for_sender: true,
             deleted_for_receiver: true,
             deleted_at: new Date().toISOString(),
-          } as any)
+          } as never)
           .eq("chat_id", chatId);
         if (error) throw error;
 
@@ -255,12 +256,12 @@ export const ChatRelationshipActions = ({
         const [{ error: e1 }, { error: e2 }] = await Promise.all([
           supabase
             .from("chat_messages")
-            .update({ deleted_for_sender: true } as any)
+            .update({ deleted_for_sender: true } as never)
             .eq("chat_id", chatId)
             .eq("sender_id", currentUserId),
           supabase
             .from("chat_messages")
-            .update({ deleted_for_receiver: true } as any)
+            .update({ deleted_for_receiver: true } as never)
             .eq("chat_id", chatId)
             .eq("receiver_id", currentUserId),
         ]);
@@ -273,11 +274,11 @@ export const ChatRelationshipActions = ({
         });
       }
       onCleared?.();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error clearing chat:", err);
       toast({
         title: "Error",
-        description: err.message || "Failed to clear chat",
+        description: getErrorMessage(err, "Failed to clear chat"),
         variant: "destructive",
       });
     } finally {

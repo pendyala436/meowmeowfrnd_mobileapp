@@ -123,6 +123,7 @@ export const useResizableWindow = ({ position, setPosition }: UseResizableWindow
       document.removeEventListener("touchmove", handleResizeMove);
       document.removeEventListener("touchend", handleResizeEnd);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [isResizing, position]);
 
   return { size, isResizing, handleResizeStart };

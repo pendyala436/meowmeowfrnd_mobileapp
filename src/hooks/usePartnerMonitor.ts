@@ -1,3 +1,4 @@
+import type { RealtimeChangePayload } from "@/types/supabase-helpers";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -36,7 +37,7 @@ export const usePartnerMonitor = ({
           table: "active_chat_sessions",
           filter: `id=eq.${sessionId}`,
         },
-        (payload: any) => {
+        (payload: RealtimeChangePayload) => {
           const session = payload.new;
 
           if (session.status === "ended" && session.end_reason) {

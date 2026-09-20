@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useState, useEffect, useRef, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import type { AuthChangeEvent } from "@supabase/supabase-js";
 import { useAuthReady, isSignedOut } from "@/hooks/useAuthReady";
 import { Loader2 } from "lucide-react";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -132,11 +133,13 @@ export function clearLoginGateSessionFlags() {
     sessionStorage.removeItem("genderVerifiedAt");
     sessionStorage.removeItem("captchaVerifiedAt");
     sessionStorage.removeItem("postCaptchaRedirect");
-  } catch {}
+  } catch {
+    /* sessionStorage unavailable */
+  }
 }
 
 // Listen for sign-out to invalidate cache (module-level, runs once)
-supabase.auth.onAuthStateChange((event) => {
+supabase.auth.onAuthStateChange((event: AuthChangeEvent) => {
   if (event === "SIGNED_OUT") {
     clearRoleCache();
     captchaPassCache = null;
@@ -152,7 +155,9 @@ supabase.auth.onAuthStateChange((event) => {
         const k = sessionStorage.key(i);
         if (k?.startsWith("genderVerifiedFor:")) sessionStorage.removeItem(k);
       }
-    } catch {}
+    } catch {
+      /* sessionStorage unavailable */
+    }
   }
 });
 
@@ -177,7 +182,12 @@ const ProtectedRoute = ({ children, requiredRole = "authenticated" }: Props) => 
     }
 
     const MAX_RETRIES = forceRefresh ? 1 : 3;
-    let profileRes: any, femaleRes: any, adminRes: any;
+    let profileRes: { data: { gender?: string } | null; error: unknown } = {
+      data: null,
+      error: null,
+    };
+    let femaleRes: { data: unknown; error: unknown } = { data: null, error: null };
+    let adminRes: { data: unknown; error: unknown } = { data: null, error: null };
 
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
       try {
@@ -192,7 +202,11 @@ const ProtectedRoute = ({ children, requiredRole = "authenticated" }: Props) => 
             .eq("role", "admin")
             .maybeSingle(),
         ]);
-        [profileRes, femaleRes, adminRes] = (await Promise.race([queries, timeout])) as any;
+        [profileRes, femaleRes, adminRes] = (await Promise.race([queries, timeout])) as [
+          typeof profileRes,
+          typeof femaleRes,
+          typeof adminRes,
+        ];
         break;
       } catch (retryErr) {
         if (attempt < MAX_RETRIES) {
@@ -306,6 +320,7 @@ const ProtectedRoute = ({ children, requiredRole = "authenticated" }: Props) => 
     return () => {
       mounted = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [user?.id, isReady, requiredRole, navigate]);
 
   // Periodic re-validation: detect revoked roles while tab is open
@@ -329,6 +344,7 @@ const ProtectedRoute = ({ children, requiredRole = "authenticated" }: Props) => 
     }, REVALIDATE_INTERVAL_MS);
 
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [authorized, user?.id, requiredRole, navigate]);
 
   // Back-button guard — sign-out is already handled by module-level listener & useAuthReady

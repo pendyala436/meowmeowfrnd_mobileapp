@@ -54,12 +54,28 @@ const RATES = {
   groupchat: { man: 2, woman: 1 },
 } as const;
 
+interface GroupHistoryTx {
+  id?: string;
+  session_id?: string | null;
+  duration_seconds?: number | null;
+  amount?: number | null;
+  rate_per_minute?: number | null;
+  counterparty_name?: string | null;
+  partner_name?: string | null;
+  description?: string | null;
+  created_at?: string | null;
+  counterparty_id?: string | null;
+  partner_id?: string | null;
+  partner_avatar?: string | null;
+  [key: string]: unknown;
+}
+
 const asList = <T,>(v: T[] | null | undefined): T[] => (Array.isArray(v) ? v : []);
 
-const asRecord = (v: unknown): Record<string, any> | undefined => {
+const asRecord = (v: unknown): Record<string, unknown> | undefined => {
   if (!v) return undefined;
   if (Array.isArray(v)) return asRecord(v[0]);
-  if (typeof v === "object") return v as Record<string, any>;
+  if (typeof v === "object") return v as Record<string, unknown>;
   return undefined;
 };
 
@@ -147,7 +163,7 @@ export const CallHistoryTab: React.FC<CallHistoryTabProps> = ({ currentUserId, u
 
       // 3. Group call participation — unified from wallet_transactions + archive
       //    (>3 month old records live in wallet_transactions_archive)
-      const { data: groupTxs } = await supabase.rpc("get_user_group_call_history" as any, {
+      const { data: groupTxs } = await supabase.rpc("get_user_group_call_history", {
         p_user_id: currentUserId,
         p_is_male: isMale,
         p_limit: 50,
@@ -179,8 +195,8 @@ export const CallHistoryTab: React.FC<CallHistoryTabProps> = ({ currentUserId, u
       type TxRow = { session_id: string | null; amount: number | null };
       const chats = asList(chatSessions as SessionRow[] | null);
       const videos = asList(videoSessions as SessionRow[] | null);
-      const groupRows = asList(groupTxs as any[]);
-      const groupChats = asList(gcRows as any[]);
+      const groupRows = asList(groupTxs as GroupHistoryTx[] | null | undefined);
+      const groupChats = asList(gcRows as GroupHistoryTx[] | null | undefined);
 
       const sessionIds = [
         ...chats.map((s) => s.id).filter(Boolean),
@@ -277,7 +293,7 @@ export const CallHistoryTab: React.FC<CallHistoryTabProps> = ({ currentUserId, u
         const pid = s.man_user_id === currentUserId ? s.woman_user_id : s.man_user_id;
         if (!s.id || !pid) return;
         const profile = profileMap.get(pid);
-        const isAudio = (s as any).call_type === "audio";
+        const isAudio = (s as { call_type?: string }).call_type === "audio";
         const rateSet = isAudio ? RATES.audio : RATES.video;
         const rate = asNum(s.rate_per_minute) || (isMale ? rateSet.man : rateSet.woman);
         const fromWallet = amountBySession.get(s.id);
@@ -321,7 +337,7 @@ export const CallHistoryTab: React.FC<CallHistoryTabProps> = ({ currentUserId, u
           partnerAvatar: string;
         }
       >();
-      groupRows.forEach((tx: any) => {
+      groupRows.forEach((tx) => {
         if (!tx?.id) return;
         const key = tx.session_id ? String(tx.session_id) : String(tx.id);
         const secs = asNum(tx.duration_seconds) || 60;
@@ -371,7 +387,7 @@ export const CallHistoryTab: React.FC<CallHistoryTabProps> = ({ currentUserId, u
       });
 
       // Map group chat participation — one row per session joined
-      groupChats.forEach((row: any) => {
+      groupChats.forEach((row) => {
         if (!row?.id) return;
         const sess = asRecord(row.group_chat_sessions);
         const room = asRecord(sess?.group_chat_rooms);
@@ -399,7 +415,7 @@ export const CallHistoryTab: React.FC<CallHistoryTabProps> = ({ currentUserId, u
             partnerAvatar: "",
             status: row.left_at ? "ended" : sess?.ended_at ? "ended" : "active",
             startedAt: asText(row.joined_at || sess?.started_at, ""),
-            endedAt: row.left_at || sess?.ended_at || undefined,
+            endedAt: asText(row.left_at || sess?.ended_at, "") || undefined,
             totalMinutes: 0,
             totalAmount: 0,
             ratePerMinute: rate,
@@ -415,7 +431,7 @@ export const CallHistoryTab: React.FC<CallHistoryTabProps> = ({ currentUserId, u
           partnerAvatar: "",
           status: row.left_at ? "ended" : sess?.ended_at ? "ended" : "active",
           startedAt: asText(row.joined_at || sess?.started_at, ""),
-          endedAt: row.left_at || sess?.ended_at || undefined,
+          endedAt: asText(row.left_at || sess?.ended_at, "") || undefined,
           totalMinutes: mins,
           totalAmount: billed,
           ratePerMinute: rate,

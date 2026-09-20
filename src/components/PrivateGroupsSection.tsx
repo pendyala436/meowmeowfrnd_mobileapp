@@ -99,8 +99,8 @@ export function PrivateGroupsSection({
           .eq("is_active", true),
       ]);
       if (gErr) throw gErr;
-      setGroups((gData as any[]) || []);
-      setActiveHosts((hData as any[]) || []);
+      setGroups(gData || []);
+      setActiveHosts(hData || []);
     } catch (error) {
       console.error("Error fetching groups:", error);
       toast.error("Groups unavailable", {
@@ -152,7 +152,7 @@ export function PrivateGroupsSection({
       fetchAll();
       return;
     }
-    if (!isGroupCallLanguage(userLanguage)) {
+    if (!userLanguage || !isGroupCallLanguage(userLanguage)) {
       toast.error(GROUP_CALL_LANGUAGE_UNAVAILABLE);
       return;
     }
@@ -207,11 +207,11 @@ export function PrivateGroupsSection({
         .select("host_number")
         .eq("id", currentUserId)
         .maybeSingle();
-      const hostNum = (meProf as any)?.host_number;
+      const hostNum = (meProf as { host_number?: number | null } | null)?.host_number;
       toast.success(
         `You are live in ${group.name} (${userLanguage})${hostNum ? ` — Host #${hostNum}` : ""}`,
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       preStream.getTracks().forEach((t) => t.stop());
       toast.error("Unable to go live", {
         description: classifyError(error, "start the live stream").message,
@@ -231,7 +231,7 @@ export function PrivateGroupsSection({
       if (error) throw error;
       toast.success(`Stopped live in ${group.name}`);
       fetchAll();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error("Unable to stop", {
         description: classifyError(error, "stop the stream").message,
       });

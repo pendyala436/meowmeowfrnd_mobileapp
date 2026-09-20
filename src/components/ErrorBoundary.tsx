@@ -44,7 +44,7 @@ export class ErrorBoundary extends Component<Props, State> {
     };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
+  override componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     console.error("[ErrorBoundary]", this.state.errorId, error?.message, error);
     console.error("[ErrorBoundary] Component stack:", errorInfo.componentStack);
     this.props.onError?.(error, errorInfo);
@@ -75,7 +75,7 @@ export class ErrorBoundary extends Component<Props, State> {
     window.location.href = "/";
   };
 
-  render(): ReactNode {
+  override render(): ReactNode {
     if (!this.state.hasError) {
       return this.props.children;
     }

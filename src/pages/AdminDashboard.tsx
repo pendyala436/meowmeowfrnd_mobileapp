@@ -100,13 +100,20 @@ const AdminDashboard = () => {
 
       if (result?.success) {
         const created =
-          (result.results?.females?.filter((f: any) => f.status === "created").length || 0) +
-          (result.results?.males?.filter((m: any) => m.status === "created").length || 0) +
-          (result.results?.admins?.filter((a: any) => a.status === "created").length || 0);
+          (result.results?.females?.filter((f: { status?: string }) => f.status === "created")
+            .length || 0) +
+          (result.results?.males?.filter((m: { status?: string }) => m.status === "created")
+            .length || 0) +
+          (result.results?.admins?.filter((a: { status?: string }) => a.status === "created")
+            .length || 0);
         const existing =
-          (result.results?.females?.filter((f: any) => f.status === "already exists").length || 0) +
-          (result.results?.males?.filter((m: any) => m.status === "already exists").length || 0) +
-          (result.results?.admins?.filter((a: any) => a.status === "already exists").length || 0);
+          (result.results?.females?.filter(
+            (f: { status?: string }) => f.status === "already exists",
+          ).length || 0) +
+          (result.results?.males?.filter((m: { status?: string }) => m.status === "already exists")
+            .length || 0) +
+          (result.results?.admins?.filter((a: { status?: string }) => a.status === "already exists")
+            .length || 0);
 
         toast.success(`Super users seeded! Created: ${created}, Already existed: ${existing}`);
         loadStats();
@@ -306,13 +313,16 @@ const AdminDashboard = () => {
           .lte("created_at", `${today}T23:59:59`),
       ]);
 
-      const getCount = (res: PromiseSettledResult<any>) =>
+      const getCount = (res: PromiseSettledResult<{ count: number | null; error: unknown }>) =>
         res.status === "fulfilled" && !res.value.error ? res.value.count || 0 : 0;
 
       let todayEarnings = 0;
       if (earningsRes.status === "fulfilled" && !earningsRes.value.error) {
         todayEarnings =
-          earningsRes.value.data?.reduce((acc: number, t: any) => acc + Number(t.amount), 0) || 0;
+          earningsRes.value.data?.reduce(
+            (acc: number, t: { amount?: number | string }) => acc + Number(t.amount),
+            0,
+          ) || 0;
       }
 
       setStats({

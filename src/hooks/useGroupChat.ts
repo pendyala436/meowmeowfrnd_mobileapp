@@ -194,15 +194,21 @@ export function useGroupChatRoom(sessionId: string | null, hostId?: string | nul
         .from("profiles")
         .select("user_id, full_name, photo_url, gender")
         .in("user_id", ids);
-      const byId = new Map((profs ?? []).map((p: any) => [p.user_id, p]));
+      const byId = new Map((profs ?? []).map((p) => [p.user_id, p]));
       return rows.map((r) => {
         const p = byId.get(r.user_id) || {};
         return {
           user_id: r.user_id,
           joined_at: r.joined_at,
-          full_name: (p as any).full_name ?? null,
-          photo_url: (p as any).photo_url ?? null,
-          gender: (p as any).gender ?? null,
+          full_name:
+            (p as { full_name?: string | null; photo_url?: string | null; gender?: string | null })
+              .full_name ?? null,
+          photo_url:
+            (p as { full_name?: string | null; photo_url?: string | null; gender?: string | null })
+              .photo_url ?? null,
+          gender:
+            (p as { full_name?: string | null; photo_url?: string | null; gender?: string | null })
+              .gender ?? null,
           is_host: hostId ? r.user_id === hostId : false,
           total_billed: Number(r.total_billed) || 0,
           last_billed_minute: Number(r.last_billed_minute) || 0,
@@ -624,7 +630,7 @@ export async function gcAnnounce(
       original_lang: "English",
       transliteration: body,
       english_translation: body,
-    } as any);
+    } as never);
     if (error) console.warn("[group-chat] announce skipped:", error.message);
   } catch {
     /* non-fatal */

@@ -95,9 +95,11 @@ export const useWomenChatMode = (
                 setCurrentMode(fresh.current_mode as WomenChatMode);
                 setFreeMinutesUsed(Number(fresh.free_minutes_used_today) || 0);
                 setExclusiveFreeLockedUntil(fresh.exclusive_free_locked_until);
-                const ffUsed = Number((fresh as any).force_free_minutes_used_today) || 0;
-                const ffLimit = Number((fresh as any).force_free_minutes_limit) || 15;
-                const ffActive = (fresh as any).is_force_free_active ?? false;
+                const ffUsed =
+                  Number((fresh as Record<string, unknown>).force_free_minutes_used_today) || 0;
+                const ffLimit =
+                  Number((fresh as Record<string, unknown>).force_free_minutes_limit) || 15;
+                const ffActive = (fresh as Record<string, unknown>).is_force_free_active ?? false;
                 setForceFreeMinutesUsed(ffUsed);
                 setForceFreeMinutesLimit(ffLimit);
                 setIsForceFreeActive(ffActive && ffUsed < ffLimit);
@@ -127,9 +129,11 @@ export const useWomenChatMode = (
             setFreeMinutesUsed(Number(data.free_minutes_used_today) || 0);
             setExclusiveFreeLockedUntil(data.exclusive_free_locked_until);
             // Load force free state
-            const ffUsed = Number((data as any).force_free_minutes_used_today) || 0;
-            const ffLimit = Number((data as any).force_free_minutes_limit) || 15;
-            const ffActive = (data as any).is_force_free_active ?? false;
+            const ffUsed =
+              Number((data as Record<string, unknown>).force_free_minutes_used_today) || 0;
+            const ffLimit =
+              Number((data as Record<string, unknown>).force_free_minutes_limit) || 15;
+            const ffActive = (data as Record<string, unknown>).is_force_free_active ?? false;
             setForceFreeMinutesUsed(ffUsed);
             setForceFreeMinutesLimit(ffLimit);
             // Auto-deactivate if limit reached
@@ -158,6 +162,7 @@ export const useWomenChatMode = (
     };
 
     loadMode();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [userId]);
 
   // Determine what modes can be switched to
@@ -189,7 +194,7 @@ export const useWomenChatMode = (
       }
 
       try {
-        const updateData: Record<string, any> = {
+        const updateData: Record<string, unknown> = {
           current_mode: newMode,
           mode_switched_at: new Date().toISOString(),
         };
@@ -255,6 +260,7 @@ export const useWomenChatMode = (
     if (isIndian && currentMode === "free" && newUsed >= freeMinutesLimit) {
       await switchMode(defaultMode);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [userId, currentMode, freeMinutesUsed, freeMinutesLimit, switchMode]);
 
   // Force free mode toggle (non-Indian only) - 15 min/day where men aren't charged
@@ -271,7 +277,7 @@ export const useWomenChatMode = (
     try {
       const { error } = await supabase
         .from("women_chat_modes")
-        .update({ is_force_free_active: newActive } as any)
+        .update({ is_force_free_active: newActive } as never)
         .eq("user_id", userId);
 
       if (error) {
@@ -296,7 +302,7 @@ export const useWomenChatMode = (
 
     await supabase
       .from("women_chat_modes")
-      .update({ force_free_minutes_used_today: newUsed } as any)
+      .update({ force_free_minutes_used_today: newUsed } as never)
       .eq("user_id", userId);
 
     // Auto-deactivate when limit reached
@@ -304,7 +310,7 @@ export const useWomenChatMode = (
       setIsForceFreeActive(false);
       await supabase
         .from("women_chat_modes")
-        .update({ is_force_free_active: false } as any)
+        .update({ is_force_free_active: false } as never)
         .eq("user_id", userId);
     }
   }, [userId, isForceFreeActive, forceFreeMinutesUsed, forceFreeMinutesLimit]);

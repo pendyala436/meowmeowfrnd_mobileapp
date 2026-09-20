@@ -41,6 +41,7 @@ export const ForwardDialog = ({
   useEffect(() => {
     if (!open || !currentUserId) return;
     loadRecentChats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [open, currentUserId]);
 
   const loadRecentChats = async () => {
@@ -98,7 +99,7 @@ export const ForwardDialog = ({
         message: messageText,
         is_forwarded: true,
         forwarded_from_id: messageId,
-      } as any);
+      } as never);
 
       toast({ title: "Message forwarded", description: `Sent to ${chat.partnerName}` });
       onClose();

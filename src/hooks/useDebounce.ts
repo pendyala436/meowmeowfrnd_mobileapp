@@ -98,16 +98,18 @@ export function useThrottledCallback<T extends (...args: unknown[]) => unknown>(
 export function useDeepMemo<T>(factory: () => T, deps: unknown[]): T {
   const ref = useRef<{ deps: unknown[]; value: T } | null>(null);
 
+  const prev = ref.current;
   const depsChanged =
-    !ref.current ||
-    deps.length !== ref.current.deps.length ||
-    deps.some((dep, i) => !Object.is(dep, ref.current!.deps[i]));
+    !prev ||
+    deps.length !== prev.deps.length ||
+    deps.some((dep, i) => !Object.is(dep, prev.deps[i]));
 
   if (depsChanged) {
     ref.current = { deps, value: factory() };
   }
 
-  return ref.current.value;
+  // depsChanged always assigns ref.current; assert for strict nullability.
+  return ref.current!.value;
 }
 
 /**
@@ -164,6 +166,7 @@ export function useIntersectionObserver(
     return () => {
       observer.disconnect();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [element, options?.root, options?.rootMargin, options?.threshold]);
 
   return [setRef, isIntersecting];
@@ -180,12 +183,13 @@ export function useIdleCallback(callback: () => void, options?: { timeout?: numb
   }, [callback]);
 
   useEffect(() => {
-    if ("requestIdleCallback" in window) {
-      const handle = requestIdleCallback(() => callbackRef.current(), options);
-      return () => cancelIdleCallback(handle);
+    if (typeof window.requestIdleCallback === "function") {
+      const handle = window.requestIdleCallback(() => callbackRef.current(), options);
+      return () => window.cancelIdleCallback(handle);
     } else {
       const handle = setTimeout(() => callbackRef.current(), 1);
       return () => clearTimeout(handle);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [options?.timeout]);
 }

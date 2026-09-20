@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { TestRouter } from "@/test/TestRouter";
 
 const { navigateMock, getSessionMock } = vi.hoisted(() => ({
   navigateMock: vi.fn(),
@@ -78,9 +78,9 @@ describe("CaptchaScreen", () => {
 
   it("redirects home when postCaptchaRedirect is missing", async () => {
     render(
-      <MemoryRouter>
+      <TestRouter>
         <CaptchaScreen />
-      </MemoryRouter>,
+      </TestRouter>,
     );
 
     await waitFor(() => {
@@ -92,9 +92,9 @@ describe("CaptchaScreen", () => {
     sessionStorage.setItem("postCaptchaRedirect", "/dashboard");
 
     render(
-      <MemoryRouter>
+      <TestRouter>
         <CaptchaScreen />
-      </MemoryRouter>,
+      </TestRouter>,
     );
 
     expect(screen.getByText(/Quick Security Check/i)).toBeInTheDocument();
@@ -105,9 +105,9 @@ describe("CaptchaScreen", () => {
     sessionStorage.setItem("postCaptchaRedirect", "/dashboard");
 
     render(
-      <MemoryRouter>
+      <TestRouter>
         <CaptchaScreen />
-      </MemoryRouter>,
+      </TestRouter>,
     );
 
     fireEvent.click(screen.getByRole("button", { name: /verify & continue/i }));
@@ -118,9 +118,9 @@ describe("CaptchaScreen", () => {
     sessionStorage.setItem("postCaptchaRedirect", "/dashboard");
 
     render(
-      <MemoryRouter>
+      <TestRouter>
         <CaptchaScreen />
-      </MemoryRouter>,
+      </TestRouter>,
     );
 
     fireEvent.change(screen.getByLabelText(/your answer/i), { target: { value: "1.5" } });
@@ -133,9 +133,9 @@ describe("CaptchaScreen", () => {
     sessionStorage.setItem("postCaptchaRedirect", "/dashboard");
 
     render(
-      <MemoryRouter>
+      <TestRouter>
         <CaptchaScreen />
-      </MemoryRouter>,
+      </TestRouter>,
     );
 
     fireEvent.click(screen.getByRole("button", { name: /verify & continue/i }));
@@ -150,9 +150,9 @@ describe("CaptchaScreen", () => {
     getSessionMock.mockResolvedValue({ data: { session: { user: { id: "user-99" } } } });
 
     render(
-      <MemoryRouter>
+      <TestRouter>
         <CaptchaScreen />
-      </MemoryRouter>,
+      </TestRouter>,
     );
 
     const answer = solveFromDom();
@@ -171,9 +171,9 @@ describe("CaptchaScreen", () => {
     getSessionMock.mockResolvedValue({ data: { session: null } });
 
     render(
-      <MemoryRouter>
+      <TestRouter>
         <CaptchaScreen />
-      </MemoryRouter>,
+      </TestRouter>,
     );
 
     const answer = solveFromDom();
@@ -191,9 +191,9 @@ describe("CaptchaScreen", () => {
     getSessionMock.mockRejectedValue(new Error("auth down"));
 
     render(
-      <MemoryRouter>
+      <TestRouter>
         <CaptchaScreen />
-      </MemoryRouter>,
+      </TestRouter>,
     );
 
     const answer = solveFromDom();
@@ -210,9 +210,9 @@ describe("CaptchaScreen", () => {
     getSessionMock.mockResolvedValue({ data: { session: { user: { id: "u1" } } } });
 
     render(
-      <MemoryRouter>
+      <TestRouter>
         <CaptchaScreen />
-      </MemoryRouter>,
+      </TestRouter>,
     );
 
     const answer = solveFromDom();
@@ -229,9 +229,9 @@ describe("CaptchaScreen", () => {
     sessionStorage.setItem("postCaptchaRedirect", "/dashboard");
 
     render(
-      <MemoryRouter>
+      <TestRouter>
         <CaptchaScreen />
-      </MemoryRouter>,
+      </TestRouter>,
     );
 
     fireEvent.change(screen.getByLabelText(/your answer/i), {
@@ -246,9 +246,9 @@ describe("CaptchaScreen", () => {
     sessionStorage.setItem("postCaptchaRedirect", "/dashboard");
 
     render(
-      <MemoryRouter>
+      <TestRouter>
         <CaptchaScreen />
-      </MemoryRouter>,
+      </TestRouter>,
     );
 
     for (let i = 0; i < 5; i++) {
@@ -272,9 +272,9 @@ describe("CaptchaScreen", () => {
     getSessionMock.mockResolvedValue({ data: { session: { user: { id: "u2" } } } });
 
     render(
-      <MemoryRouter>
+      <TestRouter>
         <CaptchaScreen />
-      </MemoryRouter>,
+      </TestRouter>,
     );
 
     const answer = solveFromDom();
@@ -291,9 +291,9 @@ describe("CaptchaScreen", () => {
     sessionStorage.setItem("postCaptchaRedirect", "/dashboard");
 
     render(
-      <MemoryRouter>
+      <TestRouter>
         <CaptchaScreen />
-      </MemoryRouter>,
+      </TestRouter>,
     );
 
     const before = screen.getByText(/\d+ [+\-] \d+ = \?/).textContent;
@@ -313,9 +313,9 @@ describe("CaptchaScreen", () => {
     );
 
     render(
-      <MemoryRouter>
+      <TestRouter>
         <CaptchaScreen />
-      </MemoryRouter>,
+      </TestRouter>,
     );
 
     const answer = solveFromDom();
@@ -338,9 +338,9 @@ describe("CaptchaScreen", () => {
     getSessionMock.mockImplementation(() => new Promise(() => {}));
 
     render(
-      <MemoryRouter>
+      <TestRouter>
         <CaptchaScreen />
-      </MemoryRouter>,
+      </TestRouter>,
     );
 
     const answer = solveFromDom();

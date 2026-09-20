@@ -32,7 +32,7 @@ interface PreloadedUserContext {
  * since this guards security-sensitive routing (admin access, approval status).
  */
 export async function preloadUserContext(userId: string): Promise<PreloadedUserContext> {
-  const settled = await Promise.allSettled([
+  const [adminSettled, tutorialSettled, profileSettled, femaleSettled] = await Promise.allSettled([
     supabase
       .from("user_roles")
       .select("role")
@@ -52,18 +52,17 @@ export async function preloadUserContext(userId: string): Promise<PreloadedUserC
       .maybeSingle(),
   ]);
 
-  const [adminResult, tutorialResult, profileResult, femaleResult] = settled.map((r) =>
-    r.status === "fulfilled"
-      ? r.value
-      : { data: null, error: r.status === "rejected" ? r.reason : null },
-  );
+  const adminData = adminSettled.status === "fulfilled" ? adminSettled.value.data : null;
+  const tutorialData = tutorialSettled.status === "fulfilled" ? tutorialSettled.value.data : null;
+  const profileData = profileSettled.status === "fulfilled" ? profileSettled.value.data : null;
+  const femaleData = femaleSettled.status === "fulfilled" ? femaleSettled.value.data : null;
 
   return {
-    isAdmin: !!adminResult.data,
-    tutorialCompleted: !!tutorialResult.data?.completed,
-    isFemale: profileResult.data?.gender?.toLowerCase() === "female" || !!femaleResult.data,
-    profile: profileResult.data ?? null,
-    femaleProfile: femaleResult.data ?? null,
+    isAdmin: !!adminData,
+    tutorialCompleted: !!tutorialData?.completed,
+    isFemale: profileData?.gender?.toLowerCase() === "female" || !!femaleData,
+    profile: profileData ?? null,
+    femaleProfile: femaleData ?? null,
   };
 }
 

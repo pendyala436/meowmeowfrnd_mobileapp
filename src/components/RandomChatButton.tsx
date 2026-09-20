@@ -162,7 +162,7 @@ export const RandomChatButton = ({
           const { data: walletData } = await supabase.rpc("get_men_with_balance", {
             p_user_ids: menProfiles.map((m) => m.user_id),
           });
-          const menWithBalance = walletData?.map((w: any) => w.user_id) || [];
+          const menWithBalance = walletData?.map((w) => w.user_id) || [];
           qualifiedMen = menProfiles.filter((m) => menWithBalance.includes(m.user_id));
 
           if (qualifiedMen.length === 0) {
@@ -173,7 +173,7 @@ export const RandomChatButton = ({
           const { data: walletData } = await supabase.rpc("get_men_with_balance", {
             p_user_ids: menProfiles.map((m) => m.user_id),
           });
-          const menWithBalance = new Set(walletData?.map((w: any) => w.user_id) || []);
+          const menWithBalance = new Set(walletData?.map((w) => w.user_id) || []);
           const regularMen = menProfiles.filter((m) => !menWithBalance.has(m.user_id));
           qualifiedMen = regularMen.length > 0 ? regularMen : menProfiles;
 
@@ -225,7 +225,7 @@ export const RandomChatButton = ({
           isSameLanguage,
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error finding partner:", error);
       setSearchStatus("Something went wrong. Please try again.");
       toast({
@@ -328,7 +328,7 @@ export const RandomChatButton = ({
       setSearchDialogOpen(false);
       // Chat started silently
       navigate(userGender === "female" ? "/women-dashboard" : "/dashboard");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error starting chat:", error);
       toast({
         title: "Error",

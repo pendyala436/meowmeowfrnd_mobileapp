@@ -280,7 +280,7 @@ const AdminModerationScreen = () => {
     setReports(data || []);
 
     const userIds = new Set<string>();
-    data?.forEach((r) => {
+    data?.forEach((r: Report) => {
       userIds.add(r.reporter_id);
       userIds.add(r.reported_user_id);
     });
@@ -306,7 +306,7 @@ const AdminModerationScreen = () => {
     setFlaggedMessages(data || []);
 
     const userIds = new Set<string>();
-    data?.forEach((m) => {
+    data?.forEach((m: FlaggedMessage) => {
       userIds.add(m.sender_id);
       userIds.add(m.receiver_id);
     });
@@ -332,7 +332,7 @@ const AdminModerationScreen = () => {
 
     setBlockedUsers(data || []);
 
-    const userIds = data?.map((b) => b.blocked_user_id) || [];
+    const userIds = data?.map((b: UserBlock) => b.blocked_user_id) || [];
     await loadProfiles(userIds);
   };
 
@@ -355,7 +355,7 @@ const AdminModerationScreen = () => {
 
     setProfiles((prev) => {
       const next = new Map(prev);
-      data?.forEach((p) => next.set(p.user_id, p));
+      data?.forEach((p: Profile) => next.set(p.user_id, p));
       return next;
     });
   };
@@ -429,10 +429,14 @@ const AdminModerationScreen = () => {
       data: { session },
     } = await supabase.auth.getSession();
     const user = session?.user;
+    if (!user?.id) {
+      toast.error("Not authenticated");
+      return;
+    }
 
     const { error } = await supabase.from("user_blocks").insert({
       blocked_user_id: targetUserId,
-      blocked_by: user?.id,
+      blocked_by: user.id,
       reason: actionReason || null,
       block_type: blockType,
       expires_at:
@@ -492,12 +496,16 @@ const AdminModerationScreen = () => {
       data: { session },
     } = await supabase.auth.getSession();
     const user = session?.user;
+    if (!user?.id) {
+      toast.error("Not authenticated");
+      return;
+    }
 
     const { error } = await supabase.from("user_warnings").insert({
       user_id: targetUserId,
       warning_type: "behavior",
       message: warningMessage.trim(),
-      issued_by: user?.id,
+      issued_by: user.id,
     });
 
     if (error) {

@@ -124,7 +124,7 @@ const AdminLegalDocuments = () => {
       .on("postgres_changes", { event: "*", schema: "public", table: "legal_documents" }, () => {
         fetchDocuments();
       })
-      .subscribe((status) => {
+      .subscribe((status: string) => {
         // FIX #16: Error handler for reconnection failures
         if (status === "CHANNEL_ERROR") {
           console.warn("[LegalDocs] Realtime channel error, will auto-reconnect");
@@ -145,7 +145,7 @@ const AdminLegalDocuments = () => {
 
       if (error) throw error;
       setDocuments(data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error fetching documents:", error);
       toast.error("Error", { description: "Failed to load legal documents" });
     } finally {
@@ -171,11 +171,11 @@ const AdminLegalDocuments = () => {
       if (error) throw error;
 
       toast.success("Documents Seeded", {
-        description: `Successfully seeded ${data?.results?.filter((r: any) => r.status === "created").length || 0} documents`,
+        description: `Successfully seeded ${data?.results?.filter((r: { status?: string }) => r.status === "created").length || 0} documents`,
       });
 
       await fetchDocuments();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error seeding documents:", error);
       toast.error("Seeding Failed", {
         description: classifyError(error, "seed default documents").message,
@@ -325,7 +325,7 @@ const AdminLegalDocuments = () => {
       setUploadProgress(0);
 
       await fetchDocuments();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error uploading document:", error);
       toast.error("Upload failed", {
         description: classifyError(error, "upload the document").message,
@@ -354,7 +354,7 @@ const AdminLegalDocuments = () => {
       URL.revokeObjectURL(url);
 
       toast.success("Download started", { description: `Downloading ${document.name}` });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error downloading document:", error);
       toast.error("Download failed", {
         description: classifyError(error, "download the document").message,
@@ -376,7 +376,7 @@ const AdminLegalDocuments = () => {
       });
 
       await fetchDocuments();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error toggling document status:", error);
       toast.error("Error", { description: "Failed to update document status" });
     }
@@ -402,7 +402,7 @@ const AdminLegalDocuments = () => {
       toast.success("Document deleted", { description: `${document.name} has been deleted` });
 
       await fetchDocuments();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error deleting document:", error);
       toast.error("Delete failed", {
         description: classifyError(error, "delete the document").message,

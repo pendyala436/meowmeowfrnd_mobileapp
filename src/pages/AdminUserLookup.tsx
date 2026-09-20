@@ -181,11 +181,15 @@ const AdminUserLookup = () => {
         supabase.from("profiles").select("*").order("created_at", { ascending: false }),
       ]);
 
-      const male = (maleRes.status === "fulfilled" ? maleRes.value.data || [] : []) as any[];
-      const female = (femaleRes.status === "fulfilled" ? femaleRes.value.data || [] : []) as any[];
-      const legacy = (
-        profilesRes.status === "fulfilled" ? profilesRes.value.data || [] : []
-      ) as any[];
+      const male = (maleRes.status === "fulfilled"
+        ? maleRes.value.data || []
+        : []) as unknown as UserProfile[];
+      const female = (femaleRes.status === "fulfilled"
+        ? femaleRes.value.data || []
+        : []) as unknown as UserProfile[];
+      const legacy = (profilesRes.status === "fulfilled"
+        ? profilesRes.value.data || []
+        : []) as unknown as UserProfile[];
 
       const byUserId = new Map<string, UserProfile>();
       legacy.forEach((p) => byUserId.set(p.user_id, p as UserProfile));
@@ -203,7 +207,7 @@ const AdminUserLookup = () => {
       );
       setAllUsers(merged);
       setFilteredUsers(merged);
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error("Failed to load users");
     } finally {
       setLoading(false);
@@ -241,7 +245,7 @@ const AdminUserLookup = () => {
           .eq("user_id", user.user_id)
           .maybeSingle(),
         // Unified history: live wallet_transactions + wallet_transactions_archive (>3 months old)
-        supabase.rpc("admin_get_user_transactions" as any, {
+        supabase.rpc("admin_get_user_transactions", {
           p_user_id: user.user_id,
           p_limit: 50,
           p_include_archive: true,
@@ -260,7 +264,9 @@ const AdminUserLookup = () => {
       const walletData =
         walletRes.status === "fulfilled" ? (walletRes.value.data as WalletData | null) : null;
       const txData =
-        txRes.status === "fulfilled" ? ((txRes.value.data || []) as LedgerTransaction[]) : [];
+        txRes.status === "fulfilled"
+          ? ((txRes.value.data || []) as unknown as LedgerTransaction[])
+          : [];
       const chatData =
         chatRes.status === "fulfilled" ? ((chatRes.value.data || []) as ChatSession[]) : [];
       const kyc = kycRes.status === "fulfilled" ? (kycRes.value.data as KYCRecord | null) : null;
@@ -280,7 +286,15 @@ const AdminUserLookup = () => {
           "selfie_url",
         ];
         const entries = await Promise.all(
-          fields.map(async (f) => [f as string, await getSignedKycUrl((kyc as any)[f])] as const),
+          fields.map(
+            async (f) =>
+              [
+                f as string,
+                await getSignedKycUrl(
+                  (kyc as unknown as Record<string, unknown>)[f] as string | null,
+                ),
+              ] as const,
+          ),
         );
         const urls: Record<string, string> = {};
         entries.forEach(([k, v]) => {

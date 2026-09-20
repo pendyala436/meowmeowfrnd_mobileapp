@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { CheckCircle2, XCircle, Loader2, FlaskConical } from "lucide-react";
+import { getErrorMessage } from "@/lib/errors";
 
 type Check = { check: string; expected: number | string; actual: number | string; pass: boolean };
 
@@ -46,9 +47,9 @@ export function GroupCallBillingTester() {
       setReport(r);
       if (r.all_passed) toast.success("All billing checks passed");
       else toast.error(r.error ?? "Some checks failed — see report");
-    } catch (e: any) {
-      toast.error(e.message ?? "Simulation failed");
-      setReport({ success: false, error: e.message });
+    } catch (e: unknown) {
+      toast.error(getErrorMessage(e, "Simulation failed"));
+      setReport({ success: false, error: getErrorMessage(e) });
     } finally {
       setRunning(false);
     }

@@ -22,6 +22,7 @@ import {
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { RefreshCw, Search, UserCheck, UserX } from "lucide-react";
+import { getErrorMessage } from "@/lib/errors";
 
 type GenderFilter = "all" | "male" | "female";
 
@@ -101,6 +102,8 @@ export default function AdminUserAccessPanel() {
   const loadHistory = useCallback(async () => {
     setLoadingHistory(true);
     try {
+      // Table may lag generated Database types
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- user_access_history not in generated types
       const { data, error } = await (supabase as any)
         .from("user_access_history")
         .select("*")
@@ -175,6 +178,7 @@ export default function AdminUserAccessPanel() {
           .eq("user_id", user.user_id);
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- user_access_history not in generated types
       await (supabase as any).from("user_access_history").insert({
         user_id: user.user_id,
         profile_id: user.id,
@@ -194,9 +198,9 @@ export default function AdminUserAccessPanel() {
         prev.map((u) => (u.id === user.id ? { ...u, account_status: nextStatus } : u)),
       );
       void loadHistory();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("[AdminUserAccess] toggle:", err);
-      toast.error(err?.message || "Failed to update user access");
+      toast.error(getErrorMessage(err, "Failed to update user access"));
     } finally {
       setTogglingId(null);
     }

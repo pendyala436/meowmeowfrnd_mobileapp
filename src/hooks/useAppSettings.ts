@@ -146,11 +146,16 @@ function setState(partial: Partial<StoreState>) {
   emit();
 }
 
-function parseRow(row: any): [keyof AppSettings, any] | null {
+function parseRow(row: {
+  setting_key?: string;
+  setting_value?: unknown;
+  setting_type?: string;
+}): [keyof AppSettings, AppSettings[keyof AppSettings]] | null {
+  if (!row.setting_key) return null;
   const propertyName = SETTING_KEY_MAP[row.setting_key];
   if (!propertyName) return null;
 
-  let value: any;
+  let value: unknown;
   try {
     if (row.setting_type === "json") {
       if (typeof row.setting_value === "string") {
@@ -172,7 +177,7 @@ function parseRow(row: any): [keyof AppSettings, any] | null {
     value = row.setting_value;
   }
 
-  return [propertyName, value];
+  return [propertyName, value as AppSettings[keyof AppSettings]];
 }
 
 async function fetchSettings() {
@@ -191,9 +196,9 @@ async function fetchSettings() {
 
     if (data && data.length > 0) {
       const parsed: Partial<AppSettings> = {};
-      data.forEach((row: any) => {
+      data.forEach((row) => {
         const result = parseRow(row);
-        if (result) (parsed as any)[result[0]] = result[1];
+        if (result) (parsed as Record<string, unknown>)[result[0] as string] = result[1];
       });
       const merged: AppSettings = { ...DEFAULT_SETTINGS, ...parsed };
       // Fall back to legacy global flag when gender-specific keys are not yet set.

@@ -87,6 +87,7 @@ export const useAutoReconnect = (
         return null;
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
     [currentUserId, userLanguage],
   );
 
@@ -127,7 +128,7 @@ export const useAutoReconnect = (
         .select("user_id, current_chat_count, max_concurrent_chats, is_available")
         .in("user_id", filteredIds);
 
-      const availabilityMap = new Map(((availability as any[]) || []).map((a) => [a.user_id, a]));
+      const availabilityMap = new Map((availability || []).map((a) => [a.user_id, a]));
 
       // Get languages
       const { data: languages } = await supabase

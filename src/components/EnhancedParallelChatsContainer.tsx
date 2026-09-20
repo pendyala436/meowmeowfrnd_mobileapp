@@ -153,22 +153,22 @@ const EnhancedParallelChatsContainer = ({
         const sessionStartTimes = new Map(
           sessions.map((s) => [
             s.chat_id,
-            (s as any).started_at || (s as any).updated_at || s.created_at,
+            (s as { started_at?: string; updated_at?: string }).started_at ||
+              (s as { started_at?: string; updated_at?: string }).updated_at ||
+              s.created_at,
           ]),
         );
         const chatsWithUserMessages = new Set(
           messages
-            .filter((m: any) => {
+            .filter((m) => {
               const sessionStart = sessionStartTimes.get(m.chat_id);
               if (!sessionStart) return true;
               return new Date(m.created_at) >= new Date(sessionStart as string);
             })
-            .map((m: any) => m.chat_id),
+            .map((m) => m.chat_id),
         );
-        const profileMap = new Map((profiles as any[]).map((p) => [p.user_id, p]));
-        const statusMap = new Map(
-          (statuses as any[]).map((s) => [s.user_id, s.is_online as boolean]),
-        );
+        const profileMap = new Map(profiles.map((p) => [p.user_id, p]));
+        const statusMap = new Map(statuses.map((s) => [s.user_id, s.is_online as boolean]));
 
         const partnerToSession = new Map<string, (typeof sessions)[0]>();
 
@@ -235,6 +235,7 @@ const EnhancedParallelChatsContainer = ({
         isLoadingRef.current = false;
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
     [currentUserId, userGender],
   ); // NO activeChats dependency - prevents infinite loops
 
@@ -343,6 +344,7 @@ const EnhancedParallelChatsContainer = ({
         });
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
     [userGender, currentUserId, loadActiveChats],
   );
 

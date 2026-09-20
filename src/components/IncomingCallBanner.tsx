@@ -59,7 +59,9 @@ export const IncomingCallBanner = ({
         osc3.start(t + offset);
         osc3.stop(t + offset + 0.3);
       });
-    } catch {}
+    } catch {
+      /* ignore ringtone errors */
+    }
   };
 
   useEffect(() => {

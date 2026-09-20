@@ -24,7 +24,7 @@ interface AuthState {
 
 // ── Global singleton state ──────────────────────────────────────────
 let globalState: AuthState = { user: null, isReady: false, session: null };
-let listeners = new Set<(s: AuthState) => void>();
+const listeners = new Set<(s: AuthState) => void>();
 let initialized = false;
 
 function broadcast(next: AuthState) {
@@ -53,8 +53,10 @@ function boot() {
               error.message,
             );
             try {
-              await supabase.auth.signOut({ scope: "local" } as any);
-            } catch {}
+              await supabase.auth.signOut({ scope: "local" } as never);
+            } catch {
+              /* ignore local signOut errors */
+            }
             broadcast({ user: null, session: null, isReady: true });
             return;
           }
@@ -66,7 +68,9 @@ function boot() {
       // subscriptions run as 'authenticated' and RLS delivers live events.
       try {
         supabase.realtime.setAuth(session?.access_token ?? null);
-      } catch {}
+      } catch {
+        /* ignore realtime auth set */
+      }
       broadcast({ user: session?.user ?? null, session, isReady: true });
     })
     .catch(() => {
@@ -96,7 +100,9 @@ function boot() {
     // updating after a manual refresh).
     try {
       supabase.realtime.setAuth(session?.access_token ?? null);
-    } catch {}
+    } catch {
+      /* ignore realtime auth set */
+    }
     broadcast({ user: session?.user ?? null, session, isReady: true });
   });
 }

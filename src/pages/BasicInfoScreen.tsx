@@ -79,8 +79,8 @@ const BasicInfoScreen = () => {
     ): Promise<{ emailExists: boolean; phoneExists: boolean }> => {
       try {
         const { data, error } = await supabase.rpc("check_signup_availability", {
-          p_email: checkEmail,
-          p_phone: checkPhone,
+          p_email: checkEmail ?? undefined,
+          p_phone: checkPhone ?? undefined,
         });
         if (error) throw error;
         const r = (data ?? {}) as { email_exists?: boolean; phone_exists?: boolean };
@@ -180,7 +180,7 @@ const BasicInfoScreen = () => {
     if (!value.trim()) return "Full name is required";
     if (value.trim().length < 2) return "Name must be at least 2 characters";
     if (value.trim().length > 50) return "Name must be less than 50 characters";
-    if (!/^[a-zA-Z\s\-'\.]+$/.test(value.trim())) return "Please enter a valid name";
+    if (!/^[a-zA-Z\s\-'.]+$/.test(value.trim())) return "Please enter a valid name";
     return undefined;
   };
 

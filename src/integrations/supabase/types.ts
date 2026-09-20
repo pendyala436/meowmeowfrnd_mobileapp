@@ -4163,6 +4163,10 @@ export type Database = {
         Args: { p_man_id: string; p_session_id: string }
         Returns: Json
       }
+      bill_group_chat_leftover: {
+        Args: { p_man_id: string; p_session_id: string }
+        Returns: Json
+      }
       bill_group_gift_or_tip: {
         Args: {
           p_amount: number

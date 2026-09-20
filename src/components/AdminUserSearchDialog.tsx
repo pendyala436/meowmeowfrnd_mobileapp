@@ -207,7 +207,7 @@ export const AdminUserSearchDialog = () => {
           }
 
           // Wallet info removed — billing system removed
-          let wallet: WalletInfo | null = null;
+          const wallet: WalletInfo | null = null;
 
           // Fetch chat stats
           let chatStats: ChatStats | null = null;

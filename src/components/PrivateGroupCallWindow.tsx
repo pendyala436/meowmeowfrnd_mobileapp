@@ -354,8 +354,13 @@ export function PrivateGroupCallWindow({
           filter: `group_id=eq.${group.id}`,
         },
         async (payload) => {
-          const msg = payload.new as any;
-          let text: string = msg.message || "";
+          const msg = payload.new as {
+            id: string;
+            sender_id: string;
+            message?: string | null;
+            created_at?: string;
+          };
+          let text: string = msg.message ?? "";
           let embeddedName: string | null = null;
           const h = handlersRef.current;
 
@@ -472,6 +477,7 @@ export function PrivateGroupCallWindow({
       hasAutoStarted.current = true;
       joinStream();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [isOwner, group.is_live, isConnected, isConnecting, joinStream, hasVideo, goLive, isLive]);
 
   // Attach host stream
@@ -480,6 +486,7 @@ export function PrivateGroupCallWindow({
       remoteVideoRef.current.srcObject = hostStream;
       remoteVideoRef.current.play().catch(() => {});
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [hostStream]);
 
   useEffect(() => {

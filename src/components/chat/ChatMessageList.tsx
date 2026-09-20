@@ -86,7 +86,7 @@ const MessageBubble = memo(
         const updateField = isOwn ? "deleted_for_sender" : "deleted_for_receiver";
         const { error } = await supabase
           .from("chat_messages")
-          .update({ [updateField]: true, deleted_at: new Date().toISOString() } as any)
+          .update({ [updateField]: true, deleted_at: new Date().toISOString() } as never)
           .eq("id", message.id);
 
         if (error) throw error;
@@ -111,7 +111,7 @@ const MessageBubble = memo(
             deleted_for_sender: true,
             deleted_for_receiver: true,
             deleted_at: new Date().toISOString(),
-          } as any)
+          } as never)
           .eq("id", message.id);
 
         if (error) throw error;

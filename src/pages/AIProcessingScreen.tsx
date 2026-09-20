@@ -1,3 +1,4 @@
+import type { VerificationResult } from "@/types/supabase-helpers";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -35,7 +36,7 @@ const AIProcessingScreen = () => {
   const [verificationStatus, setVerificationStatus] = useState<
     "idle" | "verifying" | "success" | "failed"
   >("idle");
-  const [verificationResult, setVerificationResult] = useState<any>(null);
+  const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
   const [progress, setProgress] = useState(0);
 
   // Gender classification hook
@@ -90,11 +91,12 @@ const AIProcessingScreen = () => {
     if (countdown > 0) {
       const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
       return () => clearTimeout(timer);
-    } else {
-      // Capture the photo
-      capturePhoto();
-      setCountdown(null);
     }
+    // Capture the photo
+    capturePhoto();
+    setCountdown(null);
+    return;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [countdown]);
 
   // Capture photo from video
@@ -171,11 +173,11 @@ const AIProcessingScreen = () => {
           variant: "destructive",
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Verification error:", error);
       setProgress(100);
       setVerificationStatus("failed");
-      const isTimeout = error?.message === "AI_TIMEOUT";
+      const isTimeout = error instanceof Error && error.message === "AI_TIMEOUT";
       toast({
         title: isTimeout ? "Verification Timed Out" : "Verification Error",
         description: isTimeout
@@ -187,7 +189,14 @@ const AIProcessingScreen = () => {
   };
 
   // Save verification result to Supabase
-  const saveVerificationResult = async (result: any) => {
+  const saveVerificationResult = async (result: {
+    detectedGender?: string;
+    confidence?: number;
+    reason?: string;
+    verified?: boolean;
+    genderMatches?: boolean;
+    errors?: (string | undefined)[] | null;
+  }) => {
     try {
       const {
         data: { session },
@@ -200,7 +209,8 @@ const AIProcessingScreen = () => {
           processing_status: result.verified && result.genderMatches ? "completed" : "failed",
           gender_verified: result.verified && result.genderMatches,
           completed_at: new Date().toISOString(),
-          errors: result.verified && result.genderMatches ? null : [result.reason],
+          errors:
+            result.verified && result.genderMatches ? null : result.reason ? [result.reason] : null,
         });
       }
     } catch (error) {
@@ -397,7 +407,7 @@ const AIProcessingScreen = () => {
                     <span className="font-semibold capitalize">
                       {verificationResult.detectedGender}
                     </span>{" "}
-                    ({Math.round(verificationResult.confidence * 100)}% confidence)
+                    ({Math.round((verificationResult.confidence ?? 0) * 100)}% confidence)
                   </p>
                 ) : (
                   <p>{verificationResult.reason}</p>

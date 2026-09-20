@@ -22,6 +22,7 @@ import {
   Info,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import type { RealtimeChangePayload } from "@/types/supabase-helpers";
 import { isVisibilityStatusChange } from "@/lib/presence";
 import { Badge } from "@/components/ui/badge";
 import { isIndianLanguage } from "@/data/supportedLanguages";
@@ -74,6 +75,7 @@ const MatchingScreen = () => {
       if (reloadTimeoutRef.current) clearTimeout(reloadTimeoutRef.current);
       cleanup();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, []);
 
   const setupRealtimeSubscription = () => {
@@ -93,7 +95,7 @@ const MatchingScreen = () => {
           schema: "public",
           table: "user_status",
         },
-        (payload) => {
+        (payload: RealtimeChangePayload) => {
           if (
             !isVisibilityStatusChange(
               payload as {
@@ -197,7 +199,7 @@ const MatchingScreen = () => {
         .eq("is_online", true)
         .neq("status_text", "busy");
 
-      const onlineUserIds = onlineStatus?.map((s) => s.user_id) || [];
+      const onlineUserIds = onlineStatus?.map((s: { user_id: string }) => s.user_id) || [];
 
       if (onlineUserIds.length === 0) {
         setMatchableWomen([]);
@@ -220,7 +222,7 @@ const MatchingScreen = () => {
         .select("user_id, is_available, current_chat_count, max_concurrent_chats")
         .in("user_id", onlineUserIds);
 
-      const availabilityMap = new Map(((availability as any[]) || []).map((a) => [a.user_id, a]));
+      const availabilityMap = new Map((availability || []).map((a) => [a.user_id, a]));
 
       // Fetch user settings for profile visibility
       const { data: userSettings } = await supabase
@@ -229,12 +231,27 @@ const MatchingScreen = () => {
         .in("user_id", onlineUserIds);
 
       const settingsMap = new Map(
-        userSettings?.map((s) => [s.user_id, s.profile_visibility]) || [],
+        userSettings?.map((s: { user_id: string; profile_visibility: string | null }) => [
+          s.user_id,
+          s.profile_visibility,
+        ]) || [],
       );
+
+      type MatchingProfile = {
+        user_id: string;
+        full_name: string | null;
+        photo_url: string | null;
+        age: number | null;
+        primary_language: string | null;
+        preferred_language: string | null;
+        country: string | null;
+        ai_approved: boolean | null;
+        approval_status: string | null;
+      };
 
       // Fetch languages for each user
       const women: MatchableWoman[] = await Promise.all(
-        (profiles || []).map(async (profile) => {
+        (profiles || []).map(async (profile: MatchingProfile) => {
           const { data: languages } = await supabase
             .from("user_languages")
             .select("language_name")
@@ -273,7 +290,7 @@ const MatchingScreen = () => {
       // Apply profile visibility filtering (probability-based)
       const visibilityFilteredWomen = women.filter((w) => {
         // Simple probability-based visibility using profileVisibility
-        const vis = (w as any).profileVisibility as string;
+        const vis = (w as { profileVisibility?: string }).profileVisibility as string;
         if (vis === "low") return Math.random() < 0.25;
         if (vis === "medium") return Math.random() < 0.5;
         return true; // high, very_high

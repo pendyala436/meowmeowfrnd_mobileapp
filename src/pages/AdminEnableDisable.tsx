@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 import { useAppSettings } from "@/hooks/useAppSettings";
 import AdminUserAccessPanel from "@/components/AdminUserAccessPanel";
+import { getErrorMessage } from "@/lib/errors";
 
 type ToggleKey =
   | "statements_tab_visible"
@@ -241,7 +242,7 @@ const AdminEnableDisable = () => {
       const { error } = await supabase.from("app_settings").upsert(
         {
           setting_key: cfg.key,
-          setting_value: next as unknown as any,
+          setting_value: next as never,
           setting_type: "json",
           is_public: true,
           description: cfg.description,
@@ -254,11 +255,11 @@ const AdminEnableDisable = () => {
         description: next ? cfg.onToastDesc : cfg.offToastDesc,
       });
       await refetch();
-    } catch (err: any) {
+    } catch (err: unknown) {
       setLocalValues((prev) => ({ ...prev, [cfg.key]: !next })); // revert
       toast({
         title: "Failed to update setting",
-        description: err?.message ?? "Please try again.",
+        description: getErrorMessage(err, "Please try again."),
         variant: "destructive",
       });
     } finally {

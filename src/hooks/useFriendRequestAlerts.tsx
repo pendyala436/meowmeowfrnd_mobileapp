@@ -6,6 +6,7 @@ import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
+import { getErrorMessage } from "@/lib/errors";
 
 export function useFriendRequestAlerts(
   currentUserId: string | null,
@@ -60,10 +61,10 @@ export function useFriendRequestAlerts(
                   title: "Friend Added!",
                   description: `You are now friends with ${fromName}.`,
                 });
-              } catch (e: any) {
+              } catch (e: unknown) {
                 toast({
                   title: "Could not accept",
-                  description: e?.message || "Open Friends to manage the request.",
+                  description: getErrorMessage(e, "Open Friends to manage the request."),
                   variant: "destructive",
                 });
                 onOpenFriends?.();

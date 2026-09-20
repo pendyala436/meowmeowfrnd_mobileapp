@@ -1,4 +1,4 @@
-import { classifyError, ERROR_MESSAGES, logError } from "@/lib/errors";
+import { classifyError, ERROR_MESSAGES, logError, getErrorMessage } from "@/lib/errors";
 import AdminNav from "@/components/AdminNav";
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
@@ -80,7 +80,7 @@ const AdminBackupManagement = () => {
 
       if (error) throw error;
       setBackups(data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error fetching backups:", error);
       toast.error("Error", { description: "Failed to load backup logs" });
     } finally {
@@ -91,10 +91,10 @@ const AdminBackupManagement = () => {
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      await supabase
-        .rpc("mark_stalled_backups")
-        .then(() => {})
-        .catch(() => {});
+      await supabase.rpc("mark_stalled_backups").then(
+        () => {},
+        () => {},
+      );
       await fetchBackups();
       toast.success("Refreshed", { description: "Backup list updated" });
     } finally {
@@ -120,7 +120,7 @@ const AdminBackupManagement = () => {
       toast.success("Backup Started", { description: "Manual backup has been initiated" });
 
       await fetchBackups();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error triggering backup:", error);
       toast.error("Backup Failed", {
         description: classifyError(error, "trigger the backup").message,
@@ -158,13 +158,14 @@ const AdminBackupManagement = () => {
       toast.success("Backup Downloaded", {
         description: `Downloaded ${formatBytes(backup.size_bytes)}`,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Storage download error:", error);
       toast.error("Download Failed", {
         description:
-          error?.message?.includes("Object not found") || error?.message?.includes("not found")
+          error instanceof Error &&
+          (error.message.includes("Object not found") || error.message.includes("not found"))
             ? "Backup file no longer exists in storage. Trigger a fresh backup."
-            : `Could not download backup: ${error?.message || "Unknown error"}`,
+            : `Could not download backup: ${getErrorMessage(error, "Unknown error")}`,
       });
     }
   };

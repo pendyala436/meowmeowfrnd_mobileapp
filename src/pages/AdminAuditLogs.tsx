@@ -48,6 +48,7 @@ import {
   XCircle,
   ChevronLeft,
   ChevronRight,
+  type LucideIcon,
 } from "lucide-react";
 
 interface AuditLog {
@@ -58,15 +59,15 @@ interface AuditLog {
   action_type: string;
   resource_type: string;
   resource_id: string | null;
-  old_value: any;
-  new_value: any;
+  old_value: unknown;
+  new_value: unknown;
   ip_address: string | null;
   details: string | null;
   status: string;
   created_at: string;
 }
 
-const ACTION_TYPE_ICONS: Record<string, any> = {
+const ACTION_TYPE_ICONS: Record<string, LucideIcon> = {
   create: Plus,
   update: Edit,
   delete: Trash2,
@@ -82,7 +83,7 @@ const ACTION_TYPE_COLORS: Record<string, string> = {
   view: "bg-muted text-muted-foreground border-muted",
 };
 
-const RESOURCE_TYPE_ICONS: Record<string, any> = {
+const RESOURCE_TYPE_ICONS: Record<string, LucideIcon> = {
   users: User,
   settings: Settings,
   security: Shield,
@@ -127,7 +128,6 @@ const AdminAuditLogs = () => {
     } finally {
       setLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Real-time subscription for audit logs

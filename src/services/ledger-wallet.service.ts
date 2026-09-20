@@ -96,7 +96,7 @@ export async function rechargeWallet(
     p_gateway: gateway,
   });
   if (error) return { success: false, error: error.message };
-  return (data as BillingResult) ?? { success: false, error: "No response" };
+  return (data as unknown as BillingResult) ?? { success: false, error: "No response" };
 }
 
 // ──────────── Statements ────────────
@@ -109,8 +109,8 @@ export async function getStatement(
 ): Promise<StatementRow[]> {
   const { data, error } = await supabase.rpc("get_ledger_statement", {
     p_user_id: userId,
-    p_from_date: fromDate || null,
-    p_to_date: toDate || null,
+    p_from_date: fromDate || undefined,
+    p_to_date: toDate || undefined,
   });
   if (error) throw error;
   if (!data) return [];

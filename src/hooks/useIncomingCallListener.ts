@@ -1,3 +1,4 @@
+import type { CallRow } from "@/types/supabase-helpers";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -42,9 +43,9 @@ export const useIncomingCallListener = (
       }
     };
 
-    const showIncoming = async (row: any) => {
+    const showIncoming = async (row: CallRow) => {
       if (!row?.call_id || row.status !== "ringing") return;
-      if (incomingCallRef.current?.callId === row.call_id) return;
+      if (incomingCallRef.current?.callId === (row.call_id ?? row.id)) return;
 
       // Skip ringing if either side has blocked the other
       try {
@@ -52,7 +53,7 @@ export const useIncomingCallListener = (
           .from("user_blocks")
           .select("id")
           .or(
-            `and(blocked_by.eq.${currentUserId},blocked_user_id.eq.${row.man_user_id}),and(blocked_by.eq.${row.man_user_id},blocked_user_id.eq.${currentUserId})`,
+            `and(blocked_by.eq.${currentUserId},blocked_user_id.eq.${row.man_user_id ?? ""}),and(blocked_by.eq.${row.man_user_id ?? ""},blocked_user_id.eq.${currentUserId})`,
           )
           .limit(1)
           .maybeSingle();
@@ -64,13 +65,13 @@ export const useIncomingCallListener = (
       const { data: profile } = await supabase
         .from("male_profiles")
         .select("full_name, photo_url")
-        .eq("user_id", row.man_user_id)
+        .eq("user_id", row.man_user_id ?? "")
         .maybeSingle();
 
       setIncomingCall({
-        callId: row.call_id,
+        callId: row.call_id ?? row.id,
         callType: (row.call_type as "audio" | "video") || "video",
-        callerUserId: row.man_user_id,
+        callerUserId: row.man_user_id ?? "",
         callerName: profile?.full_name || "Unknown",
         callerPhoto: profile?.photo_url || null,
       });
@@ -87,7 +88,7 @@ export const useIncomingCallListener = (
           filter: `woman_user_id=eq.${currentUserId}`,
         },
         async (payload) => {
-          const row = payload.new as any;
+          const row = payload.new as CallRow;
           // DB trigger already enforced same-language. Do not hide the ring
           // behind a second client-side language fetch (stale male/female_profiles
           // used to drop Hindi–Hindi calls silently).
@@ -103,9 +104,9 @@ export const useIncomingCallListener = (
           filter: `woman_user_id=eq.${currentUserId}`,
         },
         (payload) => {
-          const row = payload.new as any;
+          const row = payload.new as CallRow;
           if (row?.call_id && isTerminal(row.status)) {
-            dismissIfCurrent(row.call_id);
+            dismissIfCurrent(row.call_id ?? row.id);
           }
         },
       )

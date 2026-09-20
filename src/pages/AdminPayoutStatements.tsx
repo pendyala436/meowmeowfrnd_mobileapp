@@ -43,6 +43,7 @@ import { format } from "date-fns";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
+import { getErrorMessage } from "@/lib/errors";
 
 // A6: single source of truth for INR currency formatting (admin payouts).
 // Two-decimal precision required by financial spec; uses Indian grouping.
@@ -127,6 +128,7 @@ const AdminPayoutStatements = () => {
 
   useEffect(() => {
     loadRecords();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [monthFilter]);
 
   // Global lookup across ALL women profiles when a search term is entered.
@@ -154,52 +156,62 @@ const AdminPayoutStatements = () => {
           setLookupRows([]);
           return;
         }
-        const ids = profs.map((p) => p.user_id);
+        const ids = profs.map((p: { user_id: string }) => p.user_id);
         const [kycRes, walletRes, codeRes] = await Promise.all([
           supabase
             .from("women_kyc")
             .select(
-              "user_id, account_holder_name, full_name_as_per_bank, mobile_number, email_address, current_address, account_number, ifsc_code, upi_vpa, upi_id, beneficiary_purpose, verification_status",
+              "user_id, account_holder_name, full_name_as_per_bank, mobile_number, email_address, current_address, account_number, ifsc_code, upi_vpa, beneficiary_purpose, verification_status",
             )
             .in("user_id", ids),
           supabase.from("wallets").select("user_id, balance").in("user_id", ids),
           supabase.from("profiles").select("user_id, user_code").in("user_id", ids),
         ]);
-        const kMap = new Map((kycRes.data || []).map((k: any) => [k.user_id, k]));
+        const kMap = new Map((kycRes.data || []).map((k: { user_id: string }) => [k.user_id, k]));
         const wMap = new Map(
-          (walletRes.data || []).map((w: any) => [w.user_id, Number(w.balance || 0)]),
+          (walletRes.data || []).map((w) => [w.user_id, Number(w.balance || 0)]),
         );
         const existing = new Set(records.map((r) => r.user_id));
         const synth: PayoutRecord[] = profs
-          .filter((p) => !existing.has(p.user_id))
-          .map((p) => {
-            const k: any = kMap.get(p.user_id) || {};
-            return {
-              id: `lookup-${p.user_id}`,
-              user_id: p.user_id,
-              app_sno: p.app_sno ?? null,
-              beneficiary_purpose: k.beneficiary_purpose || null,
-              account_holder_name: k.account_holder_name || null,
-              full_name: k.full_name_as_per_bank || p.full_name || "—",
-              mobile_number: k.mobile_number || null,
-              email_address: k.email_address || null,
-              address: k.current_address || null,
-              bank_account_number: k.account_number || null,
-              ifsc_code: k.ifsc_code || null,
-              upi_vpa: k.upi_vpa || k.upi_id || null,
-              wallet_balance_at_snapshot: wMap.get(p.user_id) || 0,
-              payment_status: k.verification_status === "approved" ? "lookup" : "kyc_pending",
-              snapshot_type: "lookup",
-              ist_month: monthFilter,
-              ist_year: new Date().getFullYear(),
-              snapshot_ist_date: "",
-              created_at: "",
-            };
-          });
+          .filter((p: { user_id: string }) => !existing.has(p.user_id))
+          .map(
+            (p: {
+              user_id: string;
+              user_code?: string | null;
+              full_name?: string | null;
+              app_sno?: number | null;
+            }) => {
+              const k = (kMap.get(p.user_id) || {}) as Record<string, unknown>;
+              return {
+                id: `lookup-${p.user_id}`,
+                user_id: p.user_id,
+                app_sno: p.app_sno ?? null,
+                beneficiary_purpose: (k.beneficiary_purpose as string | null | undefined) ?? null,
+                account_holder_name: (k.account_holder_name as string | null | undefined) ?? null,
+                full_name: String(k.full_name_as_per_bank || p.full_name || "—"),
+                mobile_number: (k.mobile_number as string | null | undefined) ?? null,
+                email_address: (k.email_address as string | null | undefined) ?? null,
+                address: (k.current_address as string | null | undefined) ?? null,
+                bank_account_number: (k.account_number as string | null | undefined) ?? null,
+                ifsc_code: (k.ifsc_code as string | null | undefined) ?? null,
+                upi_vpa:
+                  (k.upi_vpa as string | null | undefined) ??
+                  (k.upi_id as string | null | undefined) ??
+                  null,
+                wallet_balance_at_snapshot: wMap.get(p.user_id) || 0,
+                payment_status: k.verification_status === "approved" ? "lookup" : "kyc_pending",
+                snapshot_type: "lookup",
+                ist_month: monthFilter,
+                ist_year: new Date().getFullYear(),
+                snapshot_ist_date: "",
+                created_at: "",
+              };
+            },
+          );
         setLookupRows(synth);
         // Hydrate codeMap with these IDs too so the GESS column renders.
         const newCodes: Record<string, string> = {};
-        (codeRes.data || []).forEach((p: any) => {
+        (codeRes.data || []).forEach((p) => {
           if (p.user_code) newCodes[p.user_id] = p.user_code;
         });
         if (Object.keys(newCodes).length) setCodeMap((prev) => ({ ...prev, ...newCodes }));
@@ -299,11 +311,11 @@ const AdminPayoutStatements = () => {
         latestPerUser.push(r);
       }
       setRecords(latestPerUser);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("[Payouts] load failed:", err);
       toast({
         title: "Failed to load payouts",
-        description: err?.message || "Please retry",
+        description: getErrorMessage(err, "Please retry"),
         variant: "destructive",
       });
       setRecords([]);
@@ -340,7 +352,7 @@ const AdminPayoutStatements = () => {
       // 3) Build Excel from fresh rows (don't depend on async state)
       // Fetch login + billing seconds inline so the Excel matches the on-screen data.
       const ids = fresh.map((r) => r.user_id).filter(Boolean);
-      let freshTimes: Record<string, { login: number; billing: number }> = {};
+      const freshTimes: Record<string, { login: number; billing: number }> = {};
       if (ids.length > 0) {
         const { data: tData, error: tErr } = await supabase.rpc("get_login_billing_seconds_bulk", {
           _user_ids: ids,
@@ -359,7 +371,7 @@ const AdminPayoutStatements = () => {
       }
 
       // Fetch GESS codes inline so the Excel matches on-screen data
-      let freshCodes: Record<string, string> = {};
+      const freshCodes: Record<string, string> = {};
       if (ids.length > 0) {
         const { data: pData } = await supabase
           .from("profiles")
@@ -469,10 +481,10 @@ const AdminPayoutStatements = () => {
         description: `${legacy.count} women${skipMsg}${unifiedMsg}${archiveMsg}.`,
       });
       loadArchives();
-    } catch (e: any) {
+    } catch (e: unknown) {
       toast({
         title: "Error",
-        description: e?.message || "Generation failed",
+        description: getErrorMessage(e, "Generation failed"),
         variant: "destructive",
       });
     } finally {
@@ -499,11 +511,11 @@ const AdminPayoutStatements = () => {
     }
     setArchives(
       (data || [])
-        .filter((f) => f.name.endsWith(".xlsx"))
-        .map((f) => ({
+        .filter((f: { name: string; created_at?: string }) => f.name.endsWith(".xlsx"))
+        .map((f: { name: string; created_at?: string }) => ({
           name: f.name,
           path: `${monthFilter}/${f.name}`,
-          created_at: (f as any).created_at,
+          created_at: f.created_at,
         })),
     );
   };
@@ -514,7 +526,11 @@ const AdminPayoutStatements = () => {
   const downloadArchive = async (path: string, name: string) => {
     const { data, error } = await supabase.storage.from(bucketName).download(path);
     if (error || !data) {
-      toast({ title: "Download failed", description: error?.message, variant: "destructive" });
+      toast({
+        title: "Download failed",
+        description: error instanceof Error ? error.message : "Unknown error",
+        variant: "destructive",
+      });
       return;
     }
     const url = URL.createObjectURL(data);
@@ -543,8 +559,12 @@ const AdminPayoutStatements = () => {
       await moveFile(path, "payout-exports", "payout-exports-archive");
       toast({ title: "Archived", description: name });
       loadArchives();
-    } catch (e: any) {
-      toast({ title: "Archive failed", description: e?.message, variant: "destructive" });
+    } catch (e: unknown) {
+      toast({
+        title: "Archive failed",
+        description: e instanceof Error ? e.message : "Unknown error",
+        variant: "destructive",
+      });
     }
   };
 
@@ -553,8 +573,12 @@ const AdminPayoutStatements = () => {
       await moveFile(path, "payout-exports-archive", "payout-exports");
       toast({ title: "Restored", description: name });
       loadArchives();
-    } catch (e: any) {
-      toast({ title: "Restore failed", description: e?.message, variant: "destructive" });
+    } catch (e: unknown) {
+      toast({
+        title: "Restore failed",
+        description: e instanceof Error ? e.message : "Unknown error",
+        variant: "destructive",
+      });
     }
   };
 

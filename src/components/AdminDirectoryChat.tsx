@@ -20,6 +20,18 @@ export interface DirectoryUser {
   has_recharged: boolean;
 }
 
+interface DirMessage {
+  target_user_id: string;
+  sender_role: string;
+  is_read: boolean;
+  message: string;
+  created_at: string;
+}
+interface DirProfile {
+  user_id: string;
+  full_name: string | null;
+  gender: string | null;
+}
 interface Thread {
   user_id: string;
   full_name: string;
@@ -156,7 +168,7 @@ export function AdminDirectoryChat({
   const loadDirectory = async () => {
     const { data, error } = await supabase.rpc("get_admin_user_directory");
     if (!error && data) {
-      const list = (Array.isArray(data) ? data : []) as DirectoryUser[];
+      const list = (Array.isArray(data) ? data : []) as unknown as DirectoryUser[];
       if (list.length > 0) {
         setDirectory(
           list.map((u) => ({
@@ -185,7 +197,7 @@ export function AdminDirectoryChat({
       .order("created_at", { ascending: false })
       .limit(500);
     const grouped = new Map<string, Thread>();
-    for (const m of (data ?? []) as any[]) {
+    for (const m of (data ?? []) as DirMessage[]) {
       const uid = m.target_user_id as string;
       if (!uid) continue;
       const cur = grouped.get(uid);
@@ -209,7 +221,7 @@ export function AdminDirectoryChat({
         .from("profiles")
         .select("user_id, full_name, gender")
         .in("user_id", ids);
-      for (const p of (profs ?? []) as any[]) {
+      for (const p of (profs ?? []) as DirProfile[]) {
         const t = grouped.get(p.user_id);
         if (t) {
           t.full_name = p.full_name ?? "User";
@@ -250,6 +262,7 @@ export function AdminDirectoryChat({
           (o) => genderOf(o.gender) === "male" && o.has_recharged && matches(o.full_name),
         ),
       ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
     [directory, q],
   );
   const menNoRecharge = useMemo(
@@ -259,6 +272,7 @@ export function AdminDirectoryChat({
           (o) => genderOf(o.gender) === "male" && !o.has_recharged && matches(o.full_name),
         ),
       ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
     [directory, q],
   );
   const women = useMemo(
@@ -266,6 +280,7 @@ export function AdminDirectoryChat({
       sortPresence(
         directory.filter((o) => genderOf(o.gender) === "female" && matches(o.full_name)),
       ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
     [directory, q],
   );
 
@@ -341,7 +356,7 @@ export function AdminDirectoryChat({
           <Loader2 className="w-5 h-5 animate-spin text-primary" />
         </div>
       ) : (
-        <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
+        <Tabs value={tab} onValueChange={(v) => setTab(v as "online" | "chats" | "tl")}>
           <TabsList className={`grid w-full ${showTl ? "grid-cols-3" : "grid-cols-2"}`}>
             <TabsTrigger value="online" className="text-xs">
               Online{" "}

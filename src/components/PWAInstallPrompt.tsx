@@ -1,3 +1,4 @@
+import type { NavigatorWithStandalone } from "@/types/supabase-helpers";
 /**
  * PWAInstallPrompt.tsx
  *
@@ -31,7 +32,7 @@ export function PWAInstallPrompt() {
   const isInStandaloneMode =
     typeof window !== "undefined" &&
     (window.matchMedia("(display-mode: standalone)").matches ||
-      (window.navigator as any).standalone === true);
+      (navigator as NavigatorWithStandalone).standalone === true);
 
   // Log PWA state for debugging (dev only)
   useEffect(() => {

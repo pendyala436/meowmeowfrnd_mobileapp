@@ -65,6 +65,7 @@ import { pickCallLanguage } from "@/lib/call-languages";
 
 import { UserContactCard } from "@/components/UserContactCard";
 import { isVisibilityStatusChange } from "@/lib/presence";
+import type { RealtimeChangePayload } from "@/types/supabase-helpers";
 // WhatsAppFAB removed — unused in current layout
 import { WomenKYCForm } from "@/components/WomenKYCForm";
 import { CallHistoryTab } from "@/components/CallHistoryTab";
@@ -220,6 +221,7 @@ const WomenDashboardScreen = () => {
     if (tabFromState) {
       navigate(location.pathname, { replace: true, state: {} });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [location.state, location.pathname, navigate, searchParams, setSearchParams]);
   const matchesFetchedRef = useRef(false);
   const chatsFetchedRef = useRef(false);
@@ -331,10 +333,9 @@ const WomenDashboardScreen = () => {
 
   useEffect(() => {
     let mounted = true;
-    let loadingTimeoutId: NodeJS.Timeout;
 
     // Safety timeout - force loading complete after 12 seconds to prevent stuck state
-    loadingTimeoutId = setTimeout(() => {
+    const loadingTimeoutId = setTimeout(() => {
       if (mounted && isLoading) {
         console.warn("[WomenDashboard] Loading timed out - forcing complete");
         setIsLoading(false);
@@ -384,6 +385,7 @@ const WomenDashboardScreen = () => {
       if (fetchMenTimeoutRef.current) clearTimeout(fetchMenTimeoutRef.current);
       updateUserOnlineStatus(false);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, []);
 
   const currentWomanLanguageRef = useRef(currentWomanLanguage);
@@ -435,6 +437,7 @@ const WomenDashboardScreen = () => {
     }
     lastFetchMenRef.current = now;
     fetchOnlineMen(lang, country);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, []); // stable — reads from refs, no stale closure
 
   useEffect(() => {
@@ -442,20 +445,24 @@ const WomenDashboardScreen = () => {
 
     const channel = supabase
       .channel("women-dashboard-updates")
-      .on("postgres_changes", { event: "*", schema: "public", table: "user_status" }, (payload) => {
-        if (
-          !isVisibilityStatusChange(
-            payload as {
-              eventType?: string;
-              new?: Record<string, unknown>;
-              old?: Record<string, unknown>;
-            },
-            userStatusSnapshotRef.current,
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "user_status" },
+        (payload: RealtimeChangePayload) => {
+          if (
+            !isVisibilityStatusChange(
+              payload as {
+                eventType?: string;
+                new?: Record<string, unknown>;
+                old?: Record<string, unknown>;
+              },
+              userStatusSnapshotRef.current,
+            )
           )
-        )
-          return;
-        throttledFetchOnlineMen();
-      })
+            return;
+          throttledFetchOnlineMen();
+        },
+      )
       .on(
         "postgres_changes",
         {
@@ -554,7 +561,7 @@ const WomenDashboardScreen = () => {
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "user_languages" },
-        async (payload) => {
+        async (payload: RealtimeChangePayload) => {
           const record = payload.new as {
             user_id?: string;
             language_name?: string;
@@ -577,7 +584,7 @@ const WomenDashboardScreen = () => {
           table: "user_languages",
           filter: `user_id=eq.${currentUserId}`,
         },
-        async (payload) => {
+        async (payload: RealtimeChangePayload) => {
           const newLanguage = (payload.new as { language_name?: string })?.language_name;
           const newCode = (payload.new as { language_code?: string })?.language_code || "eng_Latn";
           if (newLanguage) {
@@ -596,7 +603,7 @@ const WomenDashboardScreen = () => {
           table: "female_profiles",
           filter: `user_id=eq.${currentUserId}`,
         },
-        async (payload) => {
+        async (payload: RealtimeChangePayload) => {
           const newProfile = payload.new as {
             primary_language?: string;
             preferred_language?: string;
@@ -613,6 +620,7 @@ const WomenDashboardScreen = () => {
     return () => {
       supabase.removeChannel(channel);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [currentUserId]); // stable — throttledFetchOnlineMen reads from refs; language handlers fetch directly
 
   // Refs to track current men lists (avoids side-effect-only setState peeks)
@@ -639,7 +647,7 @@ const WomenDashboardScreen = () => {
         const { data } = await supabase.rpc("get_men_wallet_balances_bulk", {
           p_user_ids: allMenIds,
         });
-        if (!data || (data as any[]).length === 0) return;
+        if (!data || data.length === 0) return;
         const balanceMap = new Map<string, number>(
           (data as Array<{ user_id: string; balance: number | string }>).map((w) => [
             w.user_id,
@@ -690,6 +698,7 @@ const WomenDashboardScreen = () => {
     if (!chatsFetchedRef.current && !chatsInFlightRef.current) {
       fetchWomenActiveChats();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [currentUserId]);
 
   // Lazy-load data on tab switch
@@ -760,7 +769,7 @@ const WomenDashboardScreen = () => {
       });
       if (error) throw error;
 
-      const chats = ((data as any[]) || []).map((r) => ({
+      const chats = (data || []).map((r) => ({
         chatId: r.chat_id as string,
         partnerId: r.partner_id as string,
         partnerName: r.partner_name as string,
@@ -855,7 +864,7 @@ const WomenDashboardScreen = () => {
 
       const isIndian =
         mainProfile?.is_indian === true || mainProfile?.country?.toLowerCase().includes("india");
-      setIsIndianWoman(isIndian && mainProfile?.gender?.toLowerCase() === "female");
+      setIsIndianWoman(Boolean(isIndian && mainProfile?.gender?.toLowerCase() === "female"));
 
       const fullName = mainProfile?.full_name;
       if (fullName) {
@@ -868,8 +877,8 @@ const WomenDashboardScreen = () => {
         .select("app_id")
         .eq("user_id", user.id)
         .maybeSingle()
-        .then(({ data }) => {
-          if ((data as any)?.app_id) setAppId((data as any).app_id);
+        .then(({ data }: { data: { app_id?: string | null } | null }) => {
+          if (data?.app_id) setAppId(data.app_id);
         });
 
       const womanLanguage =
@@ -932,7 +941,7 @@ const WomenDashboardScreen = () => {
 
       // Ghost-user guard: drop rows whose last_seen is older than 5 minutes
       const freshCutoff = Date.now() - 5 * 60 * 1000;
-      const freshOnlineMen = (onlineMenData || []).filter((m: any) => {
+      const freshOnlineMen = (onlineMenData || []).filter((m) => {
         if (!m?.last_seen) return false;
         const ts = new Date(m.last_seen).getTime();
         return Number.isFinite(ts) && ts >= freshCutoff;
@@ -1080,7 +1089,11 @@ const WomenDashboardScreen = () => {
       }
 
       const otherUserIds = [
-        ...new Set(matches.map((m) => (m.user_id === userId ? m.matched_user_id : m.user_id))),
+        ...new Set(
+          matches.map((m: { user_id: string; matched_user_id: string }) =>
+            m.user_id === userId ? m.matched_user_id : m.user_id,
+          ),
+        ),
       ] as string[];
 
       const { fetchPublicProfiles } = await import("@/lib/profile-queries");
@@ -1089,14 +1102,12 @@ const WomenDashboardScreen = () => {
         supabase.from("user_status").select("user_id, is_online").in("user_id", otherUserIds),
       ]);
 
-      const statusMap = new Map(
-        ((statusesRes.data as any[]) || []).map((s) => [s.user_id, s.is_online]),
-      );
-      const profileMap = new Map(((profiles as any[]) || []).map((p) => [p.user_id, p]));
+      const statusMap = new Map((statusesRes.data || []).map((s) => [s.user_id, s.is_online]));
+      const profileMap = new Map((profiles || []).map((p) => [p.user_id, p]));
 
       const seenUserIds = new Set<string>();
       const matched: MatchedMan[] = matches
-        .map((m) => {
+        .map((m: { id: string; user_id: string; matched_user_id: string; matched_at: string }) => {
           const otherId = m.user_id === userId ? m.matched_user_id : m.user_id;
           if (seenUserIds.has(otherId)) return null;
           seenUserIds.add(otherId);
@@ -1309,7 +1320,7 @@ const WomenDashboardScreen = () => {
           message: "👋 Hi!",
         });
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to start chat session:", err);
     }
   };

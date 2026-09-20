@@ -1,3 +1,4 @@
+import type { NavigatorWithDeviceMemory } from "@/types/supabase-helpers";
 /**
  * useLoginSessionTracker
  * Records when the signed-in user is logged into the app.
@@ -26,12 +27,15 @@ export function useLoginSessionTracker() {
 
         const clientInfo = {
           ua: typeof navigator !== "undefined" ? navigator.userAgent : null,
-          platform: typeof navigator !== "undefined" ? (navigator as any).platform : null,
+          platform:
+            typeof navigator !== "undefined"
+              ? (navigator as NavigatorWithDeviceMemory).platform
+              : null,
           tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
         };
 
         const { data, error } = await supabase.rpc("start_login_session", {
-          _client_info: clientInfo as any,
+          _client_info: clientInfo as never,
         });
         if (error) {
           console.warn("[LoginSession] start failed:", error.message);
@@ -48,7 +52,7 @@ export function useLoginSessionTracker() {
           supabase.rpc("end_login_session", { _session_id: sessionIdRef.current }).then(() => {
             // immediately reopen to keep tracking continuous
             supabase
-              .rpc("start_login_session", { _client_info: clientInfo as any })
+              .rpc("start_login_session", { _client_info: clientInfo as never })
               .then(({ data: nid }) => {
                 if (nid) sessionIdRef.current = nid as unknown as string;
               });
@@ -59,7 +63,7 @@ export function useLoginSessionTracker() {
       }
     };
 
-    const stop = (sync = false) => {
+    const stop = (_sync = false) => {
       const id = sessionIdRef.current;
       if (heartbeatRef.current) {
         clearInterval(heartbeatRef.current);
@@ -67,13 +71,8 @@ export function useLoginSessionTracker() {
       }
       sessionIdRef.current = null;
       if (!id) return;
-      // Best-effort close
-      if (sync && navigator.sendBeacon) {
-        // sendBeacon path uses Supabase REST directly — fall back to RPC fetch
-        supabase.rpc("end_login_session", { _session_id: id });
-      } else {
-        supabase.rpc("end_login_session", { _session_id: id });
-      }
+      // Best-effort close (both sync and async call sites use the same RPC)
+      supabase.rpc("end_login_session", { _session_id: id });
     };
 
     // Boot

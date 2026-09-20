@@ -253,7 +253,7 @@ const PHONE_PATTERNS = [
 const EMAIL_PATTERNS = [
   /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/gi,
   // Obfuscated: user [at] domain [dot] com
-  /[a-zA-Z0-9._%+-]+\s*[@\[\(]\s*[a-zA-Z0-9.-]+\s*[.\[\(]\s*[a-zA-Z]{2,}/gi,
+  /[a-zA-Z0-9._%+-]+\s*[@[(]\s*[a-zA-Z0-9.-]+\s*[.[(]\s*[a-zA-Z]{2,}/gi,
   /[a-zA-Z0-9._%+-]+\s*(at|@|AT|अट|ऐट)\s*[a-zA-Z0-9.-]+\s*(dot|\.|\s*डॉट)\s*[a-zA-Z]{2,}/gi,
   // Gmail/yahoo/hotmail mentions with username
   /\b(gmail|yahoo|hotmail|outlook|proton\s*mail|mail)\s*[-:]\s*[a-zA-Z0-9._]+/gi,

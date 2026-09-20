@@ -181,14 +181,14 @@ const AdminPolicyAlerts = () => {
 
       // Load user profiles for alerts
       if (data && data.length > 0) {
-        const userIds = [...new Set(data.map((a) => a.user_id))];
+        const userIds = [...new Set(data.map((a: PolicyAlert) => a.user_id))];
         const { data: profiles } = await supabase
           .from("profiles")
           .select("id, user_id, full_name, gender, photo_url")
           .in("user_id", userIds);
 
         const profileMap: Record<string, UserProfile> = {};
-        profiles?.forEach((p) => {
+        profiles?.forEach((p: UserProfile) => {
           profileMap[p.user_id] = p;
         });
         setUserProfiles(profileMap);
@@ -345,9 +345,11 @@ const AdminPolicyAlerts = () => {
       setMessageContent("");
       loadAlerts();
       loadStats();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error sending message:", error);
-      toast.error("Failed to send message", { description: error?.message });
+      toast.error("Failed to send message", {
+        description: error instanceof Error ? error.message : undefined,
+      });
     }
   };
 
@@ -357,6 +359,7 @@ const AdminPolicyAlerts = () => {
         data: { session },
       } = await supabase.auth.getSession();
       const adminId = session?.user?.id;
+      if (!adminId) throw new Error("Not authenticated");
 
       // 1) Mark profile blocked
       const { error: profileErr } = await supabase
@@ -403,9 +406,11 @@ const AdminPolicyAlerts = () => {
       setAlertDialogOpen(false);
       loadAlerts();
       loadStats();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error blocking user:", error);
-      toast.error("Failed to block user", { description: error?.message });
+      toast.error("Failed to block user", {
+        description: error instanceof Error ? error.message : undefined,
+      });
     }
   };
 

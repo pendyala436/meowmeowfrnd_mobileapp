@@ -1,3 +1,8 @@
+import type {
+  NavigatorWithDeviceMemory,
+  NavigatorWithStandalone,
+  WindowWithWebkitAudio,
+} from "@/types/supabase-helpers";
 /**
  * useDeviceDetect.ts
  *
@@ -292,7 +297,7 @@ export function useDeviceDetect(): DeviceInfo {
     const isBaidu = /baidubrowser|baiduboxapp/.test(ua);
     const isYandex = /yabrowser/.test(ua);
     const isSilk = /silk/.test(ua);
-    const isBrave = /brave/.test(ua) || !!(navigator as any).brave;
+    const isBrave = /brave/.test(ua) || !!(navigator as NavigatorWithDeviceMemory).brave;
     const isVivaldi = /vivaldi/.test(ua);
     const isSamsung = /samsungbrowser/.test(ua);
     const isOpera = /opr|opera/.test(ua);
@@ -346,10 +351,13 @@ export function useDeviceDetect(): DeviceInfo {
     // ========================================
     const isPWA =
       window.matchMedia("(display-mode: standalone)").matches ||
-      (window.navigator as any).standalone === true ||
+      (navigator as NavigatorWithStandalone).standalone === true ||
       document.referrer.includes("android-app://");
-    const isCapacitor = !!(window as any).Capacitor?.isNativePlatform?.();
-    const isElectron = !!(window as any).process?.versions?.electron;
+    const isCapacitor = !!(
+      window as WindowWithWebkitAudio & Record<string, unknown>
+    ).Capacitor?.isNativePlatform?.();
+    const isElectron = !!(window as WindowWithWebkitAudio & Record<string, unknown>).process
+      ?.versions?.electron;
 
     // ========================================
     // USER PREFERENCES
@@ -372,7 +380,7 @@ export function useDeviceDetect(): DeviceInfo {
     // ========================================
     // NETWORK
     // ========================================
-    const connection = (navigator as any).connection;
+    const connection = (navigator as NavigatorWithDeviceMemory).connection;
     const connectionType = connection?.effectiveType || "unknown";
     const isSlowConnection = connectionType === "2g" || connectionType === "slow-2g";
 

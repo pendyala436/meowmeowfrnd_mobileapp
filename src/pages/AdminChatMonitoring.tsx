@@ -154,6 +154,50 @@ const LiveDuration = ({ startedAt }: { startedAt: string | null }) => {
 };
 
 // ─── Main component ──────────────────────────────────────────────
+
+interface MonitoredVideoCall {
+  id: string;
+  man_user_id: string;
+  woman_user_id: string;
+  man_name?: string;
+  woman_name?: string;
+  man_country?: string;
+  woman_country?: string;
+  man_language?: string;
+  woman_language?: string;
+  call_type?: string | null;
+  status?: string | null;
+  started_at?: string | null;
+  created_at?: string | null;
+  rate_per_minute?: number | null;
+  man_photo_url?: string | null;
+  woman_photo_url?: string | null;
+}
+
+interface MonitoredLiveGroup {
+  id: string;
+  name: string;
+  current_host_id: string | null;
+  current_host_name?: string;
+  participant_count?: number;
+}
+
+interface MonitoredGroupMessage {
+  id: string;
+  sender_id: string;
+  sender_name?: string;
+  message?: string | null;
+  created_at?: string;
+}
+
+interface MonitoredGroupParticipant {
+  user_id: string;
+  full_name?: string | null;
+  photo_url?: string | null;
+  gender?: string | null;
+  country?: string | null;
+}
+
 const AdminChatMonitoring = () => {
   const navigate = useNavigate();
 
@@ -190,16 +234,16 @@ const AdminChatMonitoring = () => {
   const [loadingChats, setLoadingChats] = useState(false);
 
   // Video call monitoring states
-  const [activeVideoCalls, setActiveVideoCalls] = useState<any[]>([]);
+  const [activeVideoCalls, setActiveVideoCalls] = useState<MonitoredVideoCall[]>([]);
   const [loadingVideoCalls, setLoadingVideoCalls] = useState(false);
   const [monitoringVideoCallId, setMonitoringVideoCallId] = useState<string | null>(null);
 
   // Private group monitoring states
-  const [liveGroups, setLiveGroups] = useState<any[]>([]);
+  const [liveGroups, setLiveGroups] = useState<MonitoredLiveGroup[]>([]);
   const [loadingGroups, setLoadingGroups] = useState(false);
   const [monitoringGroupId, setMonitoringGroupId] = useState<string | null>(null);
-  const [groupMessages, setGroupMessages] = useState<any[]>([]);
-  const [groupParticipants, setGroupParticipants] = useState<any[]>([]);
+  const [groupMessages, setGroupMessages] = useState<MonitoredGroupMessage[]>([]);
+  const [groupParticipants, setGroupParticipants] = useState<MonitoredGroupParticipant[]>([]);
 
   // ─── Data loaders ──────────────────────────────────────────────
   // Use refs for realtime callbacks to avoid recreating the channel on every state change
@@ -247,6 +291,7 @@ const AdminChatMonitoring = () => {
     return () => {
       supabase.removeChannel(channel);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [filterStatus, filterFlagged]);
 
   const loadMessages = async () => {
@@ -267,7 +312,7 @@ const AdminChatMonitoring = () => {
       setMessages(data || []);
 
       const userIds = new Set<string>();
-      data?.forEach((msg) => {
+      data?.forEach((msg: ChatMessage) => {
         userIds.add(msg.sender_id);
         userIds.add(msg.receiver_id);
       });
@@ -280,7 +325,7 @@ const AdminChatMonitoring = () => {
 
         if (profilesData) {
           const profilesMap: Record<string, Profile> = {};
-          profilesData.forEach((p) => {
+          profilesData.forEach((p: Profile) => {
             profilesMap[p.user_id] = {
               user_id: p.user_id,
               full_name: p.full_name,
@@ -316,7 +361,14 @@ const AdminChatMonitoring = () => {
       }
 
       const userIds = new Set<string>();
-      sessions.forEach((s) => {
+      type ActiveSessionRow = {
+        chat_id: string;
+        man_user_id: string;
+        woman_user_id: string;
+        started_at: string;
+        last_activity_at: string;
+      };
+      sessions.forEach((s: ActiveSessionRow) => {
         userIds.add(s.man_user_id);
         userIds.add(s.woman_user_id);
       });
@@ -325,21 +377,21 @@ const AdminChatMonitoring = () => {
         .from("profiles")
         .select("user_id, full_name, country, primary_language")
         .in("user_id", Array.from(userIds));
-      const profileMap = new Map<string, any>();
-      profilesData?.forEach((p) => profileMap.set(p.user_id, p));
+      const profileMap = new Map<string, Profile>();
+      (profilesData as Profile[] | null)?.forEach((p) => profileMap.set(p.user_id, p));
 
-      const chatIds = sessions.map((s) => s.chat_id);
+      const chatIds = sessions.map((s: ActiveSessionRow) => s.chat_id);
       const { data: messageCounts } = await supabase
         .from("chat_messages")
         .select("chat_id")
         .in("chat_id", chatIds);
       const countMap = new Map<string, number>();
-      messageCounts?.forEach((m) => {
+      messageCounts?.forEach((m: { chat_id: string }) => {
         countMap.set(m.chat_id, (countMap.get(m.chat_id) || 0) + 1);
       });
 
       setActiveChats(
-        sessions.map((s) => {
+        sessions.map((s: ActiveSessionRow) => {
           const man = profileMap.get(s.man_user_id);
           const woman = profileMap.get(s.woman_user_id);
           return {
@@ -395,7 +447,7 @@ const AdminChatMonitoring = () => {
       }
 
       const userIds = new Set<string>();
-      sessions.forEach((s: any) => {
+      sessions.forEach((s) => {
         userIds.add(s.man_user_id);
         userIds.add(s.woman_user_id);
       });
@@ -404,11 +456,13 @@ const AdminChatMonitoring = () => {
         .from("profiles")
         .select("user_id, full_name, country, primary_language, photo_url")
         .in("user_id", Array.from(userIds));
-      const profileMap = new Map<string, any>();
-      profilesData?.forEach((p: any) => profileMap.set(p.user_id, p));
+      const profileMap = new Map();
+      profilesData?.forEach((p) => {
+        if (p.user_id) profileMap.set(p.user_id, p);
+      });
 
       setActiveVideoCalls(
-        sessions.map((s: any) => ({
+        sessions.map((s) => ({
           ...s,
           man_name: profileMap.get(s.man_user_id)?.full_name || "Unknown",
           woman_name: profileMap.get(s.woman_user_id)?.full_name || "Unknown",
@@ -440,8 +494,10 @@ const AdminChatMonitoring = () => {
 
       if (data && data.length > 0) {
         // Enrich with host names and participant counts
-        const hostIds = data.map((g: any) => g.current_host_id).filter(Boolean);
-        const groupIds = data.map((g: any) => g.id);
+        const hostIds = data
+          .map((g) => g.current_host_id)
+          .filter((id): id is string => Boolean(id));
+        const groupIds = data.map((g) => g.id);
 
         const [{ data: hostProfiles }, { data: memberships }] = await Promise.all([
           supabase.from("profiles").select("user_id, full_name").in("user_id", hostIds),
@@ -453,16 +509,14 @@ const AdminChatMonitoring = () => {
         ]);
 
         const hostMap = new Map<string, string>();
-        hostProfiles?.forEach((p: any) => hostMap.set(p.user_id, p.full_name));
+        hostProfiles?.forEach((p) => hostMap.set(p.user_id, p.full_name ?? "Unknown"));
         const countMap = new Map<string, number>();
-        memberships?.forEach((m: any) =>
-          countMap.set(m.group_id, (countMap.get(m.group_id) || 0) + 1),
-        );
+        memberships?.forEach((m) => countMap.set(m.group_id, (countMap.get(m.group_id) || 0) + 1));
 
         setLiveGroups(
-          data.map((g: any) => ({
+          data.map((g) => ({
             ...g,
-            current_host_name: hostMap.get(g.current_host_id) || "Unknown",
+            current_host_name: hostMap.get(g.current_host_id ?? "") || "Unknown",
             participant_count: countMap.get(g.id) || 0,
           })),
         );
@@ -488,17 +542,17 @@ const AdminChatMonitoring = () => {
       if (error) throw error;
 
       const userIds = new Set<string>();
-      data?.forEach((m: any) => userIds.add(m.sender_id));
+      data?.forEach((m) => userIds.add(m.sender_id));
 
       const { data: profilesData } = await supabase
         .from("profiles")
         .select("user_id, full_name")
         .in("user_id", Array.from(userIds));
       const profileMap = new Map<string, string>();
-      profilesData?.forEach((p: any) => profileMap.set(p.user_id, p.full_name));
+      profilesData?.forEach((p) => profileMap.set(p.user_id, p.full_name ?? "Unknown"));
 
       setGroupMessages(
-        (data || []).map((m: any) => ({
+        (data || []).map((m) => ({
           ...m,
           sender_name: profileMap.get(m.sender_id) || "Unknown",
         })),
@@ -520,16 +574,18 @@ const AdminChatMonitoring = () => {
         return;
       }
 
-      const userIds = memberships.map((m: any) => m.user_id);
+      const userIds = memberships.map((m) => m.user_id);
       const { data: profilesData } = await supabase
         .from("profiles")
         .select("user_id, full_name, gender, country")
         .in("user_id", userIds);
-      const profileMap = new Map<string, any>();
-      profilesData?.forEach((p: any) => profileMap.set(p.user_id, p));
+      const profileMap = new Map();
+      profilesData?.forEach((p) => {
+        if (p.user_id) profileMap.set(p.user_id, p);
+      });
 
       setGroupParticipants(
-        memberships.map((m: any) => ({
+        memberships.map((m) => ({
           ...m,
           full_name: profileMap.get(m.user_id)?.full_name || "Unknown",
           gender: profileMap.get(m.user_id)?.gender || "Unknown",
@@ -645,7 +701,7 @@ const AdminChatMonitoring = () => {
         return;
       }
 
-      const notifications = users.map((user) => ({
+      const notifications = users.map((user: { user_id: string }) => ({
         user_id: user.user_id,
         title: notificationTitle,
         message: notificationMessage,
@@ -1117,7 +1173,7 @@ const AdminChatMonitoring = () => {
                               <p className="text-sm text-gray-800">{msg.message}</p>
                               <div className="flex items-center justify-end gap-1 mt-1">
                                 <span className="text-[10px] text-gray-500">
-                                  {format(new Date(msg.created_at), "HH:mm")}
+                                  {format(new Date(String(msg.created_at ?? "")), "HH:mm")}
                                 </span>
                                 {isMale &&
                                   (msg.is_read ? (
@@ -1273,7 +1329,7 @@ const AdminChatMonitoring = () => {
                 </CardHeader>
                 <CardContent>
                   {(() => {
-                    const call = activeVideoCalls.find((c: any) => c.id === monitoringVideoCallId);
+                    const call = activeVideoCalls.find((c) => c.id === monitoringVideoCallId);
                     if (!call)
                       return (
                         <p className="text-center text-muted-foreground py-8">
@@ -1310,7 +1366,7 @@ const AdminChatMonitoring = () => {
                         </div>
                         <div className="flex items-center justify-center gap-6 py-4">
                           <div className="text-center">
-                            <LiveDuration startedAt={call.started_at} />
+                            <LiveDuration startedAt={call.started_at ?? null} />
                             <p className="text-xs text-muted-foreground mt-1">Duration</p>
                           </div>
                           <div className="text-center">
@@ -1379,7 +1435,7 @@ const AdminChatMonitoring = () => {
                   ) : (
                     <ScrollArea className="max-h-[500px]">
                       <div className="space-y-3">
-                        {activeVideoCalls.map((call: any) => (
+                        {activeVideoCalls.map((call) => (
                           <Card key={call.id} className="hover:shadow-md transition-shadow">
                             <CardContent className="p-4">
                               <div className="flex items-center justify-between">
@@ -1410,7 +1466,7 @@ const AdminChatMonitoring = () => {
                                       <Globe className="h-3 w-3" />
                                       {call.man_country} ↔ {call.woman_country}
                                     </span>
-                                    <LiveDuration startedAt={call.started_at} />
+                                    <LiveDuration startedAt={call.started_at ?? null} />
                                     {call.rate_per_minute && (
                                       <span>₹{call.rate_per_minute}/min</span>
                                     )}
@@ -1452,8 +1508,7 @@ const AdminChatMonitoring = () => {
                     </Button>
                   </div>
                   <CardDescription>
-                    Group:{" "}
-                    {liveGroups.find((g: any) => g.id === monitoringGroupId)?.name || "Unknown"} —
+                    Group: {liveGroups.find((g) => g.id === monitoringGroupId)?.name || "Unknown"} —
                     You are invisible to participants
                   </CardDescription>
                 </CardHeader>
@@ -1466,7 +1521,7 @@ const AdminChatMonitoring = () => {
                         Participants ({groupParticipants.length})
                       </h4>
                       <div className="flex flex-wrap gap-2">
-                        {groupParticipants.map((p: any) => (
+                        {groupParticipants.map((p) => (
                           <Badge key={p.user_id} variant="outline" className="gap-1 text-xs">
                             <User className="h-3 w-3" />
                             {p.full_name} ({p.gender === "female" ? "W" : "M"} • {p.country})
@@ -1478,14 +1533,14 @@ const AdminChatMonitoring = () => {
                   {/* Chat messages */}
                   <ScrollArea className="h-[400px] border rounded-lg p-4 bg-muted/30">
                     <div className="space-y-3">
-                      {groupMessages.map((msg: any) => (
+                      {groupMessages.map((msg) => (
                         <div key={msg.id} className="p-3 rounded-lg max-w-[80%] bg-muted">
                           <div className="flex items-center gap-2 mb-1">
                             <Badge variant="secondary" className="text-xs">
                               {msg.sender_name}
                             </Badge>
                             <span className="text-xs text-muted-foreground">
-                              {format(new Date(msg.created_at), "HH:mm:ss")}
+                              {format(new Date(String(msg.created_at ?? "")), "HH:mm:ss")}
                             </span>
                           </div>
                           <p className="text-sm">{msg.message}</p>
@@ -1529,7 +1584,7 @@ const AdminChatMonitoring = () => {
                   ) : (
                     <ScrollArea className="max-h-[500px]">
                       <div className="space-y-3">
-                        {liveGroups.map((group: any) => (
+                        {liveGroups.map((group) => (
                           <Card
                             key={group.id}
                             className="hover:shadow-md transition-shadow border-destructive/30"

@@ -82,7 +82,7 @@ const AdminLanguageLimits = () => {
       .on("postgres_changes", { event: "*", schema: "public", table: "language_limits" }, () => {
         loadLimits();
       })
-      .subscribe((status) => {
+      .subscribe((status: string) => {
         if (status === "CHANNEL_ERROR") {
           console.warn("[LanguageLimits] Realtime channel error");
         }

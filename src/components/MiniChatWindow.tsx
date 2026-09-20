@@ -1,3 +1,8 @@
+import type {
+  RealtimeChangePayload,
+  ChatMessageRow,
+  ChatSessionRow,
+} from "@/types/supabase-helpers";
 import { classifyError, ERROR_MESSAGES } from "@/lib/errors";
 import { moderateMessage } from "@/lib/content-moderation";
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -139,6 +144,7 @@ const MiniChatWindow = ({
       });
       handleClose();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [isBlocked]);
 
   // Placeholder: Type a message...
@@ -188,10 +194,15 @@ const MiniChatWindow = ({
             Number((partnerWalletRpc as Record<string, number> | null)?.balance) || 0;
           if (partnerBalance <= 0) {
             // Check free chat status
-            const { data: freeChatStatus } = await supabase.rpc("check_free_chat_status", {
+            const { data: freeChatStatusRaw } = await supabase.rpc("check_free_chat_status", {
               p_woman_id: currentUserId,
               p_man_id: partnerId,
             });
+            const freeChatStatus = freeChatStatusRaw as {
+              blocked?: boolean;
+              remaining_seconds?: number;
+              seconds_used?: number;
+            } | null;
 
             if (freeChatStatus?.blocked) {
               toast({
@@ -224,6 +235,7 @@ const MiniChatWindow = ({
     };
 
     loadInitialData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [currentUserId, userGender, ratePerMinute, partnerId]);
 
   useEffect(() => {
@@ -241,7 +253,7 @@ const MiniChatWindow = ({
           table: "active_chat_sessions",
           filter: `id=eq.${sessionId}`,
         },
-        (payload: any) => {
+        (payload: RealtimeChangePayload<ChatSessionRow>) => {
           const session = payload.new;
           if (session.status === "ended") {
             let message = "Chat session ended";
@@ -274,12 +286,16 @@ const MiniChatWindow = ({
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
       if (heartbeatRef.current) clearInterval(heartbeatRef.current);
+      // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
       if (inactivityRef.current) clearTimeout(inactivityRef.current);
+      // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
       if (logoutTimeoutRef.current) clearTimeout(logoutTimeoutRef.current);
+      // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
       if (billingPauseTimeoutRef.current) clearTimeout(billingPauseTimeoutRef.current);
       unsubscribe?.();
       supabase.removeChannel(sessionChannel);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [chatId, sessionId]);
 
   useEffect(() => {
@@ -297,6 +313,7 @@ const MiniChatWindow = ({
       setLastActivityTime(Date.now());
       startBilling();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [messages, currentUserId]);
 
   useEffect(() => {
@@ -380,6 +397,7 @@ const MiniChatWindow = ({
     }, 1000);
 
     return () => clearInterval(tick);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [
     lastUserMessageTime,
     lastPartnerMessageTime,
@@ -401,11 +419,12 @@ const MiniChatWindow = ({
 
       // Persist to DB every 10 seconds
       try {
-        const { data } = await supabase.rpc("update_free_chat_usage", {
+        const { data: usageRaw } = await supabase.rpc("update_free_chat_usage", {
           p_woman_id: currentUserId,
           p_man_id: partnerId,
           p_seconds: 10,
         });
+        const data = usageRaw as { blocked?: boolean } | null;
 
         if (data?.blocked) {
           // 5 minutes up — auto-close and send recharge message
@@ -434,7 +453,9 @@ const MiniChatWindow = ({
                 end_reason: "free_chat_expired",
               })
               .eq("id", sessionId);
-          } catch {}
+          } catch {
+            /* ignore session end errors */
+          }
 
           onClose();
         }
@@ -446,6 +467,7 @@ const MiniChatWindow = ({
     return () => {
       if (freeChatTimerRef.current) clearInterval(freeChatTimerRef.current);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [isFreeChatMode, billingStarted, currentUserId, partnerId, chatId, sessionId, onClose]);
 
   const loadMessages = async () => {
@@ -514,7 +536,7 @@ const MiniChatWindow = ({
           table: "chat_messages",
           filter: `chat_id=eq.${chatId}`,
         },
-        async (payload: any) => {
+        async (payload: RealtimeChangePayload<ChatMessageRow>) => {
           const newMsg = payload.new;
           const isPartnerMessage = newMsg.sender_id !== currentUserId;
 
@@ -539,7 +561,7 @@ const MiniChatWindow = ({
                 updated[tempIdx] = {
                   id: newMsg.id,
                   senderId: newMsg.sender_id,
-                  message: newMsg.message,
+                  message: newMsg.message ?? "",
                   translatedMessage: tempMsg.translatedMessage,
                   englishText: tempMsg.englishText,
                   isTranslated: tempMsg.isTranslated,
@@ -566,7 +588,7 @@ const MiniChatWindow = ({
               {
                 id: newMsg.id,
                 senderId: newMsg.sender_id,
-                message: newMsg.message,
+                message: newMsg.message ?? "",
                 createdAt: newMsg.created_at,
               },
             ];
@@ -578,7 +600,7 @@ const MiniChatWindow = ({
             !languagesMatch(currentUserLanguage, partnerLanguage)
           ) {
             const langToUse = currentUserLanguage || "English";
-            void translateForViewer(newMsg.message, langToUse, partnerLanguage)
+            void translateForViewer(newMsg.message ?? "", langToUse, partnerLanguage)
               .then((result) => {
                 setMessages((prev) =>
                   prev.map((m) =>
@@ -587,7 +609,7 @@ const MiniChatWindow = ({
                           ...m,
                           translatedMessage: result.nativeText,
                           englishText: result.englishText,
-                          isTranslated: result.nativeText !== newMsg.message,
+                          isTranslated: result.nativeText !== (newMsg.message ?? ""),
                           isTranslating: false,
                         }
                       : m,

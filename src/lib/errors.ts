@@ -464,7 +464,7 @@ export function classifyError(error: unknown, context?: string): AppError {
     if (known) {
       return {
         ...known,
-        action: (known as any).action,
+        action: (known as { action?: string }).action,
         category: ErrorCategory.AUTH,
         raw,
       };
@@ -513,7 +513,7 @@ export function classifyError(error: unknown, context?: string): AppError {
     if (known) {
       return {
         ...known,
-        action: (known as any).action,
+        action: (known as { action?: string }).action,
         category: ErrorCategory.DATABASE,
         raw,
       };

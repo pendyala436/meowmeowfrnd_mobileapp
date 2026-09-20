@@ -1,3 +1,4 @@
+import type { ChatMessageRow } from "@/types/supabase-helpers";
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -67,6 +68,7 @@ export function TLCommunicationTab({
     void loadAll();
     const cleanup = subscribe();
     return cleanup;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [currentUserId]);
 
   useEffect(() => {
@@ -91,7 +93,7 @@ export function TLCommunicationTab({
       ]);
       const profiles = await fetchPublicProfiles(missing);
       const adminSet = new Set((adminRes.data ?? []).map((r: { user_id: string }) => r.user_id));
-      for (const p of profiles as any[]) {
+      for (const p of profiles) {
         profileCacheRef.current.set(p.user_id, {
           name: p.full_name || "Member",
           photo: p.photo_url || null,
@@ -110,18 +112,27 @@ export function TLCommunicationTab({
     }
   };
 
-  const mapRow = (m: any): TLMessage => {
+  const mapRow = (m: {
+    id: string;
+    sender_id: string;
+    message?: string | null;
+    file_url?: string | null;
+    file_type?: string | null;
+    file_name?: string | null;
+    file_size?: number | null;
+    created_at: string;
+  }): TLMessage => {
     const cached = profileCacheRef.current.get(m.sender_id);
     return {
       id: m.id,
       senderId: m.sender_id,
       senderName: cached?.isAdmin ? "Admin" : cached?.name || "Member",
       senderPhoto: cached?.photo || null,
-      message: m.message,
-      fileUrl: m.file_url,
-      fileType: m.file_type,
-      fileName: m.file_name,
-      fileSize: m.file_size,
+      message: m.message ?? null,
+      fileUrl: m.file_url ?? null,
+      fileType: m.file_type ?? null,
+      fileName: m.file_name ?? null,
+      fileSize: m.file_size ?? null,
       createdAt: m.created_at,
       isOwn: m.sender_id === currentUserId,
       isAdmin: !!cached?.isAdmin,
@@ -192,7 +203,7 @@ export function TLCommunicationTab({
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "tl_communication_messages" },
         async (payload) => {
-          const row = payload.new as any;
+          const row = payload.new as ChatMessageRow;
           if (!row?.id) return;
           await hydrateProfiles([row.sender_id]);
           const mapped = mapRow(row);

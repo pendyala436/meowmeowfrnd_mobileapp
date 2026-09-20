@@ -1,5 +1,5 @@
 import AdminNav from "@/components/AdminNav";
-import { classifyError, ERROR_MESSAGES, logError } from "@/lib/errors";
+import { classifyError, ERROR_MESSAGES, logError, getErrorMessage } from "@/lib/errors";
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -300,7 +300,10 @@ const AdminUserManagement = () => {
       if (error) {
         let errorMessage = "Failed to create user";
         if (error && typeof error === "object") {
-          const httpErr = error as any;
+          const httpErr = error as {
+            context?: { json?: () => Promise<Record<string, unknown>> };
+            message?: string;
+          };
           if (httpErr.context?.json) {
             try {
               const body = await httpErr.context.json();
@@ -337,9 +340,9 @@ const AdminUserManagement = () => {
         role: "user",
       });
       handleRefresh();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("[handleCreateUser] Error:", err);
-      const msg = err.message || "Failed to create user";
+      const msg = getErrorMessage(err, "Failed to create user");
       if (msg.toLowerCase().includes("already") || msg.toLowerCase().includes("exists")) {
         toast.error("User Already Exists", { description: msg });
       } else {
@@ -471,13 +474,13 @@ const AdminUserManagement = () => {
       setTotalCount(count || 0);
 
       if (data && data.length > 0) {
-        const userIds = data.map((u) => u.user_id);
+        const userIds = data.map((u: { user_id: string }) => u.user_id);
         const { data: rolesData } = await supabase
           .from("user_roles")
           .select("user_id, role")
           .in("user_id", userIds);
         const rolesMap: Record<string, string> = {};
-        rolesData?.forEach((r) => {
+        rolesData?.forEach((r: UserRole) => {
           rolesMap[r.user_id] = r.role;
         });
         setUserRoles(rolesMap);
@@ -607,7 +610,7 @@ const AdminUserManagement = () => {
         body: { user_id: userId },
       });
       if (authError) {
-        const msg = (authError as any)?.message || "Failed to delete user";
+        const msg = (authError as { message?: string } | null)?.message || "Failed to delete user";
         throw new Error(msg);
       }
       if (data?.cleanupErrors?.length) {
@@ -618,9 +621,9 @@ const AdminUserManagement = () => {
       setDeleteDialogOpen(false);
       fetchUsers();
       loadStats();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error deleting user:", error);
-      const msg = error?.message || "Failed to delete user";
+      const msg = getErrorMessage(error, "Failed to delete user");
       if (msg.toLowerCase().includes("protected admin")) {
         toast.error("Cannot delete protected admin account (admin1-15@meow-meow.com)");
       } else {
@@ -731,13 +734,13 @@ const AdminUserManagement = () => {
       if (existingRole) {
         const { error } = await supabase
           .from("user_roles")
-          .update({ role: newRole as any })
+          .update({ role: newRole as never })
           .eq("user_id", userId);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from("user_roles")
-          .insert({ user_id: userId, role: newRole as any });
+          .insert({ user_id: userId, role: newRole as never });
         if (error) throw error;
       }
       toast.success("Role updated successfully");
@@ -824,7 +827,7 @@ const AdminUserManagement = () => {
       return;
     }
     try {
-      const { error } = await supabase.rpc("admin_toggle_language_leader" as any, {
+      const { error } = await supabase.rpc("admin_toggle_language_leader", {
         p_user_id: user.user_id,
         p_make_leader: makeLeader,
       });
@@ -843,9 +846,9 @@ const AdminUserManagement = () => {
           : `Leader badge + Team Lead removed`,
       );
       fetchUsers();
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error("Toggle leader error:", e);
-      toast.error(e?.message || "Failed to update leader badge");
+      toast.error(getErrorMessage(e, "Failed to update leader badge"));
     }
   };
 
@@ -928,8 +931,8 @@ const AdminUserManagement = () => {
         .select("balance")
         .eq("user_id", user.user_id)
         .maybeSingle();
-      const walletData = data as any;
-      setDeductUserBalance(walletData?.balance ?? 0);
+      const walletData = data as Record<string, unknown>;
+      setDeductUserBalance(Number(walletData?.balance ?? 0));
     } catch {
       setDeductUserBalance(0);
     }
@@ -957,7 +960,7 @@ const AdminUserManagement = () => {
       } = await supabase.auth.getSession();
 
       // Atomic RPC: wallet update + ledger + notification + audit in one transaction
-      const { data, error } = await supabase.rpc("admin_deduct_wallet" as any, {
+      const { data, error } = await supabase.rpc("admin_deduct_wallet", {
         p_user_id: deductUser.user_id,
         p_amount: amount,
         p_reason: deductReason.trim(),
@@ -966,14 +969,14 @@ const AdminUserManagement = () => {
 
       if (error) throw error;
 
-      const result = data as any;
+      const result = data as Record<string, unknown>;
       toast.success(
         `₹${amount.toFixed(2)} deducted from ${deductUser.full_name || "user"}'s wallet`,
       );
       setDeductDialogOpen(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error deducting balance:", error);
-      toast.error(error.message || "Failed to deduct balance");
+      toast.error(getErrorMessage(error, "Failed to deduct balance"));
     } finally {
       setDeducting(false);
     }

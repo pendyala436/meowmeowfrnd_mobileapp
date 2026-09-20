@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { MessageCircle, Send, X, Loader2, Shield, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/errors";
 
 interface UserAdminChatProps {
   currentUserId: string;
@@ -43,6 +44,7 @@ export function UserAdminChat({ currentUserId, userName, embedded = false }: Use
     } else {
       fetchUnreadCount();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [isOpen, currentUserId]);
 
   useEffect(() => {
@@ -71,6 +73,7 @@ export function UserAdminChat({ currentUserId, userName, embedded = false }: Use
     return () => {
       supabase.removeChannel(channel);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [currentUserId, isOpen]);
 
   useEffect(() => {
@@ -125,8 +128,8 @@ export function UserAdminChat({ currentUserId, userName, embedded = false }: Use
       if (error) throw error;
       setNewMessage("");
       fetchMessages();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to send message");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, "Failed to send message"));
     } finally {
       setIsSending(false);
     }

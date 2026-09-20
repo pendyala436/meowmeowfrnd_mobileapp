@@ -1,3 +1,4 @@
+import type { WindowWithWebkitAudio } from "@/types/supabase-helpers";
 /**
  * useAudioModeration
  * --------------------------------------------------------
@@ -24,7 +25,21 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { moderateMessage, type ViolationType } from "@/lib/content-moderation";
 
 // Browser SpeechRecognition typings (not in standard lib.d.ts)
-type AnySpeechRecognition = any;
+type AnySpeechRecognitionConstructor = new () => AnySpeechRecognition;
+type AnySpeechRecognition = {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
+  onerror: ((event: { error?: string }) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+};
+interface SpeechRecognitionEventLike {
+  resultIndex: number;
+  results: ArrayLike<{ isFinal?: boolean; 0?: { transcript?: string } }>;
+}
 
 declare global {
   interface Window {
@@ -55,7 +70,7 @@ export interface AudioModerationState {
 
 const playBeep = (durationMs: number) => {
   try {
-    const Ctx = window.AudioContext || (window as any).webkitAudioContext;
+    const Ctx = window.AudioContext || (window as WindowWithWebkitAudio).webkitAudioContext;
     if (!Ctx) return;
     const ctx = new Ctx();
     const osc = ctx.createOscillator();
@@ -120,12 +135,14 @@ export function useAudioModeration({
     }
     setState((s) => ({ ...s, isSupported: true }));
 
-    const recognition: AnySpeechRecognition = new SR();
+    const recognition: AnySpeechRecognition = new (
+      SR as unknown as new () => AnySpeechRecognition
+    )();
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = language;
 
-    recognition.onresult = (event: any) => {
+    recognition.onresult = (event: SpeechRecognitionEventLike) => {
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript: string = event.results[i][0]?.transcript || "";
         if (!transcript.trim()) continue;
@@ -145,7 +162,9 @@ export function useAudioModeration({
       // Auto-restart on transient errors (network/no-speech)
       try {
         recognition.stop();
-      } catch {}
+      } catch {
+        /* ignore stop errors */
+      }
     };
 
     recognition.onend = () => {
@@ -153,7 +172,9 @@ export function useAudioModeration({
       if (enabled) {
         try {
           recognition.start();
-        } catch {}
+        } catch {
+          /* ignore restart race */
+        }
       }
     };
 
@@ -167,7 +188,9 @@ export function useAudioModeration({
     return () => {
       try {
         recognition.stop();
-      } catch {}
+      } catch {
+        /* ignore cleanup stop */
+      }
       recognitionRef.current = null;
       if (beepTimeoutRef.current) clearTimeout(beepTimeoutRef.current);
     };

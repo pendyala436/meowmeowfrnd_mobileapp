@@ -50,6 +50,7 @@ export const MiniChatActions = ({
     if (currentUserId && targetUserId) {
       loadUserRelationship();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [currentUserId, targetUserId]);
 
   // Subscribe to real-time changes
@@ -69,6 +70,7 @@ export const MiniChatActions = ({
     return () => {
       supabase.removeChannel(channel);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [currentUserId, targetUserId]);
 
   const loadUserRelationship = async () => {

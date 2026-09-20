@@ -113,11 +113,12 @@ export const SettingsPanel = ({ compact = false }: SettingsPanelProps) => {
 
       setCurrentUserId(user.id);
 
-      let { data: settingsData, error } = await supabase
+      const { data: initialSettings, error } = await supabase
         .from("user_settings")
         .select("*")
         .eq("user_id", user.id)
         .maybeSingle();
+      let settingsData = initialSettings;
 
       if (error) throw error;
 
@@ -180,6 +181,7 @@ export const SettingsPanel = ({ compact = false }: SettingsPanelProps) => {
 
   useEffect(() => {
     fetchSettings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, []);
 
   // Only sync from realtime when NOT editing (no unsaved changes)

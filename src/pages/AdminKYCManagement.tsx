@@ -1,3 +1,4 @@
+import type { RealtimeChangePayload } from "@/types/supabase-helpers";
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import AdminNav from "@/components/AdminNav";
@@ -84,6 +85,8 @@ interface KYCRecord {
   nominee_dob: string | null;
   nominee_address: string | null;
   declaration_place: string | null;
+  beneficiary_purpose?: string | null;
+  upi_vpa?: string | null;
 }
 
 interface IndianWoman {
@@ -188,17 +191,17 @@ const AdminKYCManagement = () => {
       .channel("kyc-management-rt")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "women_kyc" as any },
-        (payload: any) => {
+        { event: "*", schema: "public", table: "women_kyc" },
+        (payload: RealtimeChangePayload) => {
           loadStats();
           // Refresh the currently selected user's KYC if it changed
-          const changedUserId = (payload?.new as any)?.user_id || (payload?.old as any)?.user_id;
+          const changedUserId = String(payload?.new?.user_id || payload?.old?.user_id || "");
           if (changedUserId && changedUserId === selectedUserId) {
             loadKYCForUser(changedUserId);
           }
         },
       )
-      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" as any }, () => {
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => {
         loadIndianWomen();
       })
       .subscribe();
@@ -206,11 +209,11 @@ const AdminKYCManagement = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin, adminLoading, selectedUserId]);
 
   useEffect(() => {
     filterWomen();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [searchQuery, statusFilter, indianWomen]);
 
   const loadStats = async () => {
@@ -218,9 +221,15 @@ const AdminKYCManagement = () => {
     if (data) {
       setStats({
         total: data.length,
-        pending: data.filter((k) => k.verification_status === "pending").length,
-        approved: data.filter((k) => k.verification_status === "approved").length,
-        rejected: data.filter((k) => k.verification_status === "rejected").length,
+        pending: data.filter(
+          (k: { verification_status: string | null }) => k.verification_status === "pending",
+        ).length,
+        approved: data.filter(
+          (k: { verification_status: string | null }) => k.verification_status === "approved",
+        ).length,
+        rejected: data.filter(
+          (k: { verification_status: string | null }) => k.verification_status === "rejected",
+        ).length,
       });
     }
   };
@@ -291,8 +300,8 @@ const AdminKYCManagement = () => {
         const urls: Record<string, string> = {};
         await Promise.all(
           urlFields.map(async (field) => {
-            const val = (kyc as any)[field];
-            if (val) {
+            const val = kyc[field as keyof KYCRecord];
+            if (typeof val === "string" && val) {
               urls[field] = await getSignedUrl(val);
             }
           }),
@@ -589,9 +598,7 @@ const AdminKYCManagement = () => {
                             <Label className="text-muted-foreground text-xs">
                               Father's/Mother's Name
                             </Label>
-                            <p className="font-medium">
-                              {(selectedKYC as any).fathers_name || "N/A"}
-                            </p>
+                            <p className="font-medium">{selectedKYC.fathers_name || "N/A"}</p>
                           </div>
                           <div>
                             <Label className="text-muted-foreground text-xs">Date of Birth</Label>
@@ -603,26 +610,20 @@ const AdminKYCManagement = () => {
                           </div>
                           <div>
                             <Label className="text-muted-foreground text-xs">Marital Status</Label>
-                            <p className="font-medium">
-                              {(selectedKYC as any).marital_status || "N/A"}
-                            </p>
+                            <p className="font-medium">{selectedKYC.marital_status || "N/A"}</p>
                           </div>
                           <div>
                             <Label className="text-muted-foreground text-xs">Nationality</Label>
-                            <p className="font-medium">
-                              {(selectedKYC as any).nationality || "Indian"}
-                            </p>
+                            <p className="font-medium">{selectedKYC.nationality || "Indian"}</p>
                           </div>
                           <div>
                             <Label className="text-muted-foreground text-xs">Occupation</Label>
-                            <p className="font-medium">
-                              {(selectedKYC as any).occupation || "N/A"}
-                            </p>
+                            <p className="font-medium">{selectedKYC.occupation || "N/A"}</p>
                           </div>
                           <div>
                             <Label className="text-muted-foreground text-xs">Annual Income</Label>
                             <p className="font-medium">
-                              {(selectedKYC as any).annual_income_range || "N/A"}
+                              {selectedKYC.annual_income_range || "N/A"}
                             </p>
                           </div>
                           <div>
@@ -642,45 +643,41 @@ const AdminKYCManagement = () => {
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
                           <div>
                             <Label className="text-muted-foreground text-xs">Mobile Number</Label>
-                            <p className="font-medium">
-                              {(selectedKYC as any).mobile_number || "N/A"}
-                            </p>
+                            <p className="font-medium">{selectedKYC.mobile_number || "N/A"}</p>
                           </div>
                           <div>
                             <Label className="text-muted-foreground text-xs">Email Address</Label>
-                            <p className="font-medium">
-                              {(selectedKYC as any).email_address || "N/A"}
-                            </p>
+                            <p className="font-medium">{selectedKYC.email_address || "N/A"}</p>
                           </div>
                           <div>
                             <Label className="text-muted-foreground text-xs">City</Label>
-                            <p className="font-medium">{(selectedKYC as any).city || "N/A"}</p>
+                            <p className="font-medium">{selectedKYC.city || "N/A"}</p>
                           </div>
                           <div>
                             <Label className="text-muted-foreground text-xs">State</Label>
-                            <p className="font-medium">{(selectedKYC as any).state || "N/A"}</p>
+                            <p className="font-medium">{selectedKYC.state || "N/A"}</p>
                           </div>
                           <div>
                             <Label className="text-muted-foreground text-xs">PIN Code</Label>
-                            <p className="font-medium">{(selectedKYC as any).pin_code || "N/A"}</p>
+                            <p className="font-medium">{selectedKYC.pin_code || "N/A"}</p>
                           </div>
                           <div>
                             <Label className="text-muted-foreground text-xs">Country</Label>
                             <p className="font-medium">{selectedKYC.country_of_residence}</p>
                           </div>
                         </div>
-                        {(selectedKYC as any).current_address && (
+                        {selectedKYC.current_address && (
                           <div className="mt-2 text-sm">
                             <Label className="text-muted-foreground text-xs">Current Address</Label>
-                            <p className="font-medium">{(selectedKYC as any).current_address}</p>
+                            <p className="font-medium">{selectedKYC.current_address}</p>
                           </div>
                         )}
-                        {(selectedKYC as any).permanent_address && (
+                        {selectedKYC.permanent_address && (
                           <div className="mt-2 text-sm">
                             <Label className="text-muted-foreground text-xs">
                               Permanent Address
                             </Label>
-                            <p className="font-medium">{(selectedKYC as any).permanent_address}</p>
+                            <p className="font-medium">{selectedKYC.permanent_address}</p>
                           </div>
                         )}
                       </div>
@@ -858,30 +855,24 @@ const AdminKYCManagement = () => {
                       <Separator />
 
                       {/* Section 5: Additional Address Proof */}
-                      {(selectedKYC as any).address_proof_url && (
+                      {selectedKYC.address_proof_url && (
                         <>
                           <div>
                             <h4 className="font-semibold mb-3">5. Additional Address Proof</h4>
                             <div className="text-sm mb-2">
                               <Label className="text-muted-foreground text-xs">Proof Type</Label>
                               <p className="font-medium">
-                                {(selectedKYC as any).address_proof_type || "N/A"}
+                                {selectedKYC.address_proof_type || "N/A"}
                               </p>
                             </div>
                             <a
-                              href={
-                                signedUrls.address_proof_url ||
-                                (selectedKYC as any).address_proof_url
-                              }
+                              href={signedUrls.address_proof_url || selectedKYC.address_proof_url}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="block w-48 border rounded-lg overflow-hidden hover:opacity-80 transition-opacity"
                             >
                               <img
-                                src={
-                                  signedUrls.address_proof_url ||
-                                  (selectedKYC as any).address_proof_url
-                                }
+                                src={signedUrls.address_proof_url || selectedKYC.address_proof_url}
                                 alt="Address Proof"
                                 className="w-full h-32 object-cover"
                               />
@@ -901,9 +892,7 @@ const AdminKYCManagement = () => {
                           </div>
                           <div>
                             <Label className="text-muted-foreground text-xs">Branch</Label>
-                            <p className="font-medium">
-                              {(selectedKYC as any).bank_branch_name || "N/A"}
-                            </p>
+                            <p className="font-medium">{selectedKYC.bank_branch_name || "N/A"}</p>
                           </div>
                           <div>
                             <Label className="text-muted-foreground text-xs">Account Holder</Label>
@@ -920,7 +909,7 @@ const AdminKYCManagement = () => {
                           <div>
                             <Label className="text-muted-foreground text-xs">Account Type</Label>
                             <p className="font-medium capitalize">
-                              {(selectedKYC as any).account_type || "Savings"}
+                              {selectedKYC.account_type || "Savings"}
                             </p>
                           </div>
                         </div>
@@ -929,7 +918,7 @@ const AdminKYCManagement = () => {
                       <Separator />
 
                       {/* Section 7: Nominee Details */}
-                      {(selectedKYC as any).nominee_name && (
+                      {selectedKYC.nominee_name && (
                         <>
                           <div>
                             <h4 className="font-semibold mb-3">7. Nominee Details</h4>
@@ -938,31 +927,27 @@ const AdminKYCManagement = () => {
                                 <Label className="text-muted-foreground text-xs">
                                   Nominee Name
                                 </Label>
-                                <p className="font-medium">{(selectedKYC as any).nominee_name}</p>
+                                <p className="font-medium">{selectedKYC.nominee_name}</p>
                               </div>
                               <div>
                                 <Label className="text-muted-foreground text-xs">
                                   Relationship
                                 </Label>
                                 <p className="font-medium capitalize">
-                                  {(selectedKYC as any).nominee_relationship || "N/A"}
+                                  {selectedKYC.nominee_relationship || "N/A"}
                                 </p>
                               </div>
                               <div>
                                 <Label className="text-muted-foreground text-xs">Nominee DOB</Label>
-                                <p className="font-medium">
-                                  {(selectedKYC as any).nominee_dob || "N/A"}
-                                </p>
+                                <p className="font-medium">{selectedKYC.nominee_dob || "N/A"}</p>
                               </div>
                             </div>
-                            {(selectedKYC as any).nominee_address && (
+                            {selectedKYC.nominee_address && (
                               <div className="mt-2 text-sm">
                                 <Label className="text-muted-foreground text-xs">
                                   Nominee Address
                                 </Label>
-                                <p className="font-medium">
-                                  {(selectedKYC as any).nominee_address}
-                                </p>
+                                <p className="font-medium">{selectedKYC.nominee_address}</p>
                               </div>
                             )}
                           </div>
@@ -992,16 +977,14 @@ const AdminKYCManagement = () => {
                       </div>
 
                       {/* Declaration */}
-                      {(selectedKYC as any).declaration_place && (
+                      {selectedKYC.declaration_place && (
                         <>
                           <Separator />
                           <div>
                             <h4 className="font-semibold mb-3">9. Declaration</h4>
                             <div className="text-sm">
                               <Label className="text-muted-foreground text-xs">Place</Label>
-                              <p className="font-medium">
-                                {(selectedKYC as any).declaration_place}
-                              </p>
+                              <p className="font-medium">{selectedKYC.declaration_place}</p>
                             </div>
                             <p className="text-xs text-muted-foreground mt-1">
                               Consent: {selectedKYC.consent_given ? "✓ Given" : "✗ Not given"}

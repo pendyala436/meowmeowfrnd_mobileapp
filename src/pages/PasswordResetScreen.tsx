@@ -43,7 +43,7 @@ const PasswordResetScreen = () => {
   const hasUppercase = /[A-Z]/.test(password);
   const hasLowercase = /[a-z]/.test(password);
   const hasNumber = /[0-9]/.test(password);
-  const hasSymbol = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+  const hasSymbol = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password);
   const passwordsMatch = password === confirmPassword && confirmPassword.length > 0;
   const isPasswordValid =
     hasMinLength && hasUppercase && hasLowercase && hasNumber && hasSymbol && passwordsMatch;
@@ -72,7 +72,7 @@ const PasswordResetScreen = () => {
           setTokenValid(false);
           setTokenError(data?.error || "Invalid or expired reset token.");
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         setTokenValid(false);
         setTokenError("Failed to verify reset token. Please try again.");
       } finally {
@@ -100,7 +100,7 @@ const PasswordResetScreen = () => {
       } else {
         throw new Error(data?.error || "Failed to reset password");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Error",
         description: classifyError(error, "reset your password").message,

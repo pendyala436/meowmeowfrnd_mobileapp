@@ -52,6 +52,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useUserRelationships } from "@/hooks/useUserRelationships";
+import { getErrorMessage } from "@/lib/errors";
 
 // --- Browse user type (loaded separately) ---
 interface BrowseUser {
@@ -181,6 +182,7 @@ export const FriendsBlockedPanel = ({
     } finally {
       setBrowseLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [currentUserId, userGender]);
 
   const selectTab = (tab: typeof activeTab) => {
@@ -235,10 +237,10 @@ export const FriendsBlockedPanel = ({
       } else {
         throw new Error(data?.error || "Failed to start chat");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast({
         title: "Error",
-        description: err.message || "Failed to start chat",
+        description: getErrorMessage(err, "Failed to start chat"),
         variant: "destructive",
       });
     } finally {

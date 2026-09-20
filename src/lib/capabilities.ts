@@ -8,9 +8,9 @@
 export const supportsWebRTC = (): boolean => {
   return !!(
     typeof navigator !== "undefined" &&
-    navigator.mediaDevices?.getUserMedia &&
+    typeof navigator.mediaDevices?.getUserMedia === "function" &&
     typeof window !== "undefined" &&
-    window.RTCPeerConnection
+    typeof window.RTCPeerConnection === "function"
   );
 };
 

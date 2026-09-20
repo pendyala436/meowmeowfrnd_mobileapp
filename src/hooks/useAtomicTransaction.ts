@@ -23,6 +23,7 @@
 import { useState, useCallback, useRef } from "react";
 import { classifyError, ERROR_MESSAGES, logError } from "@/lib/errors";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import { useToast } from "@/hooks/use-toast";
 
 // Transaction result interface
@@ -132,8 +133,8 @@ export const useAtomicTransaction = () => {
           p_user_id: userId,
           p_amount: amount,
           p_gateway: "manual",
-          p_gateway_txn_id: referenceId || null,
-          p_description: description || null,
+          p_gateway_txn_id: referenceId || undefined,
+          p_description: description || undefined,
         });
 
         if (error) throw error;
@@ -173,6 +174,7 @@ export const useAtomicTransaction = () => {
         stopProcessing();
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
     [toast],
   );
 
@@ -201,7 +203,7 @@ export const useAtomicTransaction = () => {
           p_from_user_id: fromUserId,
           p_to_user_id: toUserId,
           p_amount: amount,
-          p_description: description || null,
+          p_description: description || undefined,
         });
 
         if (error) throw error;
@@ -247,6 +249,7 @@ export const useAtomicTransaction = () => {
         stopProcessing();
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
     [toast],
   );
 
@@ -339,16 +342,18 @@ export const useAtomicTransaction = () => {
       startProcessing();
 
       try {
-        const { data, error } = await supabase.rpc("process_withdrawal_request", {
+        const { data, error } = await supabase.rpc("ledger_withdrawal", {
           p_user_id: userId,
           p_amount: amount,
-          p_payment_method: paymentMethod || null,
-          p_payment_details: paymentDetails ? JSON.parse(JSON.stringify(paymentDetails)) : null,
+          p_payment_method: paymentMethod || undefined,
+          p_payment_details: paymentDetails
+            ? (JSON.parse(JSON.stringify(paymentDetails)) as Json)
+            : undefined,
         });
 
         if (error) throw error;
 
-        const result = data as Record<string, unknown>;
+        const result = data as unknown as Record<string, unknown>;
 
         if (!result.success) {
           toast({
@@ -386,6 +391,7 @@ export const useAtomicTransaction = () => {
         stopProcessing();
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
     [toast],
   );
 

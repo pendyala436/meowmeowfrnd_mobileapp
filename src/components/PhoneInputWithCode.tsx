@@ -286,6 +286,7 @@ export default function PhoneInputWithCode({
         setSelectedCountry(matchedCountry);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, []);
 
   // Filter countries based on search

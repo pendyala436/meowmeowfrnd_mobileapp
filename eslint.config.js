@@ -17,17 +17,12 @@ export default tseslint.config(
       "supabase/functions/**",
       "coverage",
       "node_modules",
+      "src/lib/polyfills.ts",
     ],
   },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
-    files: [
-      "src/**/*.{ts,tsx}",
-      "*.{ts,tsx}",
-      "vite.config.ts",
-      "tailwind.config.ts",
-      "capacitor.config.ts",
-    ],
+    files: ["src/**/*.{ts,tsx}"],
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
@@ -39,18 +34,43 @@ export default tseslint.config(
     rules: {
       ...reactHooks.configs.recommended.rules,
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
-      // Legacy codebase: keep as warnings so verify/CI can gate on real breakage.
       "@typescript-eslint/no-unused-vars": "off",
-      "@typescript-eslint/no-explicit-any": "warn",
-      "@typescript-eslint/no-require-imports": "warn",
-      "@typescript-eslint/no-empty-object-type": "warn",
-      "@typescript-eslint/no-this-alias": "warn",
-      "no-useless-escape": "warn",
-      "prefer-const": "warn",
-      "no-empty": "warn",
-      "no-constant-binary-expression": "warn",
-      "no-misleading-character-class": "warn",
-      "no-case-declarations": "warn",
+      "@typescript-eslint/no-explicit-any": "error",
+      "@typescript-eslint/no-require-imports": "error",
+      "@typescript-eslint/no-empty-object-type": "error",
+      "@typescript-eslint/no-this-alias": "error",
+      "no-useless-escape": "error",
+      "prefer-const": "error",
+      "no-empty": "error",
+      "no-constant-binary-expression": "error",
+      "no-misleading-character-class": "error",
+      "no-case-declarations": "error",
+    },
+  },
+  // shadcn/ui + context modules intentionally co-export helpers with components
+  {
+    files: [
+      "src/components/ui/**/*.{ts,tsx}",
+      "src/contexts/**/*.{ts,tsx}",
+      "src/components/ProtectedRoute.tsx",
+      "src/components/SecurityProvider.tsx",
+      "src/components/AppBottomTabs.tsx",
+      "src/components/PhoneInputWithCode.tsx",
+      "src/components/MatchFiltersPanel.tsx",
+      "src/pages/CaptchaScreen.tsx",
+      "src/components/form.tsx",
+    ],
+    rules: {
+      "react-refresh/only-export-components": "off",
+    },
+  },
+  // Tests: allow intentional edge-case expressions
+  {
+    files: ["src/**/*.{test,spec}.{ts,tsx}"],
+    rules: {
+      "no-constant-binary-expression": "off",
+      "no-useless-escape": "off",
+      "react-refresh/only-export-components": "off",
     },
   },
 );

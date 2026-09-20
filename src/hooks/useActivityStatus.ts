@@ -52,10 +52,8 @@ export const useActivityStatus = (userId: string | null) => {
     // Create a Blob with the payload and headers
     const blob = new Blob([payload], { type: "application/json" });
 
-    // Try sendBeacon first (most reliable for page unload)
-    if (navigator.sendBeacon) {
-      // For sendBeacon, we need to use a simple POST, but Supabase PATCH requires headers
-      // So we'll use fetch with keepalive as fallback
+    // Prefer keepalive fetch on unload (sendBeacon can't attach auth headers for PATCH)
+    if ("sendBeacon" in navigator) {
       try {
         fetch(url, {
           method: "PATCH",

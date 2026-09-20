@@ -23,6 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { formatGiftMessage } from "@/lib/gift-message";
+import { getErrorMessage } from "@/lib/errors";
 
 interface GiftItem {
   id: string;
@@ -134,8 +135,8 @@ export const SendGiftButton = ({
       } else {
         toast.error(r?.error || "Failed to send gift");
       }
-    } catch (e: any) {
-      toast.error(e?.message || "Failed to send gift");
+    } catch (e: unknown) {
+      toast.error(getErrorMessage(e, "Failed to send gift"));
     } finally {
       setSending(null);
     }

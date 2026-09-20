@@ -150,6 +150,7 @@ const MatchDiscoveryScreen = () => {
    */
   useEffect(() => {
     loadMatches();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [filters]); // Dependency array: re-run when filters change
 
   /**
@@ -209,7 +210,8 @@ const MatchDiscoveryScreen = () => {
         .eq("user_id", user.id);
 
       // Extract language names into simple array
-      const userLanguages = currentUserLanguages?.map((l) => l.language_name) || [];
+      const userLanguages =
+        currentUserLanguages?.map((l: { language_name: string }) => l.language_name) || [];
 
       // Determine user gender - check male_profiles first, then profiles table
       const userGender = maleProfile ? "male" : currentProfile?.gender?.toLowerCase() || "";
@@ -401,12 +403,44 @@ const MatchDiscoveryScreen = () => {
         .eq("user_id", user.id);
 
       // Convert to Set for O(1) lookup performance
-      const matchedUserIds = new Set(existingMatches?.map((m) => m.matched_user_id) || []);
+      const matchedUserIds = new Set(
+        existingMatches?.map((m: { matched_user_id: string }) => m.matched_user_id) || [],
+      );
 
       // ============= FETCH ONLINE STATUS FOR ALL PROFILES =============
 
       // Get all user IDs from profiles
-      const userIds = profiles.map((p) => p.user_id);
+      type DiscoveryProfile = {
+        user_id: string;
+        full_name: string | null;
+        photo_url: string | null;
+        country: string | null;
+        state: string | null;
+        preferred_language: string | null;
+        interests: unknown;
+        age: number | null;
+        height_cm: number | null;
+        body_type: string | null;
+        education_level: string | null;
+        occupation: string | null;
+        religion: string | null;
+        marital_status: string | null;
+        has_children: boolean | null;
+        smoking_habit: string | null;
+        drinking_habit: string | null;
+        dietary_preference: string | null;
+        fitness_level: string | null;
+        pet_preference: string | null;
+        travel_frequency: string | null;
+        personality_type: string | null;
+        zodiac_sign: string | null;
+        bio: string | null;
+        is_verified: boolean | null;
+        is_premium: boolean | null;
+        last_active_at: string | null;
+      };
+      const typedProfiles = profiles as DiscoveryProfile[];
+      const userIds = typedProfiles.map((p: DiscoveryProfile) => p.user_id);
 
       // Batch fetch online status
       const { data: onlineStatuses } = await supabase
@@ -415,7 +449,12 @@ const MatchDiscoveryScreen = () => {
         .in("user_id", userIds);
 
       // Create Map for O(1) lookup of online status
-      const onlineStatusMap = new Map(onlineStatuses?.map((s) => [s.user_id, s.is_online]) || []);
+      const onlineStatusMap = new Map(
+        onlineStatuses?.map((s: { user_id: string; is_online: boolean | null }) => [
+          s.user_id,
+          s.is_online,
+        ]) || [],
+      );
 
       // ============= COLLECT FILTER OPTIONS =============
 
@@ -426,10 +465,12 @@ const MatchDiscoveryScreen = () => {
       // ============= CALCULATE MATCH SCORES =============
 
       // Pre-filter profiles before processing
-      const eligibleProfiles = profiles.filter((p) => !matchedUserIds.has(p.user_id));
+      const eligibleProfiles = typedProfiles.filter(
+        (p: DiscoveryProfile) => !matchedUserIds.has(p.user_id),
+      );
 
       // Batch-fetch all languages in ONE query instead of N+1
-      const eligibleUserIds = eligibleProfiles.map((p) => p.user_id);
+      const eligibleUserIds = eligibleProfiles.map((p: DiscoveryProfile) => p.user_id);
       const { data: allProfileLanguages } =
         eligibleUserIds.length > 0
           ? await supabase
@@ -440,22 +481,24 @@ const MatchDiscoveryScreen = () => {
 
       // Build a lookup map: user_id -> language_name[]
       const languagesByUserId = new Map<string, string[]>();
-      (allProfileLanguages || []).forEach((row) => {
+      (allProfileLanguages || []).forEach((row: { user_id: string; language_name: string }) => {
         const existing = languagesByUserId.get(row.user_id) || [];
         existing.push(row.language_name);
         languagesByUserId.set(row.user_id, existing);
       });
 
       // Process each profile synchronously (no more async per-profile)
-      const matchedUsers: MatchUser[] = eligibleProfiles.map((profile) => {
+      const matchedUsers: MatchUser[] = eligibleProfiles.map((profile: DiscoveryProfile) => {
         const theirLanguages = languagesByUserId.get(profile.user_id) || [];
 
         // Add to filter options
-        theirLanguages.forEach((l) => languagesSet.add(l));
+        theirLanguages.forEach((l: string) => languagesSet.add(l));
         if (profile.country) countriesSet.add(profile.country);
 
         // Find common languages between current user and this profile
-        const commonLanguages = userLanguages.filter((lang) => theirLanguages.includes(lang));
+        const commonLanguages = userLanguages.filter((lang: string) =>
+          theirLanguages.includes(lang),
+        );
 
         // Use the centralized match score calculator
         const scoreResult = calculateMatchScore(

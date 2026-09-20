@@ -59,10 +59,7 @@ export const nameSchema = z
   .trim()
   .min(LIMITS.NAME_MIN, `Name must be at least ${LIMITS.NAME_MIN} characters`)
   .max(LIMITS.NAME_MAX, `Name must be less than ${LIMITS.NAME_MAX} characters`)
-  .regex(
-    /^[a-zA-Z\s'.À-ÿ\u0900-\u097F\u0980-\u09FF\u0A00-\u0A7F\u0B00-\u0B7F\u0C00-\u0C7F\u0D00-\u0D7F\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\uAC00-\uD7AF\u0600-\u06FF-]+$/,
-    "Name contains invalid characters",
-  );
+  .regex(/^[\p{L}\p{M}\s'.-]+$/u, "Name contains invalid characters");
 
 export const bioSchema = z
   .string()
