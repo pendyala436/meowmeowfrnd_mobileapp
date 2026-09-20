@@ -10,12 +10,12 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    env:
-      # Forwarded to the remote shell for `sudo -S` (same as interactive sudo -i).
-      SUDO_PASSWORD: ${{ secrets.SSH_PASSWORD }}
     steps:
       - name: Deploy meow-app via SSH
         uses: appleboy/ssh-action@v1.2.2
+        env:
+          # Must be step-level so appleboy can forward it with `envs`.
+          SUDO_PASSWORD: ${{ secrets.SSH_PASSWORD }}
         with:
           host: ${{ vars.SSH_HOST || secrets.SSH_HOST }}
           username: ${{ vars.SSH_USER || secrets.SSH_USER }}
@@ -27,12 +27,17 @@ jobs:
           script: |
             set -euo pipefail
 
+            if [ -z "${SUDO_PASSWORD:-}" ]; then
+              echo "SUDO_PASSWORD was not forwarded to the remote shell"
+              exit 1
+            fi
+
             APP_DIR="${{ vars.APP_DIR || '/meowmeow/app/new_project' }}"
             COMPOSE_DIR="${{ vars.COMPOSE_DIR || '/meowmeow/app' }}"
 
-            # Non-interactive equivalent of: sudo -i (password from SSH_PASSWORD)
-            echo "$SUDO_PASSWORD" | sudo -S -v
-            sudo -n bash -c "
+            # One shot: feed password to sudo -S (same as interactive sudo -i).
+            # Do not use sudo -n; credential caching is unreliable over SSH.
+            printf '%s\n' "$SUDO_PASSWORD" | sudo -S -p '' bash -c "
               set -euo pipefail
               APP_DIR='$APP_DIR'
               COMPOSE_DIR='$COMPOSE_DIR'
