@@ -1,4 +1,4 @@
-name: Deploy App
+name: Deploy
 
 on:
   push:
@@ -9,12 +9,14 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
+    env:
+      SUPABASE_URL: https://www.meow-meow.co.in:8443
+      SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzg1ODE0NjI4LCJleHAiOjIxMDExNzQ2Mjh9.Y-xSzsoWio6UlfzA0hL4Zra6hno-zG81-VwCpalUcbk
     steps:
-      - name: Deploy meow-app via SSH
+      - name: Migrate DB + deploy meow-app via SSH
         uses: appleboy/ssh-action@v1.2.2
         env:
-          # Must be step-level so appleboy can forward it with `envs`.
           SUDO_PASSWORD: ${{ secrets.SSH_PASSWORD }}
         with:
           host: ${{ vars.SSH_HOST || secrets.SSH_HOST }}
@@ -23,7 +25,7 @@ jobs:
           port: ${{ vars.SSH_PORT || 22 }}
           envs: SUDO_PASSWORD
           script_stop: true
-          command_timeout: 40m
+          command_timeout: 55m
           script: |
             set -euo pipefail
 
@@ -35,8 +37,6 @@ jobs:
             APP_DIR="${{ vars.APP_DIR || '/meowmeow/app/new_project' }}"
             COMPOSE_DIR="${{ vars.COMPOSE_DIR || '/meowmeow/app' }}"
 
-            # One shot: feed password to sudo -S (same as interactive sudo -i).
-            # Do not use sudo -n; credential caching is unreliable over SSH.
             printf '%s\n' "$SUDO_PASSWORD" | sudo -S -p '' bash -c "
               set -euo pipefail
               APP_DIR='$APP_DIR'
@@ -47,6 +47,10 @@ jobs:
               git fetch origin main
               git checkout main
               git pull --ff-only origin main
+
+              echo '==> Applying pending DB migrations'
+              chmod +x scripts/unix/apply-pending-migrations.sh
+              scripts/unix/apply-pending-migrations.sh \"\$APP_DIR\"
 
               echo '==> Building meow-app:latest'
               docker build --no-cache -t meow-app:latest .
@@ -59,3 +63,28 @@ jobs:
               docker image inspect meow-app:latest --format 'image={{.Id}} created={{.Created}}'
               docker compose ps bun-app
             "
+
+      - name: Validate Financial Single Source of Truth
+        run: |
+          set -euo pipefail
+          echo "::group::SoT validator output"
+          RESPONSE=$(curl -sS -X POST "$SUPABASE_URL/rest/v1/rpc/validate_financial_sot" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{}')
+          echo "$RESPONSE" | python3 -m json.tool
+          echo "::endgroup::"
+
+          OK=$(echo "$RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin).get('ok'))")
+          if [ "$OK" != "True" ]; then
+            echo "::error::Financial SoT validation FAILED. See output above."
+            echo "$RESPONSE" | python3 -c "
+          import sys, json
+          data = json.load(sys.stdin)
+          for c in data.get('checks', []):
+              status = 'PASS' if c.get('pass') else 'FAIL'
+              print(f\"  {status} {c['name']}: {json.dumps(c.get('detail', {}))}\")"
+            exit 1
+          fi
+          echo "All SoT checks passed."
