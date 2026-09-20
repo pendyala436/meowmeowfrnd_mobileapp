@@ -29,15 +29,114 @@ interface ProfileLanguage {
 
 // Indian language codes for categorization
 const INDIAN_LANGUAGE_CODES = new Set([
-  "hi", "bn", "te", "mr", "ta", "gu", "kn", "ml", "or", "pa", "as", "mai", "sat", "ks",
-  "kok", "doi", "mni", "brx", "sa", "bho", "hne", "raj", "mwr", "mtr", "bgc", "mag",
-  "anp", "bjj", "awa", "bns", "bfy", "gbm", "kfy", "him", "kan", "tcy", "kfa", "bhb",
-  "gon", "lmn", "sck", "kru", "unr", "hoc", "khr", "hlb", "khn", "dcc", "wbr", "bhd",
-  "mup", "hoj", "dgo", "sjo", "mby", "saz", "bra", "kfk", "lah", "psu", "pgg", "xnr",
-  "srx", "jml", "dty", "thl", "bap", "lus", "kha", "grt", "mjw", "trp", "rah", "mrg",
-  "njz", "apt", "adi", "lep", "sip", "lif", "njo", "njh", "nsm", "njm", "nmf", "pck",
-  "tcz", "nbu", "nst", "nnp", "njb", "nag", "tcx", "bfq", "iru", "kfh", "vav", "abl",
-  "wbq", "gok", "kxv", "kff", "kdu", "yed", "sou", "ur", "sd", "ne"
+  "hi",
+  "bn",
+  "te",
+  "mr",
+  "ta",
+  "gu",
+  "kn",
+  "ml",
+  "or",
+  "pa",
+  "as",
+  "mai",
+  "sat",
+  "ks",
+  "kok",
+  "doi",
+  "mni",
+  "brx",
+  "sa",
+  "bho",
+  "hne",
+  "raj",
+  "mwr",
+  "mtr",
+  "bgc",
+  "mag",
+  "anp",
+  "bjj",
+  "awa",
+  "bns",
+  "bfy",
+  "gbm",
+  "kfy",
+  "him",
+  "kan",
+  "tcy",
+  "kfa",
+  "bhb",
+  "gon",
+  "lmn",
+  "sck",
+  "kru",
+  "unr",
+  "hoc",
+  "khr",
+  "hlb",
+  "khn",
+  "dcc",
+  "wbr",
+  "bhd",
+  "mup",
+  "hoj",
+  "dgo",
+  "sjo",
+  "mby",
+  "saz",
+  "bra",
+  "kfk",
+  "lah",
+  "psu",
+  "pgg",
+  "xnr",
+  "srx",
+  "jml",
+  "dty",
+  "thl",
+  "bap",
+  "lus",
+  "kha",
+  "grt",
+  "mjw",
+  "trp",
+  "rah",
+  "mrg",
+  "njz",
+  "apt",
+  "adi",
+  "lep",
+  "sip",
+  "lif",
+  "njo",
+  "njh",
+  "nsm",
+  "njm",
+  "nmf",
+  "pck",
+  "tcz",
+  "nbu",
+  "nst",
+  "nnp",
+  "njb",
+  "nag",
+  "tcx",
+  "bfq",
+  "iru",
+  "kfh",
+  "vav",
+  "abl",
+  "wbq",
+  "gok",
+  "kxv",
+  "kff",
+  "kdu",
+  "yed",
+  "sou",
+  "ur",
+  "sd",
+  "ne",
 ]);
 
 interface LanguageSelectorProps {
@@ -48,7 +147,7 @@ interface LanguageSelectorProps {
   label?: string;
   description?: string;
   className?: string;
-  gender?: 'male' | 'female' | null;
+  gender?: "male" | "female" | null;
 }
 
 export const LanguageSelector = ({
@@ -66,13 +165,15 @@ export const LanguageSelector = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
   const [tempSelectedLanguage, setTempSelectedLanguage] = useState<ProfileLanguage | null>(null);
-  const [userGender, setUserGender] = useState<'male' | 'female' | null>(gender || null);
+  const [userGender, setUserGender] = useState<"male" | "female" | null>(gender || null);
 
   // Fetch user gender if not provided
   useEffect(() => {
     if (!gender) {
       const fetchUserGender = async () => {
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         if (session?.user) {
           const user = session.user;
           const { data: profile } = await supabase
@@ -81,7 +182,7 @@ export const LanguageSelector = ({
             .eq("user_id", user.id)
             .maybeSingle();
           if (profile?.gender) {
-            setUserGender(profile.gender.toLowerCase() as 'male' | 'female');
+            setUserGender(profile.gender.toLowerCase() as "male" | "female");
           }
         }
       };
@@ -91,9 +192,9 @@ export const LanguageSelector = ({
 
   // Get languages - 1000+ languages available
   const allLanguages: ProfileLanguage[] = useMemo(() => {
-    return languages.map(lang => ({
+    return languages.map((lang) => ({
       ...lang,
-      isIndian: INDIAN_LANGUAGE_CODES.has(lang.code)
+      isIndian: INDIAN_LANGUAGE_CODES.has(lang.code),
     }));
   }, []);
 
@@ -102,29 +203,29 @@ export const LanguageSelector = ({
     if (!searchQuery.trim()) return allLanguages;
     const query = searchQuery.toLowerCase();
     return allLanguages.filter(
-      lang => 
+      (lang) =>
         lang.name.toLowerCase().includes(query) ||
         lang.nativeName.toLowerCase().includes(query) ||
-        (lang.script && lang.script.toLowerCase().includes(query))
+        (lang.script && lang.script.toLowerCase().includes(query)),
     );
   }, [allLanguages, searchQuery]);
 
   // Group languages
-  const indianLanguages = useMemo(() => 
-    filteredLanguages.filter(l => l.isIndian), 
-    [filteredLanguages]
+  const indianLanguages = useMemo(
+    () => filteredLanguages.filter((l) => l.isIndian),
+    [filteredLanguages],
   );
-  
-  const worldLanguages = useMemo(() => 
-    filteredLanguages.filter(l => !l.isIndian), 
-    [filteredLanguages]
+
+  const worldLanguages = useMemo(
+    () => filteredLanguages.filter((l) => !l.isIndian),
+    [filteredLanguages],
   );
 
   const handleOpenChange = () => {
     setIsOpen(true);
     setSearchQuery("");
     // Set temp selection to current language
-    const currentLang = allLanguages.find(l => l.name === selectedLanguage);
+    const currentLang = allLanguages.find((l) => l.name === selectedLanguage);
     setTempSelectedLanguage(currentLang || null);
   };
 
@@ -134,10 +235,12 @@ export const LanguageSelector = ({
 
   const handleSaveLanguage = async () => {
     if (!tempSelectedLanguage) return;
-    
+
     setIsUpdating(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session?.user) {
         toast({
           title: "Error",
@@ -171,10 +274,7 @@ export const LanguageSelector = ({
       // Settings screen reads this column — without it, language snaps back to English
       await supabase
         .from("user_settings")
-        .upsert(
-          { user_id: user.id, language: languageName },
-          { onConflict: "user_id" }
-        );
+        .upsert({ user_id: user.id, language: languageName }, { onConflict: "user_id" });
 
       if (gender === "male") {
         await supabase
@@ -198,7 +298,7 @@ export const LanguageSelector = ({
 
       onLanguageChange(languageName, languageCode);
       setIsOpen(false);
-      
+
       toast({
         title: "Language Saved",
         description: `Your language is now set to ${tempSelectedLanguage.name}`,
@@ -224,35 +324,39 @@ export const LanguageSelector = ({
   const LanguageItem = ({ lang }: { lang: ProfileLanguage }) => {
     const isSelected = tempSelectedLanguage?.code === lang.code;
     const isCurrent = selectedLanguage === lang.name;
-    
+
     return (
       <button
         onClick={() => handleSelectLanguage(lang)}
         className={cn(
           "w-full flex items-center justify-between p-3 rounded-lg transition-all text-left",
-          isSelected 
-            ? "bg-primary/20 border-2 border-primary shadow-sm" 
+          isSelected
+            ? "bg-primary/20 border-2 border-primary shadow-sm"
             : isCurrent
               ? "bg-accent/50 border border-border"
-              : "hover:bg-accent border border-transparent"
+              : "hover:bg-accent border border-transparent",
         )}
       >
         <div className="flex items-center gap-3">
-          <div className={cn(
-            "w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold bg-gradient-to-br from-primary to-accent text-primary-foreground"
-          )}>
+          <div
+            className={cn(
+              "w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold bg-gradient-to-br from-primary to-accent text-primary-foreground",
+            )}
+          >
             {lang.nativeName.charAt(0)}
           </div>
           <div>
             <p className="font-semibold text-foreground">{lang.name}</p>
             <p className="text-xs text-muted-foreground">
-              {lang.nativeName} • {lang.script || 'Latin'}
+              {lang.nativeName} • {lang.script || "Latin"}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           {isCurrent && !isSelected && (
-            <Badge variant="secondary" className="text-xs">Current</Badge>
+            <Badge variant="secondary" className="text-xs">
+              Current
+            </Badge>
           )}
           {isSelected && (
             <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
@@ -271,24 +375,29 @@ export const LanguageSelector = ({
     <div className={cn("space-y-2", className)}>
       {label && <Label className="text-sm font-medium">{label}</Label>}
       {description && <p className="text-xs text-muted-foreground">{description}</p>}
-      
+
       {/* Current Language Display with Change/Save Button */}
       <div className="flex items-center gap-3">
         <div className="flex-1 flex items-center gap-3 p-3 rounded-xl bg-background/80 border border-border/50">
           <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold bg-gradient-to-br from-primary to-accent text-primary-foreground">
-            {allLanguages.find(l => l.name === selectedLanguage)?.nativeName?.charAt(0) || selectedLanguage?.charAt(0) || "?"}
+            {allLanguages.find((l) => l.name === selectedLanguage)?.nativeName?.charAt(0) ||
+              selectedLanguage?.charAt(0) ||
+              "?"}
           </div>
           <div className="flex-1">
             <p className="font-semibold text-foreground">{selectedLanguage || "Select Language"}</p>
             <p className="text-xs text-muted-foreground">
-              {allLanguages.find(l => l.name === selectedLanguage)?.nativeName || "Choose your language"}
+              {allLanguages.find((l) => l.name === selectedLanguage)?.nativeName ||
+                "Choose your language"}
             </p>
           </div>
           <Badge variant="outline" className="text-xs">
-            {allLanguages.find(l => l.name === selectedLanguage)?.isIndian ? "🇮🇳 India" : "🌍 World"}
+            {allLanguages.find((l) => l.name === selectedLanguage)?.isIndian
+              ? "🇮🇳 India"
+              : "🌍 World"}
           </Badge>
         </div>
-        
+
         {/* Alternate between Change and Save buttons */}
         {!isOpen && !hasNewSelection ? (
           <Button
@@ -334,10 +443,11 @@ export const LanguageSelector = ({
               Select Your Language
             </DialogTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              Choose from {allLanguages.length} languages ({indianLanguages.length} Indian + {worldLanguages.length} World)
+              Choose from {allLanguages.length} languages ({indianLanguages.length} Indian +{" "}
+              {worldLanguages.length} World)
             </p>
           </DialogHeader>
-          
+
           {/* Search Bar */}
           <div className="px-6 py-4 border-b border-border/50 bg-muted/30">
             <div className="relative">
@@ -362,11 +472,11 @@ export const LanguageSelector = ({
             </div>
             {searchQuery && (
               <p className="text-xs text-muted-foreground mt-2">
-                Found {filteredLanguages.length} language{filteredLanguages.length !== 1 ? 's' : ''}
+                Found {filteredLanguages.length} language{filteredLanguages.length !== 1 ? "s" : ""}
               </p>
             )}
           </div>
-          
+
           {/* Language List */}
           <ScrollArea className="h-[400px]">
             <div className="p-4 space-y-6">
@@ -375,9 +485,7 @@ export const LanguageSelector = ({
                 <div>
                   <div className="flex items-center gap-2 px-2 py-2 mb-3 bg-gradient-to-r from-orange-500/10 to-green-500/10 rounded-lg">
                     <span className="text-xl">🇮🇳</span>
-                    <span className="text-sm font-bold text-foreground">
-                      Indian Languages
-                    </span>
+                    <span className="text-sm font-bold text-foreground">Indian Languages</span>
                     <Badge variant="secondary" className="ml-auto text-xs">
                       {indianLanguages.length}
                     </Badge>
@@ -389,15 +497,13 @@ export const LanguageSelector = ({
                   </div>
                 </div>
               )}
-              
+
               {/* World Languages Section */}
               {worldLanguages.length > 0 && (
                 <div>
                   <div className="flex items-center gap-2 px-2 py-2 mb-3 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-lg">
                     <Globe className="h-5 w-5 text-primary" />
-                    <span className="text-sm font-bold text-foreground">
-                      World Languages
-                    </span>
+                    <span className="text-sm font-bold text-foreground">World Languages</span>
                     <Badge variant="secondary" className="ml-auto text-xs">
                       {worldLanguages.length}
                     </Badge>
@@ -409,7 +515,7 @@ export const LanguageSelector = ({
                   </div>
                 </div>
               )}
-              
+
               {filteredLanguages.length === 0 && (
                 <div className="text-center py-12 text-muted-foreground">
                   <Languages className="h-12 w-12 mx-auto mb-3 opacity-50" />
@@ -426,18 +532,15 @@ export const LanguageSelector = ({
               <div className="text-sm text-muted-foreground">
                 {tempSelectedLanguage && tempSelectedLanguage.name !== selectedLanguage ? (
                   <span>
-                    New selection: <strong className="text-primary">{tempSelectedLanguage.name}</strong>
+                    New selection:{" "}
+                    <strong className="text-primary">{tempSelectedLanguage.name}</strong>
                   </span>
                 ) : (
                   <span>Select a different language to save</span>
                 )}
               </div>
               <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  onClick={handleCancel}
-                  className="gap-2"
-                >
+                <Button variant="outline" onClick={handleCancel} className="gap-2">
                   <X className="h-4 w-4" />
                   Cancel
                 </Button>
@@ -446,7 +549,11 @@ export const LanguageSelector = ({
                   onClick={() => {
                     handleSaveLanguage();
                   }}
-                  disabled={!tempSelectedLanguage || tempSelectedLanguage.name === selectedLanguage || isUpdating}
+                  disabled={
+                    !tempSelectedLanguage ||
+                    tempSelectedLanguage.name === selectedLanguage ||
+                    isUpdating
+                  }
                   className="gap-2 min-w-[120px]"
                 >
                   {isUpdating ? (
@@ -454,7 +561,9 @@ export const LanguageSelector = ({
                   ) : (
                     <Save className="h-4 w-4" />
                   )}
-                  {tempSelectedLanguage && tempSelectedLanguage.name !== selectedLanguage ? "Save" : "Select & Save"}
+                  {tempSelectedLanguage && tempSelectedLanguage.name !== selectedLanguage
+                    ? "Save"
+                    : "Select & Save"}
                 </Button>
               </div>
             </div>

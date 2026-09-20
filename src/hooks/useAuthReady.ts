@@ -1,17 +1,19 @@
 /**
  * Global singleton auth state hook.
- * 
+ *
  * Pattern: getSession() first, then onAuthStateChange for subsequent changes.
  * All components share one auth state — no conflicting session checks.
  */
-import { useState, useEffect, useRef } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
-import { clearUserContextCache } from '@/hooks/useOptimizedAuth';
+import { useState, useEffect, useRef } from "react";
+import { User, Session } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
+import { clearUserContextCache } from "@/hooks/useOptimizedAuth";
 
 // Module-level sign-out flag — avoids polluting globalThis/window
 let _signedOut = false;
-export const setSignedOut = (v: boolean) => { _signedOut = v; };
+export const setSignedOut = (v: boolean) => {
+  _signedOut = v;
+};
 export const isSignedOut = () => _signedOut;
 
 interface AuthState {
@@ -27,7 +29,7 @@ let initialized = false;
 
 function broadcast(next: AuthState) {
   globalState = next;
-  listeners.forEach(fn => fn(next));
+  listeners.forEach((fn) => fn(next));
 }
 
 function boot() {
@@ -35,36 +37,46 @@ function boot() {
   initialized = true;
 
   // 1) Restore session from storage FIRST — with timeout to prevent hanging
-  const sessionPromise = supabase.auth.getSession().then(async ({ data: { session } }) => {
-    // Validate restored token. If the server rejects it (e.g. bad_jwt /
-    // "missing sub claim" after a key rotation or stale cloud token on a
-    // self-hosted backend), sign out LOCALLY so the user sees a clean login
-    // instead of being bounced from protected routes on every refresh.
-    if (session?.access_token) {
-      try {
-        const { error } = await supabase.auth.getUser();
-        if (error) {
-          console.warn('[Auth] Restored session rejected by server, clearing locally:', error.message);
-          try { await supabase.auth.signOut({ scope: 'local' } as any); } catch {}
-          broadcast({ user: null, session: null, isReady: true });
-          return;
+  const sessionPromise = supabase.auth
+    .getSession()
+    .then(async ({ data: { session } }) => {
+      // Validate restored token. If the server rejects it (e.g. bad_jwt /
+      // "missing sub claim" after a key rotation or stale cloud token on a
+      // self-hosted backend), sign out LOCALLY so the user sees a clean login
+      // instead of being bounced from protected routes on every refresh.
+      if (session?.access_token) {
+        try {
+          const { error } = await supabase.auth.getUser();
+          if (error) {
+            console.warn(
+              "[Auth] Restored session rejected by server, clearing locally:",
+              error.message,
+            );
+            try {
+              await supabase.auth.signOut({ scope: "local" } as any);
+            } catch {}
+            broadcast({ user: null, session: null, isReady: true });
+            return;
+          }
+        } catch {
+          // Network hiccup — keep the session optimistically; autoRefresh will retry.
         }
-      } catch {
-        // Network hiccup — keep the session optimistically; autoRefresh will retry.
       }
-    }
-    // Attach the (restored) token to the realtime socket so postgres_changes
-    // subscriptions run as 'authenticated' and RLS delivers live events.
-    try { supabase.realtime.setAuth(session?.access_token ?? null); } catch {}
-    broadcast({ user: session?.user ?? null, session, isReady: true });
-  }).catch(() => {
-    broadcast({ user: null, session: null, isReady: true });
-  });
+      // Attach the (restored) token to the realtime socket so postgres_changes
+      // subscriptions run as 'authenticated' and RLS delivers live events.
+      try {
+        supabase.realtime.setAuth(session?.access_token ?? null);
+      } catch {}
+      broadcast({ user: session?.user ?? null, session, isReady: true });
+    })
+    .catch(() => {
+      broadcast({ user: null, session: null, isReady: true });
+    });
 
   // Safety timeout: 12s for slow mobile networks (2G/3G), was 5s
   const timeout = setTimeout(() => {
     if (!globalState.isReady) {
-      console.warn('[Auth] Session restore timed out after 12s, proceeding without session');
+      console.warn("[Auth] Session restore timed out after 12s, proceeding without session");
       broadcast({ user: null, session: null, isReady: true });
     }
   }, 12000);
@@ -74,7 +86,7 @@ function boot() {
   // 2) Listen for subsequent changes (sign-in, sign-out, token refresh)
   //    IMPORTANT: no async work inside this callback
   supabase.auth.onAuthStateChange((_event, session) => {
-    if (_event === 'SIGNED_OUT') {
+    if (_event === "SIGNED_OUT") {
       setSignedOut(true);
       clearUserContextCache();
     } else if (session?.user) {
@@ -82,11 +94,12 @@ function boot() {
     }
     // Keep the realtime socket's auth token current (fixes live chat only
     // updating after a manual refresh).
-    try { supabase.realtime.setAuth(session?.access_token ?? null); } catch {}
+    try {
+      supabase.realtime.setAuth(session?.access_token ?? null);
+    } catch {}
     broadcast({ user: session?.user ?? null, session, isReady: true });
   });
 }
-
 
 // ── Hook ────────────────────────────────────────────────────────────
 export function useAuthReady() {
@@ -101,7 +114,8 @@ export function useAuthReady() {
         prev.isReady === next.isReady &&
         prev.user?.id === next.user?.id &&
         prev.session?.expires_at === next.session?.expires_at
-      ) return;
+      )
+        return;
       stateRef.current = next;
       setState(next);
     };
@@ -115,7 +129,9 @@ export function useAuthReady() {
       setState(globalState);
     }
 
-    return () => { listeners.delete(listener); };
+    return () => {
+      listeners.delete(listener);
+    };
   }, []);
 
   return { user: state.user, isReady: state.isReady, session: state.session };

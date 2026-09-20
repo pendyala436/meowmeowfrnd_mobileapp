@@ -8,7 +8,7 @@ import { toast } from "sonner";
  */
 export const useRegistrationGuard = (
   requiredKeys: { key: string; storage?: "local" | "session" }[],
-  redirectTo: string
+  redirectTo: string,
 ) => {
   const navigate = useNavigate();
   // Stable ref to avoid re-running on every render while still reading latest values

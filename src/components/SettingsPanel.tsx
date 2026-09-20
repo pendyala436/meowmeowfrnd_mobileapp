@@ -4,16 +4,22 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
-import { 
-  Bell, 
-  Globe, 
-  Eye, 
+import {
+  Bell,
+  Globe,
+  Eye,
   Palette,
   Volume2,
   Vibrate,
@@ -26,7 +32,7 @@ import {
   CheckCircle2,
   Loader2,
   MessageCircle,
-  Check
+  Check,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -66,7 +72,7 @@ const DEFAULT_SETTINGS: UserSettings = {
   show_online_status: true,
   show_read_receipts: true,
   profile_visibility: "high",
-  distance_unit: "km"
+  distance_unit: "km",
 };
 
 interface SettingsPanelProps {
@@ -76,7 +82,8 @@ interface SettingsPanelProps {
 export const SettingsPanel = ({ compact = false }: SettingsPanelProps) => {
   const navigate = useNavigate();
   const { mode, setMode } = useAppTheme();
-  const t = (key: string, def: string) => def; const setLanguage = (l: string) => {};
+  const t = (key: string, def: string) => def;
+  const setLanguage = (l: string) => {};
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
   const [originalSettings, setOriginalSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
@@ -86,13 +93,18 @@ export const SettingsPanel = ({ compact = false }: SettingsPanelProps) => {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   // Parallel chat settings
-  const { maxParallelChats, setMaxParallelChats, isLoading: parallelSettingsLoading } = 
-    useParallelChatSettings(currentUserId || undefined);
+  const {
+    maxParallelChats,
+    setMaxParallelChats,
+    isLoading: parallelSettingsLoading,
+  } = useParallelChatSettings(currentUserId || undefined);
   const [selectedParallelChats, setSelectedParallelChats] = useState(maxParallelChats.toString());
 
   const fetchSettings = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session?.user) {
         navigate("/");
         return;
@@ -151,7 +163,11 @@ export const SettingsPanel = ({ compact = false }: SettingsPanelProps) => {
       setSettings(loadedSettings);
       setOriginalSettings(loadedSettings);
 
-      if (loadedSettings.theme === "light" || loadedSettings.theme === "dark" || loadedSettings.theme === "system") {
+      if (
+        loadedSettings.theme === "light" ||
+        loadedSettings.theme === "dark" ||
+        loadedSettings.theme === "system"
+      ) {
         setMode(loadedSettings.theme as ThemeMode);
       }
     } catch (error) {
@@ -173,7 +189,7 @@ export const SettingsPanel = ({ compact = false }: SettingsPanelProps) => {
       if (!hasChanges) {
         fetchSettings();
       }
-    }
+    },
   });
 
   // Update parallel chats selection when loaded
@@ -182,16 +198,19 @@ export const SettingsPanel = ({ compact = false }: SettingsPanelProps) => {
   }, [maxParallelChats]);
 
   useEffect(() => {
-    const changed = JSON.stringify(settings) !== JSON.stringify(originalSettings) ||
-                   mode !== originalSettings.theme ||
-                   selectedParallelChats !== maxParallelChats.toString();
+    const changed =
+      JSON.stringify(settings) !== JSON.stringify(originalSettings) ||
+      mode !== originalSettings.theme ||
+      selectedParallelChats !== maxParallelChats.toString();
     setHasChanges(changed);
   }, [settings, originalSettings, mode, selectedParallelChats, maxParallelChats]);
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session?.user) {
         toast.error("Session expired. Please log in again.");
         navigate("/");
@@ -269,7 +288,9 @@ export const SettingsPanel = ({ compact = false }: SettingsPanelProps) => {
         await setMaxParallelChats(Number(selectedParallelChats));
       } catch (parallelError) {
         console.error("Error saving parallel chat settings:", parallelError);
-        toast.error("Settings not saved", { description: "Unable to save your chat settings. Please try again." });
+        toast.error("Settings not saved", {
+          description: "Unable to save your chat settings. Please try again.",
+        });
         // Don't fail the whole save for this
       }
 
@@ -285,7 +306,7 @@ export const SettingsPanel = ({ compact = false }: SettingsPanelProps) => {
   };
 
   const updateSetting = <K extends keyof UserSettings>(key: K, value: UserSettings[K]) => {
-    setSettings(prev => ({ ...prev, [key]: value }));
+    setSettings((prev) => ({ ...prev, [key]: value }));
   };
 
   if (loading) {
@@ -298,15 +319,22 @@ export const SettingsPanel = ({ compact = false }: SettingsPanelProps) => {
   }
 
   return (
-    <div className={cn("space-y-6 w-full max-w-full min-w-0 overflow-x-hidden", compact && "space-y-4")}>
+    <div
+      className={cn(
+        "space-y-6 w-full max-w-full min-w-0 overflow-x-hidden",
+        compact && "space-y-4",
+      )}
+    >
       {/* Parallel Chat Settings */}
       <Card className="w-full max-w-full min-w-0">
         <CardHeader className={cn("pb-3", compact && "py-3 px-3 sm:px-4")}>
           <CardTitle className="flex items-center gap-2 text-base sm:text-lg min-w-0">
             <MessageCircle className="h-5 w-5 text-primary shrink-0" />
-            <span className="truncate">{t('parallelChats', 'Parallel Chats')}</span>
+            <span className="truncate">{t("parallelChats", "Parallel Chats")}</span>
           </CardTitle>
-          <CardDescription className="break-words">{t('parallelChatsDesc', 'Set how many chat windows you want open at once')}</CardDescription>
+          <CardDescription className="break-words">
+            {t("parallelChatsDesc", "Set how many chat windows you want open at once")}
+          </CardDescription>
         </CardHeader>
         <CardContent className={compact ? "px-3 sm:px-4 pb-4" : undefined}>
           <RadioGroup
@@ -320,21 +348,36 @@ export const SettingsPanel = ({ compact = false }: SettingsPanelProps) => {
               { value: "2", label: "2", desc: "Light" },
               { value: "3", label: "3", desc: "Normal" },
               { value: "4", label: "4", desc: "Busy" },
-              { value: "5", label: "5", desc: "Max" }
+              { value: "5", label: "5", desc: "Max" },
             ].map((option) => (
               <div key={option.value} className="relative min-w-0">
-                <RadioGroupItem value={option.value} id={`pc-${option.value}`} className="peer sr-only" />
+                <RadioGroupItem
+                  value={option.value}
+                  id={`pc-${option.value}`}
+                  className="peer sr-only"
+                />
                 <Label
                   htmlFor={`pc-${option.value}`}
                   className={cn(
                     "flex flex-col items-center min-w-0 p-1.5 sm:p-2 rounded-lg border-2 cursor-pointer transition-all text-center",
                     "hover:border-primary/50",
-                    selectedParallelChats === option.value ? "border-primary bg-primary/10" : "border-border"
+                    selectedParallelChats === option.value
+                      ? "border-primary bg-primary/10"
+                      : "border-border",
                   )}
                 >
-                  <MessageSquare className={cn("h-4 w-4 mb-1 shrink-0", selectedParallelChats === option.value ? "text-primary" : "text-muted-foreground")} />
+                  <MessageSquare
+                    className={cn(
+                      "h-4 w-4 mb-1 shrink-0",
+                      selectedParallelChats === option.value
+                        ? "text-primary"
+                        : "text-muted-foreground",
+                    )}
+                  />
                   <span className="font-semibold text-sm">{option.label}</span>
-                  <span className="text-[9px] text-muted-foreground truncate w-full">{option.desc}</span>
+                  <span className="text-[9px] text-muted-foreground truncate w-full">
+                    {option.desc}
+                  </span>
                   {selectedParallelChats === option.value && (
                     <Check className="absolute top-1 right-0.5 h-3 w-3 text-primary" />
                   )}
@@ -354,9 +397,11 @@ export const SettingsPanel = ({ compact = false }: SettingsPanelProps) => {
         <CardHeader className={cn("pb-3", compact && "py-3 px-3 sm:px-4")}>
           <CardTitle className="flex items-center gap-2 text-base sm:text-lg min-w-0">
             <Palette className="h-5 w-5 text-primary shrink-0" />
-            <span className="truncate">{t('appearance', 'Appearance')}</span>
+            <span className="truncate">{t("appearance", "Appearance")}</span>
           </CardTitle>
-          <CardDescription className="break-words">{t('customizeAppLooks', 'Customize how the app looks with 51 color themes')}</CardDescription>
+          <CardDescription className="break-words">
+            {t("customizeAppLooks", "Customize how the app looks with 51 color themes")}
+          </CardDescription>
         </CardHeader>
         <CardContent className={cn("min-w-0", compact && "px-3 sm:px-4 pb-4")}>
           <ThemeSelector compact />
@@ -368,15 +413,19 @@ export const SettingsPanel = ({ compact = false }: SettingsPanelProps) => {
         <CardHeader className={cn("pb-3", compact && "py-3 px-3 sm:px-4")}>
           <CardTitle className="flex items-center gap-2 text-lg">
             <Bell className="h-5 w-5 text-primary" />
-            {t('notifications', 'Notifications')}
+            {t("notifications", "Notifications")}
           </CardTitle>
-          <CardDescription>{t('manageNotifications', 'Manage your notification preferences')}</CardDescription>
+          <CardDescription>
+            {t("manageNotifications", "Manage your notification preferences")}
+          </CardDescription>
         </CardHeader>
         <CardContent className={cn("space-y-4", compact && "px-3 sm:px-4 pb-4")}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Heart className="h-4 w-4 text-muted-foreground" />
-              <Label htmlFor="notification-matches" className="cursor-pointer">{t('newMatches', 'New Matches')}</Label>
+              <Label htmlFor="notification-matches" className="cursor-pointer">
+                {t("newMatches", "New Matches")}
+              </Label>
             </div>
             <Switch
               id="notification-matches"
@@ -388,7 +437,9 @@ export const SettingsPanel = ({ compact = false }: SettingsPanelProps) => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <MessageSquare className="h-4 w-4 text-muted-foreground" />
-              <Label htmlFor="notification-messages" className="cursor-pointer">{t('messages', 'Messages')}</Label>
+              <Label htmlFor="notification-messages" className="cursor-pointer">
+                {t("messages", "Messages")}
+              </Label>
             </div>
             <Switch
               id="notification-messages"
@@ -400,7 +451,9 @@ export const SettingsPanel = ({ compact = false }: SettingsPanelProps) => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Megaphone className="h-4 w-4 text-muted-foreground" />
-              <Label htmlFor="notification-promotions" className="cursor-pointer">{t('promotions', 'Promotions')}</Label>
+              <Label htmlFor="notification-promotions" className="cursor-pointer">
+                {t("promotions", "Promotions")}
+              </Label>
             </div>
             <Switch
               id="notification-promotions"
@@ -414,7 +467,9 @@ export const SettingsPanel = ({ compact = false }: SettingsPanelProps) => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Volume2 className="h-4 w-4 text-muted-foreground" />
-              <Label htmlFor="notification-sound" className="cursor-pointer">{t('sound', 'Sound')}</Label>
+              <Label htmlFor="notification-sound" className="cursor-pointer">
+                {t("sound", "Sound")}
+              </Label>
             </div>
             <Switch
               id="notification-sound"
@@ -426,7 +481,9 @@ export const SettingsPanel = ({ compact = false }: SettingsPanelProps) => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Vibrate className="h-4 w-4 text-muted-foreground" />
-              <Label htmlFor="notification-vibration" className="cursor-pointer">{t('vibration', 'Vibration')}</Label>
+              <Label htmlFor="notification-vibration" className="cursor-pointer">
+                {t("vibration", "Vibration")}
+              </Label>
             </div>
             <Switch
               id="notification-vibration"
@@ -442,9 +499,11 @@ export const SettingsPanel = ({ compact = false }: SettingsPanelProps) => {
         <CardHeader className={cn("pb-3", compact && "py-3 px-3 sm:px-4")}>
           <CardTitle className="flex items-center gap-2 text-lg">
             <Globe className="h-5 w-5 text-primary" />
-            {t('languageRegion', 'Language & Region')}
+            {t("languageRegion", "Language & Region")}
           </CardTitle>
-          <CardDescription>{t('setLanguagePreferences', 'Set your language and translation preferences')}</CardDescription>
+          <CardDescription>
+            {t("setLanguagePreferences", "Set your language and translation preferences")}
+          </CardDescription>
         </CardHeader>
         <CardContent className={cn("space-y-4", compact && "px-3 sm:px-4 pb-4")}>
           <LanguageSelector
@@ -457,8 +516,11 @@ export const SettingsPanel = ({ compact = false }: SettingsPanelProps) => {
               setLanguage(lang);
             }}
             showAllLanguages={true}
-            label={t('appLanguage', 'App Language')}
-            description={t('languageDescription', 'Select your preferred language for the app interface')}
+            label={t("appLanguage", "App Language")}
+            description={t(
+              "languageDescription",
+              "Select your preferred language for the app interface",
+            )}
           />
 
           {/* Auto-translate setting removed - feature disabled */}
@@ -466,18 +528,18 @@ export const SettingsPanel = ({ compact = false }: SettingsPanelProps) => {
           <div className="space-y-2">
             <Label className="text-sm font-medium flex items-center gap-2">
               <Map className="h-4 w-4" />
-              {t('distanceUnit', 'Distance Unit')}
+              {t("distanceUnit", "Distance Unit")}
             </Label>
             <Select
               value={settings.distance_unit}
               onValueChange={(value) => updateSetting("distance_unit", value)}
             >
               <SelectTrigger>
-                <SelectValue placeholder={t('select', 'Select')} />
+                <SelectValue placeholder={t("select", "Select")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="km">{t('kilometers', 'Kilometers')} (km)</SelectItem>
-                <SelectItem value="miles">{t('miles', 'Miles')}</SelectItem>
+                <SelectItem value="km">{t("kilometers", "Kilometers")} (km)</SelectItem>
+                <SelectItem value="miles">{t("miles", "Miles")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -489,15 +551,19 @@ export const SettingsPanel = ({ compact = false }: SettingsPanelProps) => {
         <CardHeader className={cn("pb-3", compact && "py-3 px-3 sm:px-4")}>
           <CardTitle className="flex items-center gap-2 text-lg">
             <Lock className="h-5 w-5 text-primary" />
-            {t('privacy', 'Privacy')}
+            {t("privacy", "Privacy")}
           </CardTitle>
-          <CardDescription>{t('controlPrivacy', 'Control your privacy and visibility')}</CardDescription>
+          <CardDescription>
+            {t("controlPrivacy", "Control your privacy and visibility")}
+          </CardDescription>
         </CardHeader>
         <CardContent className={cn("space-y-4", compact && "px-3 sm:px-4 pb-4")}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Eye className="h-4 w-4 text-muted-foreground" />
-              <Label htmlFor="show-online" className="cursor-pointer">{t('showOnlineStatus', 'Show Online Status')}</Label>
+              <Label htmlFor="show-online" className="cursor-pointer">
+                {t("showOnlineStatus", "Show Online Status")}
+              </Label>
             </div>
             <Switch
               id="show-online"
@@ -509,7 +575,9 @@ export const SettingsPanel = ({ compact = false }: SettingsPanelProps) => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
-              <Label htmlFor="read-receipts" className="cursor-pointer">{t('readReceipts', 'Read Receipts')}</Label>
+              <Label htmlFor="read-receipts" className="cursor-pointer">
+                {t("readReceipts", "Read Receipts")}
+              </Label>
             </div>
             <Switch
               id="read-receipts"
@@ -521,17 +589,25 @@ export const SettingsPanel = ({ compact = false }: SettingsPanelProps) => {
           <div className="space-y-3">
             <Label className="text-sm font-medium flex items-center gap-2">
               <Eye className="h-4 w-4" />
-              {t('profileVisibility', 'Profile Visibility')}
+              {t("profileVisibility", "Profile Visibility")}
             </Label>
             <p className="text-xs text-muted-foreground">
-              {t('controlProfileVisibility', 'Control how often your profile appears to others in search results')}
+              {t(
+                "controlProfileVisibility",
+                "Control how often your profile appears to others in search results",
+              )}
             </p>
             <div className="grid grid-cols-2 gap-2 min-w-0">
               {[
                 { value: "low", labelKey: "low", descKey: "rarelyShown", icon: "🔒" },
                 { value: "medium", labelKey: "medium", descKey: "sometimesShown", icon: "👁️" },
                 { value: "high", labelKey: "high", descKey: "oftenShown", icon: "⭐" },
-                { value: "very_high", labelKey: "veryHigh", descKey: "alwaysPrioritized", icon: "🔥" },
+                {
+                  value: "very_high",
+                  labelKey: "veryHigh",
+                  descKey: "alwaysPrioritized",
+                  icon: "🔥",
+                },
               ].map((option) => (
                 <button
                   key={option.value}
@@ -540,15 +616,22 @@ export const SettingsPanel = ({ compact = false }: SettingsPanelProps) => {
                     "flex flex-col items-center justify-center min-w-0 p-2.5 sm:p-3 rounded-xl border-2 transition-all duration-200 text-center",
                     settings.profile_visibility === option.value
                       ? "border-primary bg-primary/5"
-                      : "border-border hover:border-primary/50"
+                      : "border-border hover:border-primary/50",
                   )}
                 >
                   <span className="text-2xl mb-1">{option.icon}</span>
-                  <span className={cn(
-                    "text-sm font-medium",
-                    settings.profile_visibility === option.value ? "text-primary" : "text-foreground"
-                  )}>
-                    {t(option.labelKey, option.labelKey.charAt(0).toUpperCase() + option.labelKey.slice(1))}
+                  <span
+                    className={cn(
+                      "text-sm font-medium",
+                      settings.profile_visibility === option.value
+                        ? "text-primary"
+                        : "text-foreground",
+                    )}
+                  >
+                    {t(
+                      option.labelKey,
+                      option.labelKey.charAt(0).toUpperCase() + option.labelKey.slice(1),
+                    )}
                   </span>
                   <span className="text-xs text-muted-foreground">
                     {t(option.descKey, option.descKey)}
@@ -569,7 +652,7 @@ export const SettingsPanel = ({ compact = false }: SettingsPanelProps) => {
             onClick={() => navigate("/install")}
           >
             <Globe className="h-4 w-4 text-primary" />
-            {t('installApp', 'Install App on Your Device')}
+            {t("installApp", "Install App on Your Device")}
           </Button>
         </CardContent>
       </Card>
@@ -590,12 +673,12 @@ export const SettingsPanel = ({ compact = false }: SettingsPanelProps) => {
             {saving ? (
               <>
                 <Loader2 className="h-5 w-5 animate-spin" />
-                {t('saving', 'Saving...')}
+                {t("saving", "Saving...")}
               </>
             ) : (
               <>
                 <Save className="h-5 w-5" />
-                {t('saveChanges', 'Save Changes')}
+                {t("saveChanges", "Save Changes")}
               </>
             )}
           </Button>

@@ -1,28 +1,31 @@
 import { toast } from "sonner";
 /**
  * usePWA.ts
- * 
+ *
  * PURPOSE: Universal PWA support for ALL devices, OS, and browsers
  * Supports: iOS Safari, Android Chrome, Windows Edge, macOS Safari, Linux Firefox, Samsung Internet, etc.
  */
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { registerSW } from 'virtual:pwa-register';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { registerSW } from "virtual:pwa-register";
+import { supabase } from "@/integrations/supabase/client";
 
 const isIframeOrPreviewHost = () => {
-  if (typeof window === 'undefined') return true;
+  if (typeof window === "undefined") return true;
   const inIframe = (() => {
-    try { return window.self !== window.top; }
-    catch { return true; }
+    try {
+      return window.self !== window.top;
+    } catch {
+      return true;
+    }
   })();
   const host = window.location.hostname;
-  return inIframe || host.includes('id-preview--') || host.includes('lovableproject.com');
+  return inIframe || host.includes("id-preview--") || host.includes("lovableproject.com");
 };
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
 interface PWAState {
@@ -30,16 +33,16 @@ interface PWAState {
   isInstallable: boolean;
   isInstalled: boolean;
   canInstall: boolean;
-  installMethod: 'prompt' | 'manual-ios' | 'manual-android' | 'none';
-  
+  installMethod: "prompt" | "manual-ios" | "manual-android" | "none";
+
   // Updates
   needsUpdate: boolean;
-  
+
   // Connectivity
   isOffline: boolean;
   connectionType: string;
   isSlowConnection: boolean;
-  
+
   // Platform Detection
   isIOS: boolean;
   isIPadOS: boolean;
@@ -48,7 +51,7 @@ interface PWAState {
   isWindows: boolean;
   isLinux: boolean;
   isChromeOS: boolean;
-  
+
   // Browser Detection
   isChrome: boolean;
   isSafari: boolean;
@@ -58,12 +61,12 @@ interface PWAState {
   isOpera: boolean;
   isBrave: boolean;
   isUCBrowser: boolean;
-  
+
   // Push Notifications
   isPushSupported: boolean;
   isPushEnabled: boolean;
-  pushPermission: NotificationPermission | 'unsupported';
-  
+  pushPermission: NotificationPermission | "unsupported";
+
   // Features Support
   isBackgroundSyncSupported: boolean;
   isPeriodicSyncSupported: boolean;
@@ -71,7 +74,7 @@ interface PWAState {
   isBadgingSupported: boolean;
   isWakeLockSupported: boolean;
   isFileSystemSupported: boolean;
-  
+
   // Storage
   storageQuota: number;
   storageUsed: number;
@@ -82,15 +85,17 @@ export function usePWA() {
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const disableServiceWorker = isIframeOrPreviewHost();
   const [needRefresh, setNeedRefresh] = useState(false);
-  const updateServiceWorkerRef = useRef<(reloadPage?: boolean) => Promise<void>>(async () => undefined);
+  const updateServiceWorkerRef = useRef<(reloadPage?: boolean) => Promise<void>>(
+    async () => undefined,
+  );
   const [state, setState] = useState<PWAState>({
     isInstallable: false,
     isInstalled: false,
     canInstall: false,
-    installMethod: 'none',
+    installMethod: "none",
     needsUpdate: false,
-    isOffline: typeof navigator !== 'undefined' ? !navigator.onLine : false,
-    connectionType: 'unknown',
+    isOffline: typeof navigator !== "undefined" ? !navigator.onLine : false,
+    connectionType: "unknown",
     isSlowConnection: false,
     isIOS: false,
     isIPadOS: false,
@@ -109,7 +114,7 @@ export function usePWA() {
     isUCBrowser: false,
     isPushSupported: false,
     isPushEnabled: false,
-    pushPermission: 'unsupported',
+    pushPermission: "unsupported",
     isBackgroundSyncSupported: false,
     isPeriodicSyncSupported: false,
     isShareTargetSupported: false,
@@ -122,38 +127,41 @@ export function usePWA() {
   });
 
   const checkPushPermission = useCallback(async () => {
-    if ('Notification' in window) {
+    if ("Notification" in window) {
       const permission = Notification.permission;
-      setState(prev => ({ 
-        ...prev, 
-        isPushEnabled: permission === 'granted',
+      setState((prev) => ({
+        ...prev,
+        isPushEnabled: permission === "granted",
         pushPermission: permission,
       }));
     }
   }, []);
 
   const checkStorageInfo = useCallback(async () => {
-    if ('storage' in navigator && 'estimate' in navigator.storage) {
+    if ("storage" in navigator && "estimate" in navigator.storage) {
       try {
         const estimate = await navigator.storage.estimate();
-        const isPersisted = await navigator.storage.persisted?.() || false;
-        setState(prev => ({
+        const isPersisted = (await navigator.storage.persisted?.()) || false;
+        setState((prev) => ({
           ...prev,
           storageQuota: estimate.quota || 0,
           storageUsed: estimate.usage || 0,
           isPersistentStorageGranted: isPersisted,
         }));
       } catch (error) {
-        console.error('Failed to get storage estimate:', error);
+        console.error("Failed to get storage estimate:", error);
       }
     }
   }, []);
 
   useEffect(() => {
     if (disableServiceWorker) {
-      navigator.serviceWorker?.getRegistrations().then((registrations) => {
-        registrations.forEach((registration) => registration.unregister());
-      }).catch(() => undefined);
+      navigator.serviceWorker
+        ?.getRegistrations()
+        .then((registrations) => {
+          registrations.forEach((registration) => registration.unregister());
+        })
+        .catch(() => undefined);
       return;
     }
 
@@ -161,26 +169,26 @@ export function usePWA() {
       immediate: true,
       onNeedRefresh: () => setNeedRefresh(true),
       onRegistered(registration) {
-        console.log('Service Worker registered:', registration);
+        console.log("Service Worker registered:", registration);
         checkPushPermission();
         checkStorageInfo();
       },
       onRegisterError(error) {
-        console.error('Service Worker registration error:', error);
+        console.error("Service Worker registration error:", error);
       },
     });
   }, [disableServiceWorker, checkPushPermission, checkStorageInfo]);
 
   // Comprehensive platform and browser detection
   useEffect(() => {
-    if (typeof navigator === 'undefined') return;
+    if (typeof navigator === "undefined") return;
 
     const ua = navigator.userAgent.toLowerCase();
-    const platform = navigator.platform?.toLowerCase() || '';
+    const platform = navigator.platform?.toLowerCase() || "";
 
     // OS Detection
     const isIOS = /iphone|ipod/.test(ua);
-    const isIPadOS = /ipad/.test(ua) || (platform === 'macintel' && navigator.maxTouchPoints > 1);
+    const isIPadOS = /ipad/.test(ua) || (platform === "macintel" && navigator.maxTouchPoints > 1);
     const isAndroid = /android/.test(ua);
     const isMacOS = /mac/.test(platform) && !isIOS && !isIPadOS;
     const isWindows = /win/.test(platform) || /windows/.test(ua);
@@ -198,37 +206,38 @@ export function usePWA() {
     const isUCBrowser = /ucbrowser|ucweb/.test(ua);
 
     // Check if already installed
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+    const isStandalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
       (window.navigator as any).standalone === true ||
-      document.referrer.includes('android-app://');
+      document.referrer.includes("android-app://");
 
     // Determine install method based on platform/browser
-    let installMethod: PWAState['installMethod'] = 'none';
+    let installMethod: PWAState["installMethod"] = "none";
     if (!isStandalone) {
       if (isIOS || isIPadOS) {
-        installMethod = 'manual-ios'; // iOS requires Add to Home Screen
+        installMethod = "manual-ios"; // iOS requires Add to Home Screen
       } else if (isAndroid && !isSamsungInternet && !isChrome) {
-        installMethod = 'manual-android'; // Some Android browsers need manual install
+        installMethod = "manual-android"; // Some Android browsers need manual install
       } else {
-        installMethod = 'prompt'; // Chrome, Edge, Samsung Internet support install prompt
+        installMethod = "prompt"; // Chrome, Edge, Samsung Internet support install prompt
       }
     }
 
     // Feature Detection
-    const isPushSupported = 'PushManager' in window && 'serviceWorker' in navigator;
-    const isBackgroundSyncSupported = 'SyncManager' in window;
-    const isPeriodicSyncSupported = 'PeriodicSyncManager' in (navigator as any);
-    const isShareTargetSupported = 'share' in navigator;
-    const isBadgingSupported = 'setAppBadge' in navigator;
-    const isWakeLockSupported = 'wakeLock' in navigator;
-    const isFileSystemSupported = 'showOpenFilePicker' in window;
+    const isPushSupported = "PushManager" in window && "serviceWorker" in navigator;
+    const isBackgroundSyncSupported = "SyncManager" in window;
+    const isPeriodicSyncSupported = "PeriodicSyncManager" in (navigator as any);
+    const isShareTargetSupported = "share" in navigator;
+    const isBadgingSupported = "setAppBadge" in navigator;
+    const isWakeLockSupported = "wakeLock" in navigator;
+    const isFileSystemSupported = "showOpenFilePicker" in window;
 
     // Connection info
     const connection = (navigator as any).connection;
-    const connectionType = connection?.effectiveType || 'unknown';
-    const isSlowConnection = connectionType === '2g' || connectionType === 'slow-2g';
+    const connectionType = connection?.effectiveType || "unknown";
+    const isSlowConnection = connectionType === "2g" || connectionType === "slow-2g";
 
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       isIOS,
       isIPadOS,
@@ -247,9 +256,9 @@ export function usePWA() {
       isUCBrowser,
       isInstalled: isStandalone,
       installMethod,
-      canInstall: !isStandalone && installMethod !== 'none',
+      canInstall: !isStandalone && installMethod !== "none",
       isPushSupported,
-      pushPermission: 'Notification' in window ? Notification.permission : 'unsupported',
+      pushPermission: "Notification" in window ? Notification.permission : "unsupported",
       isBackgroundSyncSupported,
       isPeriodicSyncSupported,
       isShareTargetSupported,
@@ -263,40 +272,43 @@ export function usePWA() {
 
   // Handle online/offline status
   useEffect(() => {
-    const handleOnline = () => setState(prev => ({ ...prev, isOffline: false }));
-    const handleOffline = () => setState(prev => ({ ...prev, isOffline: true }));
+    const handleOnline = () => setState((prev) => ({ ...prev, isOffline: false }));
+    const handleOffline = () => setState((prev) => ({ ...prev, isOffline: true }));
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
 
-    const connection = (navigator as any).connection as {
-      effectiveType?: string;
-      addEventListener?: (type: string, listener: () => void) => void;
-      removeEventListener?: (type: string, listener: () => void) => void;
-      addListener?: (listener: () => void) => void;
-      removeListener?: (listener: () => void) => void;
-    } | undefined;
+    const connection = (navigator as any).connection as
+      | {
+          effectiveType?: string;
+          addEventListener?: (type: string, listener: () => void) => void;
+          removeEventListener?: (type: string, listener: () => void) => void;
+          addListener?: (listener: () => void) => void;
+          removeListener?: (listener: () => void) => void;
+        }
+      | undefined;
 
     if (connection) {
       const handleConnectionChange = () => {
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
-          connectionType: connection.effectiveType || 'unknown',
-          isSlowConnection: connection.effectiveType === '2g' || connection.effectiveType === 'slow-2g',
+          connectionType: connection.effectiveType || "unknown",
+          isSlowConnection:
+            connection.effectiveType === "2g" || connection.effectiveType === "slow-2g",
         }));
       };
 
-      if (typeof connection.addEventListener === 'function') {
-        connection.addEventListener('change', handleConnectionChange);
+      if (typeof connection.addEventListener === "function") {
+        connection.addEventListener("change", handleConnectionChange);
       } else {
         connection.addListener?.(handleConnectionChange);
       }
 
       return () => {
-        window.removeEventListener('online', handleOnline);
-        window.removeEventListener('offline', handleOffline);
-        if (typeof connection.removeEventListener === 'function') {
-          connection.removeEventListener('change', handleConnectionChange);
+        window.removeEventListener("online", handleOnline);
+        window.removeEventListener("offline", handleOffline);
+        if (typeof connection.removeEventListener === "function") {
+          connection.removeEventListener("change", handleConnectionChange);
         } else {
           connection.removeListener?.(handleConnectionChange);
         }
@@ -304,8 +316,8 @@ export function usePWA() {
     }
 
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
     };
   }, []);
 
@@ -314,46 +326,52 @@ export function usePWA() {
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault();
       setInstallPrompt(e as BeforeInstallPromptEvent);
-      setState(prev => ({ ...prev, isInstallable: true, canInstall: true }));
+      setState((prev) => ({ ...prev, isInstallable: true, canInstall: true }));
     };
 
     const handleAppInstalled = () => {
       setInstallPrompt(null);
-      setState(prev => ({ 
-        ...prev, 
-        isInstallable: false, 
+      setState((prev) => ({
+        ...prev,
+        isInstallable: false,
         isInstalled: true,
         canInstall: false,
       }));
     };
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
-    window.addEventListener('appinstalled', handleAppInstalled);
+    window.addEventListener("beforeinstallprompt", handleBeforeInstall);
+    window.addEventListener("appinstalled", handleAppInstalled);
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
-      window.removeEventListener('appinstalled', handleAppInstalled);
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
+      window.removeEventListener("appinstalled", handleAppInstalled);
     };
   }, []);
 
   // Update needsUpdate state
   useEffect(() => {
-    setState(prev => ({ ...prev, needsUpdate: needRefresh }));
+    setState((prev) => ({ ...prev, needsUpdate: needRefresh }));
   }, [needRefresh]);
 
   // Install PWA (for browsers that support install prompt)
   const install = useCallback(async (): Promise<boolean> => {
     // Detect environments where the native install prompt cannot fire
     const isInIframe = (() => {
-      try { return typeof window !== 'undefined' && window.self !== window.top; }
-      catch { return true; }
+      try {
+        return typeof window !== "undefined" && window.self !== window.top;
+      } catch {
+        return true;
+      }
     })();
-    const host = typeof window !== 'undefined' ? window.location.hostname : '';
-    const isPreviewHost = host.includes('lovable.app') || host.includes('lovableproject.com') || host.includes('localhost');
-    const alreadyStandalone = typeof window !== 'undefined' && (
-      window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as any).standalone === true
-    );
+    const host = typeof window !== "undefined" ? window.location.hostname : "";
+    const isPreviewHost =
+      host.includes("lovable.app") ||
+      host.includes("lovableproject.com") ||
+      host.includes("localhost");
+    const alreadyStandalone =
+      typeof window !== "undefined" &&
+      (window.matchMedia("(display-mode: standalone)").matches ||
+        (window.navigator as any).standalone === true);
 
     if (alreadyStandalone) {
       // Already installed — no-op, no error
@@ -362,26 +380,29 @@ export function usePWA() {
 
     if (!installPrompt) {
       // Native prompt isn't available — give a helpful, platform-specific hint instead of an error
-      if (import.meta.env.DEV) console.log('[PWA] Install prompt not available', { isInIframe, isPreviewHost });
+      if (import.meta.env.DEV)
+        console.log("[PWA] Install prompt not available", { isInIframe, isPreviewHost });
 
       if (isInIframe || isPreviewHost) {
-        toast.info('Open in your browser to install', {
-          description: 'Installation only works on the published app, not inside the editor preview.',
+        toast.info("Open in your browser to install", {
+          description:
+            "Installation only works on the published app, not inside the editor preview.",
         });
         return false;
       }
 
       if (state.isIOS || state.isIPadOS) {
-        toast.info('Add to Home Screen', {
+        toast.info("Add to Home Screen", {
           description: 'Tap the Share icon in Safari, then choose "Add to Home Screen".',
         });
       } else if (state.isAndroid) {
-        toast.info('Install from browser menu', {
+        toast.info("Install from browser menu", {
           description: 'Tap the ⋮ menu in Chrome and choose "Install app" or "Add to Home screen".',
         });
       } else {
-        toast.info('Install from browser', {
-          description: 'Look for the install icon (⊕) in your browser\'s address bar, or use the browser menu.',
+        toast.info("Install from browser", {
+          description:
+            "Look for the install icon (⊕) in your browser's address bar, or use the browser menu.",
         });
       }
       return false;
@@ -391,26 +412,29 @@ export function usePWA() {
       await installPrompt.prompt();
       const { outcome } = await installPrompt.userChoice;
 
-      if (outcome === 'accepted') {
+      if (outcome === "accepted") {
         setInstallPrompt(null);
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           isInstallable: false,
           isInstalled: true,
           canInstall: false,
         }));
-        toast.success('App installed', { description: 'You can now launch it from your home screen.' });
+        toast.success("App installed", {
+          description: "You can now launch it from your home screen.",
+        });
         return true;
       }
       // User dismissed — that's fine, no error toast
       return false;
     } catch (error: any) {
-      console.error('Install failed:', error);
+      console.error("Install failed:", error);
       // Only show a real error if it's something other than the user cancelling
-      const msg = String(error?.message || error || '').toLowerCase();
-      if (!msg.includes('cancel') && !msg.includes('dismiss') && !msg.includes('user gesture')) {
-        toast.error('Installation unavailable', {
-          description: 'Your browser did not allow installation. Try the browser menu → "Install app".',
+      const msg = String(error?.message || error || "").toLowerCase();
+      if (!msg.includes("cancel") && !msg.includes("dismiss") && !msg.includes("user gesture")) {
+        toast.error("Installation unavailable", {
+          description:
+            'Your browser did not allow installation. Try the browser menu → "Install app".',
         });
       }
       return false;
@@ -421,57 +445,64 @@ export function usePWA() {
   const getInstallInstructions = useCallback(() => {
     if (state.isIOS || state.isIPadOS) {
       return {
-        title: 'Install on iOS',
+        title: "Install on iOS",
         steps: [
-          'Tap the Share button (square with arrow)',
+          "Tap the Share button (square with arrow)",
           'Scroll down and tap "Add to Home Screen"',
           'Tap "Add" in the top right corner',
         ],
-        icon: 'share',
+        icon: "share",
       };
     }
     if (state.isAndroid) {
       if (state.isFirefox) {
         return {
-          title: 'Install on Android (Firefox)',
+          title: "Install on Android (Firefox)",
           steps: [
-            'Tap the menu button (three dots)',
+            "Tap the menu button (three dots)",
             'Tap "Install"',
-            'Follow the prompts to install',
+            "Follow the prompts to install",
           ],
-          icon: 'menu',
+          icon: "menu",
         };
       }
       return {
-        title: 'Install on Android',
+        title: "Install on Android",
         steps: [
-          'Tap the menu button (three dots)',
+          "Tap the menu button (three dots)",
           'Tap "Add to Home Screen" or "Install App"',
-          'Follow the prompts to install',
+          "Follow the prompts to install",
         ],
-        icon: 'menu',
+        icon: "menu",
       };
     }
     if (state.isMacOS && state.isSafari) {
       return {
-        title: 'Install on macOS Safari',
+        title: "Install on macOS Safari",
         steps: [
-          'Click File in the menu bar',
+          "Click File in the menu bar",
           'Click "Add to Dock"',
-          'The app will be added to your Dock',
+          "The app will be added to your Dock",
         ],
-        icon: 'file',
+        icon: "file",
       };
     }
     return {
-      title: 'Install App',
+      title: "Install App",
       steps: [
-        'Look for an install icon in your browser\'s address bar',
+        "Look for an install icon in your browser's address bar",
         'Or check the browser menu for "Install" option',
       ],
-      icon: 'download',
+      icon: "download",
     };
-  }, [state.isIOS, state.isIPadOS, state.isAndroid, state.isMacOS, state.isSafari, state.isFirefox]);
+  }, [
+    state.isIOS,
+    state.isIPadOS,
+    state.isAndroid,
+    state.isMacOS,
+    state.isSafari,
+    state.isFirefox,
+  ]);
 
   // Update service worker
   const update = useCallback(async () => {
@@ -481,28 +512,30 @@ export function usePWA() {
 
   // Request push notification permission
   const requestPushPermission = useCallback(async (): Promise<boolean> => {
-    if (!('Notification' in window)) {
-      console.warn('Notifications not supported in this browser');
+    if (!("Notification" in window)) {
+      console.warn("Notifications not supported in this browser");
       return false;
     }
 
     try {
       const permission = await Notification.requestPermission();
-      const granted = permission === 'granted';
-      setState(prev => ({ 
-        ...prev, 
+      const granted = permission === "granted";
+      setState((prev) => ({
+        ...prev,
         isPushEnabled: granted,
         pushPermission: permission,
       }));
-      
+
       if (granted) {
         await subscribeToPush();
       }
-      
+
       return granted;
     } catch (error) {
-      console.error('Failed to request push permission:', error);
-      toast.error('Notifications unavailable', { description: 'Unable to enable notifications. Please check your browser settings.' });
+      console.error("Failed to request push permission:", error);
+      toast.error("Notifications unavailable", {
+        description: "Unable to enable notifications. Please check your browser settings.",
+      });
       return false;
     }
   }, []);
@@ -513,12 +546,13 @@ export function usePWA() {
       const registration = await navigator.serviceWorker.ready;
 
       // VAPID public key (publishable - safe in client code)
-      const VAPID_PUBLIC_KEY = 'BIr6ItdAyYwCl7D1Zn9MKMCgQ14NZvS9fKb_lT3__M4YMO0JcNViewkOUNIjDhfd41eAuAM16MEUeBNkvpxGGQg';
+      const VAPID_PUBLIC_KEY =
+        "BIr6ItdAyYwCl7D1Zn9MKMCgQ14NZvS9fKb_lT3__M4YMO0JcNViewkOUNIjDhfd41eAuAM16MEUeBNkvpxGGQg";
 
       // Convert VAPID key to Uint8Array
       const urlBase64ToUint8Array = (base64String: string) => {
-        const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+        const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
         const rawData = window.atob(base64);
         const outputArray = new Uint8Array(rawData.length);
         for (let i = 0; i < rawData.length; ++i) {
@@ -534,127 +568,144 @@ export function usePWA() {
 
       // Save subscription to Supabase
       const subscriptionJSON = subscription.toJSON();
-      const { error } = await supabase.from('push_subscriptions').upsert({
-        user_id: (await supabase.auth.getUser()).data.user?.id,
-        endpoint: subscriptionJSON.endpoint!,
-        p256dh: subscriptionJSON.keys!.p256dh!,
-        auth: subscriptionJSON.keys!.auth!,
-        user_agent: navigator.userAgent,
-      }, { onConflict: 'user_id,endpoint' });
+      const { error } = await supabase.from("push_subscriptions").upsert(
+        {
+          user_id: (await supabase.auth.getUser()).data.user?.id,
+          endpoint: subscriptionJSON.endpoint!,
+          p256dh: subscriptionJSON.keys!.p256dh!,
+          auth: subscriptionJSON.keys!.auth!,
+          user_agent: navigator.userAgent,
+        },
+        { onConflict: "user_id,endpoint" },
+      );
 
       if (error) {
-        console.error('Failed to save push subscription:', error);
+        console.error("Failed to save push subscription:", error);
       } else {
-        console.log('Push subscription saved successfully');
+        console.log("Push subscription saved successfully");
       }
 
       return subscription;
     } catch (error) {
-      console.error('Failed to subscribe to push:', error);
+      console.error("Failed to subscribe to push:", error);
       return null;
     }
   }, []);
 
   // Show local notification
-  const showNotification = useCallback(async (title: string, options?: NotificationOptions): Promise<boolean> => {
-    if (!state.isPushEnabled) {
-      console.warn('Push notifications not enabled');
-      return false;
-    }
+  const showNotification = useCallback(
+    async (title: string, options?: NotificationOptions): Promise<boolean> => {
+      if (!state.isPushEnabled) {
+        console.warn("Push notifications not enabled");
+        return false;
+      }
 
-    try {
-      const registration = await navigator.serviceWorker.ready;
-      await registration.showNotification(title, {
-        icon: '/icons/icon-192x192.png',
-        badge: '/icons/icon-72x72.png',
-        ...options,
-      });
-      return true;
-    } catch (error) {
-      console.error('Failed to show notification:', error);
-      // Non-critical - notification display
-      return false;
-    }
-  }, [state.isPushEnabled]);
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        await registration.showNotification(title, {
+          icon: "/icons/icon-192x192.png",
+          badge: "/icons/icon-72x72.png",
+          ...options,
+        });
+        return true;
+      } catch (error) {
+        console.error("Failed to show notification:", error);
+        // Non-critical - notification display
+        return false;
+      }
+    },
+    [state.isPushEnabled],
+  );
 
   // Set app badge (supported in Chrome, Edge, Safari 17+)
-  const setBadge = useCallback(async (count: number): Promise<boolean> => {
-    if (!state.isBadgingSupported) return false;
-    
-    try {
-      if (count > 0) {
-        await (navigator as any).setAppBadge(count);
-      } else {
-        await (navigator as any).clearAppBadge();
+  const setBadge = useCallback(
+    async (count: number): Promise<boolean> => {
+      if (!state.isBadgingSupported) return false;
+
+      try {
+        if (count > 0) {
+          await (navigator as any).setAppBadge(count);
+        } else {
+          await (navigator as any).clearAppBadge();
+        }
+        return true;
+      } catch (error) {
+        console.error("Failed to set badge:", error);
+        // Non-critical - badge update
+        return false;
       }
-      return true;
-    } catch (error) {
-      console.error('Failed to set badge:', error);
-      // Non-critical - badge update
-      return false;
-    }
-  }, [state.isBadgingSupported]);
+    },
+    [state.isBadgingSupported],
+  );
 
   // Clear all caches
   const clearCache = useCallback(async (): Promise<boolean> => {
     try {
       const registration = await navigator.serviceWorker.ready;
-      registration.active?.postMessage({ type: 'CLEAR_CACHE' });
+      registration.active?.postMessage({ type: "CLEAR_CACHE" });
       await checkStorageInfo();
       return true;
     } catch (error) {
-      console.error('Failed to clear cache:', error);
+      console.error("Failed to clear cache:", error);
       return false;
     }
   }, [checkStorageInfo]);
 
   // Request persistent storage
   const requestPersistentStorage = useCallback(async (): Promise<boolean> => {
-    if (!('storage' in navigator && 'persist' in navigator.storage)) {
+    if (!("storage" in navigator && "persist" in navigator.storage)) {
       return false;
     }
-    
+
     try {
       const granted = await navigator.storage.persist();
-      setState(prev => ({ ...prev, isPersistentStorageGranted: granted }));
+      setState((prev) => ({ ...prev, isPersistentStorageGranted: granted }));
       return granted;
     } catch (error) {
-      console.error('Failed to request persistent storage:', error);
+      console.error("Failed to request persistent storage:", error);
       // Non-critical - storage request
       return false;
     }
   }, []);
 
   // Share content (Web Share API)
-  const share = useCallback(async (data: ShareData): Promise<boolean> => {
-    if (!state.isShareTargetSupported || !navigator.share) {
-      console.warn('Web Share API not supported');
-      return false;
-    }
-
-    try {
-      await navigator.share(data);
-      return true;
-    } catch (error) {
-      if ((error as Error).name !== 'AbortError') {
-        console.error('Failed to share:', error);
-      toast.error('Sharing failed', { description: 'Unable to share at this time. Please try copying the link manually.' });
+  const share = useCallback(
+    async (data: ShareData): Promise<boolean> => {
+      if (!state.isShareTargetSupported || !navigator.share) {
+        console.warn("Web Share API not supported");
+        return false;
       }
-      return false;
-    }
-  }, [state.isShareTargetSupported]);
+
+      try {
+        await navigator.share(data);
+        return true;
+      } catch (error) {
+        if ((error as Error).name !== "AbortError") {
+          console.error("Failed to share:", error);
+          toast.error("Sharing failed", {
+            description: "Unable to share at this time. Please try copying the link manually.",
+          });
+        }
+        return false;
+      }
+    },
+    [state.isShareTargetSupported],
+  );
 
   // Browser support info
-  const browserSupport = useMemo(() => ({
-    installPrompt: state.isChrome || state.isEdge || state.isSamsungInternet || state.isOpera,
-    pushNotifications: state.isPushSupported,
-    backgroundSync: state.isBackgroundSyncSupported,
-    periodicSync: state.isPeriodicSyncSupported,
-    appBadge: state.isBadgingSupported,
-    webShare: state.isShareTargetSupported,
-    persistentStorage: 'storage' in navigator && 'persist' in navigator.storage,
-    offlineSupport: 'serviceWorker' in navigator,
-  }), [state]);
+  const browserSupport = useMemo(
+    () => ({
+      installPrompt: state.isChrome || state.isEdge || state.isSamsungInternet || state.isOpera,
+      pushNotifications: state.isPushSupported,
+      backgroundSync: state.isBackgroundSyncSupported,
+      periodicSync: state.isPeriodicSyncSupported,
+      appBadge: state.isBadgingSupported,
+      webShare: state.isShareTargetSupported,
+      persistentStorage: "storage" in navigator && "persist" in navigator.storage,
+      offlineSupport: "serviceWorker" in navigator,
+    }),
+    [state],
+  );
 
   return {
     ...state,

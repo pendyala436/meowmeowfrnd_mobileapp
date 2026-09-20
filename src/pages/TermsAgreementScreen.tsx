@@ -5,15 +5,20 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import MeowLogo from "@/components/MeowLogo";
 import ProgressIndicator from "@/components/ProgressIndicator";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  ScrollText, 
-  Shield, 
-  Check, 
-  Loader2, 
+import {
+  ScrollText,
+  Shield,
+  Check,
+  Loader2,
   FileText,
   Lock,
   Globe,
@@ -26,7 +31,7 @@ import {
   Bot,
   Clock,
   CheckCircle2,
-  ArrowLeft
+  ArrowLeft,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadRegistrationPhoto } from "@/lib/registration-photos";
@@ -323,7 +328,7 @@ INDIA: IT Act 2000 · DPDP Act 2023 · IT (Intermediary Guidelines) Rules 2021 �
 GLOBAL: EU GDPR · UK GDPR + DPA 2018 · CCPA / CPRA (California) · FTC Act + ROSCA (US) · COPPA (US) · PIPEDA (Canada) · LGPD (Brazil) · Australian Privacy Act 1988 · Singapore PDPA · UAE PDPL · Japan APPI · South Korea PIPA.
 PLATFORMS: Apple App Store Review Guidelines · Google Play Developer Policies · PCI-DSS v4.0.
 
-By accepting these Terms you acknowledge that the above framework governs your use of Meow MEOW FRND APP regardless of your physical location, and you submit to the jurisdiction and dispute-resolution mechanism described in §14.`
+By accepting these Terms you acknowledge that the above framework governs your use of Meow MEOW FRND APP regardless of your physical location, and you submit to the jurisdiction and dispute-resolution mechanism described in §14.`,
   },
   {
     id: "privacy_policy",
@@ -408,7 +413,7 @@ We use only strictly-necessary first-party cookies / local storage for session, 
 DPO / Grievance Officer (India): privacy@meowmeow.app — acknowledges within 24 h, resolves within 15 days (IT Rules 2021, Rule 3(2)(a)).
 
 14. UPDATES
-Material changes notified in-app 7 days in advance. Last updated: ${EFFECTIVE_DATE}.`
+Material changes notified in-app 7 days in advance. Last updated: ${EFFECTIVE_DATE}.`,
   },
   {
     id: "security_policy",
@@ -450,7 +455,7 @@ Effective: ${EFFECTIVE_DATE}
 • Quarterly DR drills.
 
 7. RESPONSIBLE DISCLOSURE
-Researchers may report vulnerabilities to security@meowmeow.app. We commit not to pursue legal action for good-faith research that respects user privacy and avoids service disruption.`
+Researchers may report vulnerabilities to security@meowmeow.app. We commit not to pursue legal action for good-faith research that respects user privacy and avoids service disruption.`,
   },
   {
     id: "gdpr_compliance",
@@ -489,7 +494,7 @@ You may complain to your national Data Protection Authority — e.g., the Irish 
 The App is 18+ only; consent of a parent for users below 16 is not applicable.
 
 9. DPIA
-A Data Protection Impact Assessment has been performed for biometric verification, AI moderation, women's KYC processing, and the men's recharge / virtual-coin processing flows.`
+A Data Protection Impact Assessment has been performed for biometric verification, AI moderation, women's KYC processing, and the men's recharge / virtual-coin processing flows.`,
   },
   {
     id: "data_storage_policy",
@@ -520,7 +525,7 @@ PAN, Aadhaar (stored masked / last-4 only after verification), bank or UPI handl
 By creating an account you provide express, informed consent under DPDP §6 / GDPR Art. 6 & 9 for storage in India and the cross-border transfers described above.
 
 6. CERTIFICATIONS / FRAMEWORKS
-Aligned with: ISO/IEC 27001:2022, ISO/IEC 27701, NIST CSF, SOC 2 Type II controls (sub-processor level).`
+Aligned with: ISO/IEC 27001:2022, ISO/IEC 27701, NIST CSF, SOC 2 Type II controls (sub-processor level).`,
   },
   {
     id: "user_guidelines",
@@ -549,7 +554,7 @@ DON'T
 • No off-platform meet-ups arranged for sexual exploitation, trafficking, or abuse.
 
 REPORTING
-Use the in-app Report button or email report@meowmeow.app. Reports are reviewed within 24 hours; emergencies (CSAM, threats to life) are escalated immediately.`
+Use the in-app Report button or email report@meowmeow.app. Reports are reviewed within 24 hours; emergencies (CSAM, threats to life) are escalated immediately.`,
   },
   {
     id: "anti_sexual_content",
@@ -586,7 +591,7 @@ LIVE-CALL ABUSE
 Live audio/video calls are subject to the same rules. Recording and AI scanning may be performed for safety/abuse detection in compliance with applicable wiretap and privacy laws; users are notified before each call.
 
 CONSENT
-Even between consenting adults, sexual content is prohibited on this platform. Use a service designed for adult content elsewhere.`
+Even between consenting adults, sexual content is prohibited on this platform. Use a service designed for adult content elsewhere.`,
   },
   {
     id: "payments_policy",
@@ -622,7 +627,7 @@ E. NO TAX EVENT FOR WOMEN
 Because no money or money's worth is paid to women, no income, GST, TDS, Form 16A, or other tax obligation is generated by the platform on the women's side. Women are not "deductees" under §§194-O / 194-R / 194-S of the Income Tax Act 1961 in respect of Meow MEOW FRND APP activity.
 
 F. ANTI-MONEY LAUNDERING
-We comply with the Prevention of Money Laundering Act 2002 and FATF guidance on the inbound side (men's recharges). Suspicious recharge patterns are flagged and may be reported to FIU-IND. No outbound money flows to users.`
+We comply with the Prevention of Money Laundering Act 2002 and FATF guidance on the inbound side (men's recharges). Suspicious recharge patterns are flagged and may be reported to FIU-IND. No outbound money flows to users.`,
   },
   {
     id: "content_moderation",
@@ -656,7 +661,7 @@ Users may appeal any action within 30 days at appeals@meowmeow.app. Human review
 We publish an annual transparency report summarising removals, suspensions, government requests, and CSAM reports.
 
 6. STATUTORY COMPLIANCE
-We act as an "intermediary" under IT Act 2000 §79 and observe due-diligence under IT (Intermediary Guidelines and Digital Media Ethics Code) Rules 2021. We will take down unlawful content within 36 hours of a valid court / government order, and within 24 hours for non-consensual intimate imagery (Rule 3(2)(b)).`
+We act as an "intermediary" under IT Act 2000 §79 and observe due-diligence under IT (Intermediary Guidelines and Digital Media Ethics Code) Rules 2021. We will take down unlawful content within 36 hours of a valid court / government order, and within 24 hours for non-consensual intimate imagery (Rule 3(2)(b)).`,
   },
   {
     id: "age_verification",
@@ -671,7 +676,7 @@ Effective: ${EFFECTIVE_DATE}
 • Suspected underage accounts are immediately suspended; the user is asked for government-ID proof.
 • If under-18 status is confirmed, the account and all data are deleted within 7 days, and where there is reason to believe the minor is at risk, a report is filed under POCSO 2012, IT Act §67B, and equivalent foreign laws.
 • Misrepresentation of age is a fraud against the platform and may be a criminal offence (BNS §318 — cheating).
-• Parents/guardians who discover that a minor created an account may write to safety@meowmeow.app for immediate removal.`
+• Parents/guardians who discover that a minor created an account may write to safety@meowmeow.app for immediate removal.`,
   },
   {
     id: "ai_disclosure",
@@ -700,7 +705,7 @@ NOT USED FOR
 GOVERNANCE
 • Models are evaluated for bias on Indian skin tones, languages, and demographics.
 • EU AI Act (Regulation 2024/1689): biometric categorisation and emotion-inference are limited to safety contexts permitted under Art. 5 / Annex III; users are informed when interacting with AI features.
-• You can request human review of any AI-driven decision at ai-review@meowmeow.app within 30 days.`
+• You can request human review of any AI-driven decision at ai-review@meowmeow.app within 30 days.`,
   },
   {
     id: "data_retention",
@@ -729,13 +734,16 @@ DELETION RIGHT
 Request account deletion any time from Settings or at privacy@meowmeow.app. We delete or anonymise all non-statutorily-retained data within 30 days, in compliance with DPDP §12, GDPR Art.17, CCPA / CPRA right-to-delete, and similar laws.
 
 EXCEPTIONS
-We may retain limited data where necessary to: (a) comply with law, (b) resolve disputes, (c) enforce agreements, (d) protect against fraud, (e) preserve evidence for criminal proceedings.`
-  }
+We may retain limited data where necessary to: (a) comply with law, (b) resolve disputes, (c) enforce agreements, (d) protect against fraud, (e) preserve evidence for criminal proceedings.`,
+  },
 ];
 
 const TermsAgreementScreen = () => {
   const navigate = useNavigate();
-  useRegistrationGuard([{ key: "userEmail" }, { key: "userPassword", storage: "session" }], "/password-setup");
+  useRegistrationGuard(
+    [{ key: "userEmail" }, { key: "userPassword", storage: "session" }],
+    "/password-setup",
+  );
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [expandedDoc, setExpandedDoc] = useState<string | undefined>("terms_of_service");
@@ -743,15 +751,15 @@ const TermsAgreementScreen = () => {
   const [agreeAll, setAgreeAll] = useState(false);
 
   const allRequiredAgreed = legalDocuments
-    .filter(doc => doc.required)
-    .every(doc => consents[doc.id]);
+    .filter((doc) => doc.required)
+    .every((doc) => consents[doc.id]);
 
   const agreedCount = Object.values(consents).filter(Boolean).length;
 
   const handleToggleConsent = (docId: string) => {
-    setConsents(prev => {
+    setConsents((prev) => {
       const newConsents = { ...prev, [docId]: !prev[docId] };
-      const allAgreed = legalDocuments.every(doc => newConsents[doc.id]);
+      const allAgreed = legalDocuments.every((doc) => newConsents[doc.id]);
       setAgreeAll(allAgreed);
       return newConsents;
     });
@@ -761,7 +769,7 @@ const TermsAgreementScreen = () => {
     const newAgreeAll = !agreeAll;
     setAgreeAll(newAgreeAll);
     const newConsents: Record<string, boolean> = {};
-    legalDocuments.forEach(doc => {
+    legalDocuments.forEach((doc) => {
       newConsents[doc.id] = newAgreeAll;
     });
     setConsents(newConsents);
@@ -798,9 +806,10 @@ const TermsAgreementScreen = () => {
       if (!email || !password || !passwordValid) {
         toast({
           title: "Registration incomplete",
-          description: !passwordValid && password
-            ? "Password does not meet strength requirements. Please go back and set a valid password."
-            : "Please complete all registration steps.",
+          description:
+            !passwordValid && password
+              ? "Password does not meet strength requirements. Please go back and set a valid password."
+              : "Please complete all registration steps.",
           variant: "destructive",
         });
         navigate(passwordValid ? "/register" : "/password-setup", { replace: true });
@@ -827,8 +836,8 @@ const TermsAgreementScreen = () => {
             full_name: fullName,
             gender: gender,
             phone: phone,
-          }
-        }
+          },
+        },
       });
 
       if (authError) {
@@ -883,48 +892,52 @@ const TermsAgreementScreen = () => {
       }
 
       // Save all consent data
-      const { error: consentError } = await supabase
-        .from("user_consent")
-        .upsert({
-          user_id: user.id,
-          agreed_terms: consents.terms_of_service,
-          gdpr_consent: consents.gdpr_compliance,
-          ccpa_consent: consents.gdpr_compliance,
-          dpdp_consent: consents.data_storage_policy,
-          terms_version: "1.0",
-          consent_timestamp: new Date().toISOString(),
-          user_agent: navigator.userAgent,
-        });
+      const { error: consentError } = await supabase.from("user_consent").upsert({
+        user_id: user.id,
+        agreed_terms: consents.terms_of_service,
+        gdpr_consent: consents.gdpr_compliance,
+        ccpa_consent: consents.gdpr_compliance,
+        dpdp_consent: consents.data_storage_policy,
+        terms_version: "1.0",
+        consent_timestamp: new Date().toISOString(),
+        user_agent: navigator.userAgent,
+      });
 
       if (consentError) throw consentError;
 
       // Get remaining registration data from localStorage
-      const dateOfBirth = sessionStorage.getItem("userDob") || sessionStorage.getItem("userDateOfBirth") || "";
+      const dateOfBirth =
+        sessionStorage.getItem("userDob") || sessionStorage.getItem("userDateOfBirth") || "";
       const countryCode = sessionStorage.getItem("userCountry") || "";
       const stateCode = sessionStorage.getItem("userState") || "";
       const city = sessionStorage.getItem("userCity") || "";
       const latitude = sessionStorage.getItem("userLatitude");
       const longitude = sessionStorage.getItem("userLongitude");
-      const languageCode = sessionStorage.getItem("selectedLanguage") || sessionStorage.getItem("userPrimaryLanguage") || "";
+      const languageCode =
+        sessionStorage.getItem("selectedLanguage") ||
+        sessionStorage.getItem("userPrimaryLanguage") ||
+        "";
       const pendingPhotoData = sessionStorage.getItem("pendingPhotoData") || "";
-      const pendingAdditionalPhotos = JSON.parse(sessionStorage.getItem("pendingAdditionalPhotos") || "[]");
+      const pendingAdditionalPhotos = JSON.parse(
+        sessionStorage.getItem("pendingAdditionalPhotos") || "[]",
+      );
 
       // Convert country code to full name
-      const countryData = countries.find(c => c.code === countryCode);
+      const countryData = countries.find((c) => c.code === countryCode);
       const countryName = countryData?.name || countryCode;
 
       // Convert state code to full name
       let stateName = stateCode;
       if (countryCode && stateCode) {
         const statesForCountry = getStatesForCountry(countryCode);
-        const stateData = statesForCountry.find(s => s.code === stateCode);
+        const stateData = statesForCountry.find((s) => s.code === stateCode);
         stateName = stateData?.name || stateCode;
       }
 
       // Convert language code to full name
-      const languageData = languages.find(l => l.code === languageCode);
+      const languageData = languages.find((l) => l.code === languageCode);
       const languageName = languageData?.name || languageCode;
-      
+
       // Get personal details from PersonalDetailsScreen
       const personalDetails = JSON.parse(sessionStorage.getItem("userPersonalDetails") || "{}");
 
@@ -998,7 +1011,7 @@ const TermsAgreementScreen = () => {
           .upsert(profileData, { onConflict: "user_id" });
         profileError = error;
         if (!error) break;
-        if (attempt < 3) await new Promise(r => setTimeout(r, 1000 * attempt));
+        if (attempt < 3) await new Promise((r) => setTimeout(r, 1000 * attempt));
       }
 
       if (profileError) {
@@ -1007,7 +1020,8 @@ const TermsAgreementScreen = () => {
         await supabase.auth.signOut();
         toast({
           title: "Registration failed",
-          description: "Account was created but profile setup failed. Please try registering again.",
+          description:
+            "Account was created but profile setup failed. Please try registering again.",
           variant: "destructive",
         });
         navigate("/");
@@ -1028,7 +1042,10 @@ const TermsAgreementScreen = () => {
           display_order: 0,
         });
         if (selfiePhotoError) {
-          console.error("[Registration] Failed to save selfie to user_photos:", selfiePhotoError.message);
+          console.error(
+            "[Registration] Failed to save selfie to user_photos:",
+            selfiePhotoError.message,
+          );
         }
       }
 
@@ -1048,7 +1065,10 @@ const TermsAgreementScreen = () => {
           display_order: i + 1,
         });
         if (additionalPhotoError) {
-          console.error("[Registration] Failed to save additional photo:", additionalPhotoError.message);
+          console.error(
+            "[Registration] Failed to save additional photo:",
+            additionalPhotoError.message,
+          );
         }
       }
 
@@ -1074,7 +1094,9 @@ const TermsAgreementScreen = () => {
               language_code: lang.code,
               language_name: lang.name,
             }));
-            await supabase.from("user_languages").upsert(langRecords, { onConflict: "user_id,language_code" });
+            await supabase
+              .from("user_languages")
+              .upsert(langRecords, { onConflict: "user_id,language_code" });
           }
         } catch {
           // Non-critical - language preferences can be set later from settings
@@ -1098,12 +1120,24 @@ const TermsAgreementScreen = () => {
     } finally {
       // Always clear sensitive registration data regardless of success/failure
       const registrationKeys = [
-        "pendingPhotoData", "pendingAdditionalPhotos", "userName", "userEmail",
-        "userPhone", "userGender", "userDob", "userDateOfBirth", "userCountry",
-        "userState", "userCity", "userLatitude", "userLongitude",
-        "userPrimaryLanguage", "userLanguagePreferences", "userPersonalDetails",
+        "pendingPhotoData",
+        "pendingAdditionalPhotos",
+        "userName",
+        "userEmail",
+        "userPhone",
+        "userGender",
+        "userDob",
+        "userDateOfBirth",
+        "userCountry",
+        "userState",
+        "userCity",
+        "userLatitude",
+        "userLongitude",
+        "userPrimaryLanguage",
+        "userLanguagePreferences",
+        "userPersonalDetails",
       ];
-      registrationKeys.forEach(key => sessionStorage.removeItem(key));
+      registrationKeys.forEach((key) => sessionStorage.removeItem(key));
       sessionStorage.removeItem("userPassword");
       sessionStorage.removeItem("selectedLanguage");
       sessionStorage.removeItem("selectedCountry");
@@ -1114,9 +1148,11 @@ const TermsAgreementScreen = () => {
   return (
     <div className="min-h-screen flex flex-col relative bg-background text-foreground">
       {/* Aurora Background */}
-      <Suspense fallback={
-        <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background to-secondary/30" />
-      }>
+      <Suspense
+        fallback={
+          <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background to-secondary/30" />
+        }
+      >
         <AuroraBackground />
       </Suspense>
 
@@ -1144,16 +1180,18 @@ const TermsAgreementScreen = () => {
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
               <FileText className="w-8 h-8 text-primary" />
             </div>
-            <h1 className="text-2xl font-display font-bold text-foreground">Final Step: Legal Agreements</h1>
+            <h1 className="text-2xl font-display font-bold text-foreground">
+              Final Step: Legal Agreements
+            </h1>
             <p className="text-muted-foreground">
               Please read and accept all 12 policies to complete your registration
             </p>
             <div className="flex items-center justify-center gap-2 mt-2">
-              <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-                allRequiredAgreed 
-                  ? 'bg-accent/10 text-accent' 
-                  : 'bg-muted text-muted-foreground'
-              }`}>
+              <div
+                className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  allRequiredAgreed ? "bg-accent/10 text-accent" : "bg-muted text-muted-foreground"
+                }`}
+              >
                 {agreedCount}/{legalDocuments.length} Accepted
               </div>
             </div>
@@ -1180,45 +1218,41 @@ const TermsAgreementScreen = () => {
                 Check this to accept all {legalDocuments.length} legal documents at once
               </p>
             </div>
-            {agreeAll && (
-              <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-            )}
+            {agreeAll && <CheckCircle2 className="w-5 h-5 text-emerald-500" />}
           </label>
 
           {/* Legal Documents Accordion */}
           <ScrollArea className="h-[400px] rounded-xl border border-border bg-muted/20 p-4">
-            <Accordion 
-              type="single" 
-              collapsible 
+            <Accordion
+              type="single"
+              collapsible
               value={expandedDoc}
               onValueChange={setExpandedDoc}
               className="space-y-2"
             >
               {legalDocuments.map((doc) => (
-                <AccordionItem 
-                  key={doc.id} 
+                <AccordionItem
+                  key={doc.id}
                   value={doc.id}
                   className={`border rounded-lg px-4 transition-all ${
-                    consents[doc.id] 
-                      ? 'border-emerald-500/50 bg-emerald-500/5' 
-                      : 'border-border bg-card/50'
+                    consents[doc.id]
+                      ? "border-emerald-500/50 bg-emerald-500/5"
+                      : "border-border bg-card/50"
                   }`}
                 >
                   <AccordionTrigger className="hover:no-underline py-3">
                     <div className="flex items-center gap-3 flex-1">
-                      <div className={`p-2 rounded-lg ${
-                        consents[doc.id] 
-                          ? 'bg-emerald-500/10 text-emerald-500' 
-                          : 'bg-muted text-muted-foreground'
-                      }`}>
+                      <div
+                        className={`p-2 rounded-lg ${
+                          consents[doc.id]
+                            ? "bg-emerald-500/10 text-emerald-500"
+                            : "bg-muted text-muted-foreground"
+                        }`}
+                      >
                         {doc.icon}
                       </div>
-                      <span className="font-medium text-foreground text-left">
-                        {doc.title}
-                      </span>
-                      {doc.required && (
-                        <span className="text-xs text-destructive">*Required</span>
-                      )}
+                      <span className="font-medium text-foreground text-left">{doc.title}</span>
+                      {doc.required && <span className="text-xs text-destructive">*Required</span>}
                       {consents[doc.id] && (
                         <Check className="w-4 h-4 text-emerald-500 ml-auto mr-2" />
                       )}
@@ -1283,8 +1317,9 @@ const TermsAgreementScreen = () => {
 
           {/* Footer Note */}
           <p className="text-xs text-center text-muted-foreground">
-            By completing registration, your consent to all 12 documents will be recorded with a timestamp for GDPR, CCPA, and DPDP compliance.
-            You can withdraw consent at any time from Settings.
+            By completing registration, your consent to all 12 documents will be recorded with a
+            timestamp for GDPR, CCPA, and DPDP compliance. You can withdraw consent at any time from
+            Settings.
           </p>
         </Card>
       </main>

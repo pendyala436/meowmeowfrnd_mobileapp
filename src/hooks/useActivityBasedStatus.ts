@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useUserActivity } from '@/contexts/UserActivityContext';
-import { isSignedOut } from '@/hooks/useAuthReady';
+import { useState, useEffect, useCallback, useRef } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useUserActivity } from "@/contexts/UserActivityContext";
+import { isSignedOut } from "@/hooks/useAuthReady";
 
 interface UseActivityBasedStatusOptions {
   inactivityTimeout?: number;
@@ -12,7 +12,7 @@ interface UseActivityBasedStatusOptions {
 export const useActivityBasedStatus = ({
   inactivityTimeout = 10 * 60 * 1000,
   userId,
-  onStatusChange
+  onStatusChange,
 }: UseActivityBasedStatusOptions) => {
   const [isOnline, setIsOnline] = useState(true);
   const [isManuallyOffline, setIsManuallyOffline] = useState(false);
@@ -32,25 +32,29 @@ export const useActivityBasedStatus = ({
   const { subscribe } = useUserActivity();
 
   // LIGHTWEIGHT status update - only sets is_online + last_seen.
-  const updateOnlineStatus = useCallback(async (online: boolean) => {
-    if (!userId) return;
+  const updateOnlineStatus = useCallback(
+    async (online: boolean) => {
+      if (!userId) return;
 
-    const now = Date.now();
-    if (online && now - lastDbUpdateRef.current < 20000) return;
-    lastDbUpdateRef.current = now;
+      const now = Date.now();
+      if (online && now - lastDbUpdateRef.current < 20000) return;
+      lastDbUpdateRef.current = now;
 
-    try {
-      await supabase
-        .from('user_status')
-        .upsert({
-          user_id: userId,
-          is_online: online,
-          last_seen: new Date().toISOString(),
-        }, { onConflict: 'user_id' });
-    } catch (error) {
-      console.error('Error updating online status:', error);
-    }
-  }, [userId]);
+      try {
+        await supabase.from("user_status").upsert(
+          {
+            user_id: userId,
+            is_online: online,
+            last_seen: new Date().toISOString(),
+          },
+          { onConflict: "user_id" },
+        );
+      } catch (error) {
+        console.error("Error updating online status:", error);
+      }
+    },
+    [userId],
+  );
 
   const goOnline = useCallback(() => {
     if (isManuallyOfflineRef.current) return;
@@ -77,16 +81,19 @@ export const useActivityBasedStatus = ({
     }
   }, [updateOnlineStatus]);
 
-  const toggleOnlineStatus = useCallback((online: boolean) => {
-    isManuallyOfflineRef.current = !online;
-    isOnlineRef.current = online;
-    setIsManuallyOffline(!online);
-    setIsOnline(online);
-    lastDbUpdateRef.current = 0;
-    void updateOnlineStatus(online);
-    onStatusChangeRef.current?.(online);
-    if (online) lastActivityRef.current = Date.now();
-  }, [updateOnlineStatus]);
+  const toggleOnlineStatus = useCallback(
+    (online: boolean) => {
+      isManuallyOfflineRef.current = !online;
+      isOnlineRef.current = online;
+      setIsManuallyOffline(!online);
+      setIsOnline(online);
+      lastDbUpdateRef.current = 0;
+      void updateOnlineStatus(online);
+      onStatusChangeRef.current?.(online);
+      if (online) lastActivityRef.current = Date.now();
+    },
+    [updateOnlineStatus],
+  );
 
   const resetInactivityTimer = useCallback(() => {
     if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
@@ -126,20 +133,29 @@ export const useActivityBasedStatus = ({
     if (!userId) return;
     const markOffline = () => {
       if (isSignedOut()) return;
-      supabase.from('user_status').upsert({
-        user_id: userId,
-        is_online: false,
-        last_seen: new Date().toISOString(),
-      }, { onConflict: 'user_id' }).then(() => {}, () => {});
+      supabase
+        .from("user_status")
+        .upsert(
+          {
+            user_id: userId,
+            is_online: false,
+            last_seen: new Date().toISOString(),
+          },
+          { onConflict: "user_id" },
+        )
+        .then(
+          () => {},
+          () => {},
+        );
     };
     const onPageHide = (e: PageTransitionEvent) => {
       if (!e.persisted) markOffline();
     };
-    window.addEventListener('pagehide', onPageHide);
-    window.addEventListener('beforeunload', markOffline);
+    window.addEventListener("pagehide", onPageHide);
+    window.addEventListener("beforeunload", markOffline);
     return () => {
-      window.removeEventListener('pagehide', onPageHide);
-      window.removeEventListener('beforeunload', markOffline);
+      window.removeEventListener("pagehide", onPageHide);
+      window.removeEventListener("beforeunload", markOffline);
     };
   }, [userId]);
 

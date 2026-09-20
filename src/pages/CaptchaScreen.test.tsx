@@ -335,9 +335,7 @@ describe("CaptchaScreen", () => {
 
   it("blocks verify while already verifying via early return", async () => {
     sessionStorage.setItem("postCaptchaRedirect", "/dashboard");
-    getSessionMock.mockImplementation(
-      () => new Promise(() => {}),
-    );
+    getSessionMock.mockImplementation(() => new Promise(() => {}));
 
     render(
       <MemoryRouter>

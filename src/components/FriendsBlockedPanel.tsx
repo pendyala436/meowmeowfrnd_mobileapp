@@ -1,14 +1,14 @@
 /**
  * FriendsBlockedPanel
- * 
+ *
  * Full-screen overlay panel for managing friends and blocked users.
- * 
+ *
  * Tabs:
  * - Friends: Accepted friends with Chat & Unfriend actions
  * - Requests: Pending incoming requests (Accept/Reject) + Sent requests (Cancel)
  * - Browse: Search opposite-sex users to Add Friend or Block
  * - Blocked: Blocked users with Unblock action
- * 
+ *
  * Men's dashboard shows women, Women's dashboard shows men.
  * All validation handled by secure DB functions (see useUserRelationships).
  */
@@ -30,10 +30,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { 
-  Users, 
-  ShieldOff, 
-  UserMinus, 
+import {
+  Users,
+  ShieldOff,
+  UserMinus,
   ArrowLeft,
   Loader2,
   UserX,
@@ -46,7 +46,7 @@ import {
   X,
   Clock,
   Send,
-  Eye
+  Eye,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -117,11 +117,12 @@ export const FriendsBlockedPanel = ({
 
   // Chat starting state
   const [chatStarting, setChatStarting] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"friends" | "requests" | "browse" | "blocked">("friends");
+  const [activeTab, setActiveTab] = useState<"friends" | "requests" | "browse" | "blocked">(
+    "friends",
+  );
 
   // Pending request count for badge
   const pendingCount = pendingRequests.length;
-
 
   // --- Browse tab data loading ---
   const loadBrowseUsers = useCallback(async () => {
@@ -143,7 +144,7 @@ export const FriendsBlockedPanel = ({
         return;
       }
 
-      const userIds = profiles.map(p => p.user_id);
+      const userIds = profiles.map((p) => p.user_id);
 
       // Get online status
       const { data: statusData } = await supabase
@@ -152,10 +153,10 @@ export const FriendsBlockedPanel = ({
         .in("user_id", userIds);
 
       const statusMap = new Map(
-        statusData?.map(s => [s.user_id, s.is_online as boolean] as const) || []
+        statusData?.map((s) => [s.user_id, s.is_online as boolean] as const) || [],
       );
 
-      const list: BrowseUser[] = profiles.map(p => ({
+      const list: BrowseUser[] = profiles.map((p) => ({
         userId: p.user_id,
         fullName: p.full_name || "Unknown",
         photoUrl: p.photo_url,
@@ -174,7 +175,9 @@ export const FriendsBlockedPanel = ({
       setBrowseUsers(list);
     } catch (error) {
       console.error("Error loading browse users:", error);
-      toast.error("Users unavailable", { description: "Unable to load users. Please refresh the page." });
+      toast.error("Users unavailable", {
+        description: "Unable to load users. Please refresh the page.",
+      });
     } finally {
       setBrowseLoading(false);
     }
@@ -188,7 +191,11 @@ export const FriendsBlockedPanel = ({
   // --- Chat with friend ---
   const handleStartChat = async (friendId: string, friendName: string, friendOnline: boolean) => {
     if (!friendOnline) {
-      toast({ title: "User Offline", description: `${friendName} is currently offline`, variant: "destructive" });
+      toast({
+        title: "User Offline",
+        description: `${friendName} is currently offline`,
+        variant: "destructive",
+      });
       return;
     }
 
@@ -205,30 +212,35 @@ export const FriendsBlockedPanel = ({
         body: {
           action: "start_chat",
           user_id: currentUserId,
-          ...(userGender === "male"
-            ? { woman_user_id: friendId }
-            : { man_user_id: friendId }),
+          ...(userGender === "male" ? { woman_user_id: friendId } : { man_user_id: friendId }),
         },
       });
 
       if (error) throw error;
-      
+
       // Mark as self-initiated to prevent incoming chat popup
       if (data?.session_id || data?.chat_id) {
         const { markChatAsSelfInitiated } = await import("@/hooks/useIncomingChats");
         markChatAsSelfInitiated(data.session_id, data.chat_id);
       }
-      
+
       if (data?.success) {
         onClose();
         setTimeout(() => {
-          toast({ title: "💬 Chat Started", description: `Your chat with ${friendName} is now open below` });
+          toast({
+            title: "💬 Chat Started",
+            description: `Your chat with ${friendName} is now open below`,
+          });
         }, 300);
       } else {
         throw new Error(data?.error || "Failed to start chat");
       }
     } catch (err: any) {
-      toast({ title: "Error", description: err.message || "Failed to start chat", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: err.message || "Failed to start chat",
+        variant: "destructive",
+      });
     } finally {
       setChatStarting(null);
     }
@@ -247,11 +259,12 @@ export const FriendsBlockedPanel = ({
   };
 
   // Filter browse users by search
-  const filteredBrowse = browseUsers.filter(u =>
-    !searchQuery ||
-    u.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    u.country?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    u.primaryLanguage?.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredBrowse = browseUsers.filter(
+    (u) =>
+      !searchQuery ||
+      u.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      u.country?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      u.primaryLanguage?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   // --- Render helpers ---
@@ -271,10 +284,12 @@ export const FriendsBlockedPanel = ({
         <AvatarFallback className="bg-primary/10 text-sm">{name.charAt(0)}</AvatarFallback>
       </Avatar>
       {isOnline !== undefined && (
-        <div className={cn(
-          "absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-background",
-          isOnline ? "bg-online" : "bg-muted-foreground"
-        )} />
+        <div
+          className={cn(
+            "absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-background",
+            isOnline ? "bg-online" : "bg-muted-foreground",
+          )}
+        />
       )}
     </div>
   );
@@ -287,7 +302,11 @@ export const FriendsBlockedPanel = ({
     const receivedReq = hasPendingRequest(user.userId);
 
     if (blocked) {
-      return <Badge variant="destructive" className="text-xs">Blocked</Badge>;
+      return (
+        <Badge variant="destructive" className="text-xs">
+          Blocked
+        </Badge>
+      );
     }
 
     if (friend) {
@@ -317,10 +336,21 @@ export const FriendsBlockedPanel = ({
       const reqId = getReceivedRequestId(user.userId);
       return (
         <div className="flex gap-1">
-          <Button size="sm" className="gap-1 text-xs h-8" disabled={actionLoading} onClick={() => reqId && acceptRequest(reqId)}>
+          <Button
+            size="sm"
+            className="gap-1 text-xs h-8"
+            disabled={actionLoading}
+            onClick={() => reqId && acceptRequest(reqId)}
+          >
             <Check className="h-3.5 w-3.5" /> Accept
           </Button>
-          <Button variant="outline" size="sm" className="text-xs h-8" disabled={actionLoading} onClick={() => reqId && rejectRequest(reqId)}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs h-8"
+            disabled={actionLoading}
+            onClick={() => reqId && rejectRequest(reqId)}
+          >
             <X className="h-3.5 w-3.5" />
           </Button>
         </div>
@@ -329,7 +359,12 @@ export const FriendsBlockedPanel = ({
 
     return (
       <div className="flex gap-1">
-        <Button size="sm" className="gap-1 text-xs h-8" disabled={actionLoading} onClick={() => sendFriendRequest(user.userId)}>
+        <Button
+          size="sm"
+          className="gap-1 text-xs h-8"
+          disabled={actionLoading}
+          onClick={() => sendFriendRequest(user.userId)}
+        >
           <UserPlus className="h-3.5 w-3.5" /> Add
         </Button>
         <Button
@@ -337,7 +372,9 @@ export const FriendsBlockedPanel = ({
           size="sm"
           className="text-xs h-8 text-destructive hover:bg-destructive/10"
           disabled={actionLoading}
-          onClick={() => setConfirmAction({ type: "block", userId: user.userId, userName: user.fullName })}
+          onClick={() =>
+            setConfirmAction({ type: "block", userId: user.userId, userName: user.fullName })
+          }
         >
           <ShieldBan className="h-3.5 w-3.5" />
         </Button>
@@ -360,10 +397,18 @@ export const FriendsBlockedPanel = ({
         className="relative z-10 flex shrink-0 items-center gap-3 border-b border-white/20 px-3 py-3 sm:px-4"
         style={{ backgroundColor: "hsl(var(--primary))" }}
       >
-        <Button variant="ghost" size="icon" className="shrink-0 text-white hover:bg-white/15" onClick={onClose} aria-label="Back">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="shrink-0 text-white hover:bg-white/15"
+          onClick={onClose}
+          aria-label="Back"
+        >
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="truncate text-base font-semibold text-white sm:text-lg">Friends & Blocked</h1>
+        <h1 className="truncate text-base font-semibold text-white sm:text-lg">
+          Friends & Blocked
+        </h1>
       </div>
 
       <div className="relative z-10 shrink-0 px-3 pt-3 sm:px-4">
@@ -385,7 +430,7 @@ export const FriendsBlockedPanel = ({
                 onClick={() => selectTab(tab.id)}
                 className={cn(
                   "relative flex flex-col items-center justify-center gap-0.5 rounded-lg px-1 py-2 text-[10px] sm:flex-row sm:gap-1 sm:text-xs",
-                  selected ? "bg-background text-white shadow" : "text-white/80 hover:bg-white/10"
+                  selected ? "bg-background text-white shadow" : "text-white/80 hover:bg-white/10",
                 )}
               >
                 <Icon className="h-3.5 w-3.5" />
@@ -420,7 +465,7 @@ export const FriendsBlockedPanel = ({
                   renderEmptyState(
                     <Users className="h-12 w-12" />,
                     "No friends yet",
-                    "Go to Browse tab to find and add friends"
+                    "Go to Browse tab to find and add friends",
                   )
                 ) : (
                   <div className="divide-y divide-white/15">
@@ -432,19 +477,34 @@ export const FriendsBlockedPanel = ({
                         <div className="flex min-w-0 items-center gap-3">
                           {renderAvatar(f.friendName, f.friendPhoto, f.isOnline)}
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-medium text-white">{f.friendName}</p>
+                            <p className="truncate text-sm font-medium text-white">
+                              {f.friendName}
+                            </p>
                             <div className="flex items-center gap-1.5">
-                              <Badge variant="outline" className={cn("border-white/30 px-1.5 py-0 text-[10px] text-white", f.isOnline && "border-online/40 text-online")}>
+                              <Badge
+                                variant="outline"
+                                className={cn(
+                                  "border-white/30 px-1.5 py-0 text-[10px] text-white",
+                                  f.isOnline && "border-online/40 text-online",
+                                )}
+                              >
                                 {f.isOnline ? "Online" : "Offline"}
                               </Badge>
                               {f.primaryLanguage && (
-                                <span className="text-[10px] text-white/75">{f.primaryLanguage}</span>
+                                <span className="text-[10px] text-white/75">
+                                  {f.primaryLanguage}
+                                </span>
                               )}
                             </div>
                           </div>
                         </div>
                         <div className="flex shrink-0 items-center gap-1.5 self-end sm:self-auto">
-                          <Button variant="outline" size="sm" className="h-8 border-white/30 bg-white/10" onClick={() => navigate(`/profile/${f.friendId}`)}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 border-white/30 bg-white/10"
+                            onClick={() => navigate(`/profile/${f.friendId}`)}
+                          >
                             <Eye className="h-3.5 w-3.5" />
                           </Button>
                           <Button
@@ -453,14 +513,24 @@ export const FriendsBlockedPanel = ({
                             disabled={!f.isOnline || chatStarting === f.friendId}
                             onClick={() => handleStartChat(f.friendId, f.friendName, f.isOnline)}
                           >
-                            {chatStarting === f.friendId ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MessageCircle className="h-3.5 w-3.5" />}
+                            {chatStarting === f.friendId ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <MessageCircle className="h-3.5 w-3.5" />
+                            )}
                             Chat
                           </Button>
                           <Button
                             variant="outline"
                             size="sm"
                             className="h-8 border-white/30 bg-white/10 text-destructive hover:bg-destructive/20"
-                            onClick={() => setConfirmAction({ type: "unfriend", userId: f.friendId, userName: f.friendName })}
+                            onClick={() =>
+                              setConfirmAction({
+                                type: "unfriend",
+                                userId: f.friendId,
+                                userName: f.friendName,
+                              })
+                            }
                           >
                             <UserMinus className="h-3.5 w-3.5" />
                           </Button>
@@ -482,7 +552,7 @@ export const FriendsBlockedPanel = ({
                   renderEmptyState(
                     <Send className="h-12 w-12" />,
                     "No pending requests",
-                    "Friend requests you send or receive will appear here"
+                    "Friend requests you send or receive will appear here",
                   )
                 ) : (
                   <div>
@@ -502,18 +572,36 @@ export const FriendsBlockedPanel = ({
                               <div className="flex min-w-0 items-center gap-3">
                                 {renderAvatar(req.fromUserName, req.fromUserPhoto)}
                                 <div className="min-w-0">
-                                  <p className="truncate text-sm font-medium text-white">{req.fromUserName}</p>
+                                  <p className="truncate text-sm font-medium text-white">
+                                    {req.fromUserName}
+                                  </p>
                                   <div className="flex items-center gap-1.5">
-                                    {req.age && <span className="text-[10px] text-white/75">{req.age}y</span>}
-                                    {req.country && <span className="text-[10px] text-white/75">{req.country}</span>}
+                                    {req.age && (
+                                      <span className="text-[10px] text-white/75">{req.age}y</span>
+                                    )}
+                                    {req.country && (
+                                      <span className="text-[10px] text-white/75">
+                                        {req.country}
+                                      </span>
+                                    )}
                                   </div>
                                 </div>
                               </div>
                               <div className="flex shrink-0 items-center gap-1.5 self-end sm:self-auto">
-                                <Button variant="outline" size="sm" className="h-8 border-white/30 bg-white/10" onClick={() => navigate(`/profile/${req.fromUserId}`)}>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-8 border-white/30 bg-white/10"
+                                  onClick={() => navigate(`/profile/${req.fromUserId}`)}
+                                >
                                   <Eye className="h-3.5 w-3.5" />
                                 </Button>
-                                <Button size="sm" className="h-8 gap-1 text-xs" disabled={actionLoading} onClick={() => acceptRequest(req.id)}>
+                                <Button
+                                  size="sm"
+                                  className="h-8 gap-1 text-xs"
+                                  disabled={actionLoading}
+                                  onClick={() => acceptRequest(req.id)}
+                                >
                                   <Check className="h-3.5 w-3.5" /> Accept
                                 </Button>
                                 <Button
@@ -547,14 +635,24 @@ export const FriendsBlockedPanel = ({
                               <div className="flex min-w-0 items-center gap-3">
                                 {renderAvatar(req.toUserName, req.toUserPhoto)}
                                 <div className="min-w-0">
-                                  <p className="truncate text-sm font-medium text-white">{req.toUserName}</p>
-                                  <Badge variant="outline" className="border-white/30 px-1.5 py-0 text-[10px] text-white">
+                                  <p className="truncate text-sm font-medium text-white">
+                                    {req.toUserName}
+                                  </p>
+                                  <Badge
+                                    variant="outline"
+                                    className="border-white/30 px-1.5 py-0 text-[10px] text-white"
+                                  >
                                     <Clock className="mr-1 h-2.5 w-2.5" /> Pending
                                   </Badge>
                                 </div>
                               </div>
                               <div className="flex shrink-0 items-center gap-1.5 self-end sm:self-auto">
-                                <Button variant="outline" size="sm" className="h-8 border-white/30 bg-white/10" onClick={() => navigate(`/profile/${req.toUserId}`)}>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-8 border-white/30 bg-white/10"
+                                  onClick={() => navigate(`/profile/${req.toUserId}`)}
+                                >
                                   <Eye className="h-3.5 w-3.5" />
                                 </Button>
                                 <Button
@@ -598,7 +696,7 @@ export const FriendsBlockedPanel = ({
                   renderEmptyState(
                     <Users className="h-12 w-12" />,
                     searchQuery ? "No users found" : "No users available",
-                    searchQuery ? "Try a different search term" : "Check back later"
+                    searchQuery ? "Try a different search term" : "Check back later",
                   )
                 ) : (
                   <div className="divide-y divide-white/15">
@@ -610,18 +708,36 @@ export const FriendsBlockedPanel = ({
                         <div className="flex min-w-0 flex-1 items-center gap-3">
                           {renderAvatar(user.fullName, user.photoUrl, user.isOnline)}
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-medium text-white">{user.fullName}</p>
+                            <p className="truncate text-sm font-medium text-white">
+                              {user.fullName}
+                            </p>
                             <div className="flex flex-wrap items-center gap-1.5">
-                              {user.age && <span className="text-[10px] text-white/75">{user.age}y</span>}
-                              {user.country && <span className="truncate text-[10px] text-white/75">{user.country}</span>}
+                              {user.age && (
+                                <span className="text-[10px] text-white/75">{user.age}y</span>
+                              )}
+                              {user.country && (
+                                <span className="truncate text-[10px] text-white/75">
+                                  {user.country}
+                                </span>
+                              )}
                               {user.primaryLanguage && (
-                                <Badge variant="outline" className="border-white/30 px-1.5 py-0 text-[10px] text-white">{user.primaryLanguage}</Badge>
+                                <Badge
+                                  variant="outline"
+                                  className="border-white/30 px-1.5 py-0 text-[10px] text-white"
+                                >
+                                  {user.primaryLanguage}
+                                </Badge>
                               )}
                             </div>
                           </div>
                         </div>
                         <div className="flex shrink-0 items-center gap-1.5 self-end sm:self-auto">
-                          <Button variant="outline" size="sm" className="h-8 border-white/30 bg-white/10" onClick={() => navigate(`/profile/${user.userId}`)}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 border-white/30 bg-white/10"
+                            onClick={() => navigate(`/profile/${user.userId}`)}
+                          >
                             <Eye className="h-3.5 w-3.5" />
                           </Button>
                           {renderBrowseActions(user)}
@@ -643,7 +759,7 @@ export const FriendsBlockedPanel = ({
                   renderEmptyState(
                     <ShieldOff className="h-12 w-12" />,
                     "No blocked users",
-                    "Users you block will appear here"
+                    "Users you block will appear here",
                   )
                 ) : (
                   <div className="divide-y divide-white/15">
@@ -655,7 +771,9 @@ export const FriendsBlockedPanel = ({
                         <div className="flex min-w-0 items-center gap-3">
                           {renderAvatar(user.blockedName, user.blockedPhoto)}
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-medium text-white">{user.blockedName}</p>
+                            <p className="truncate text-sm font-medium text-white">
+                              {user.blockedName}
+                            </p>
                             <p className="text-[10px] text-white/75">
                               Blocked {new Date(user.blockedAt).toLocaleDateString()}
                             </p>
@@ -666,7 +784,13 @@ export const FriendsBlockedPanel = ({
                           size="sm"
                           className="h-8 gap-1 self-end border-white/30 bg-white/10 text-xs sm:self-auto"
                           disabled={actionLoading}
-                          onClick={() => setConfirmAction({ type: "unblock", userId: user.blockedUserId, userName: user.blockedName })}
+                          onClick={() =>
+                            setConfirmAction({
+                              type: "unblock",
+                              userId: user.blockedUserId,
+                              userName: user.blockedName,
+                            })
+                          }
                         >
                           <ShieldOff className="h-3.5 w-3.5" /> Unblock
                         </Button>
@@ -684,14 +808,18 @@ export const FriendsBlockedPanel = ({
         <AlertDialogContent className="z-[220]">
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {confirmAction?.type === "unfriend" && `Remove ${confirmAction.userName} from friends?`}
+              {confirmAction?.type === "unfriend" &&
+                `Remove ${confirmAction.userName} from friends?`}
               {confirmAction?.type === "block" && `Block ${confirmAction?.userName}?`}
               {confirmAction?.type === "unblock" && `Unblock ${confirmAction?.userName}?`}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {confirmAction?.type === "unfriend" && "You can add them back later by sending a new friend request."}
-              {confirmAction?.type === "block" && "They won't be able to message, call, or send you friend requests. Any existing friendship will be removed."}
-              {confirmAction?.type === "unblock" && "They will be able to send you friend requests and messages again."}
+              {confirmAction?.type === "unfriend" &&
+                "You can add them back later by sending a new friend request."}
+              {confirmAction?.type === "block" &&
+                "They won't be able to message, call, or send you friend requests. Any existing friendship will be removed."}
+              {confirmAction?.type === "unblock" &&
+                "They will be able to send you friend requests and messages again."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -700,7 +828,8 @@ export const FriendsBlockedPanel = ({
               onClick={handleConfirmAction}
               disabled={actionLoading}
               className={cn(
-                confirmAction?.type !== "unblock" && "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                confirmAction?.type !== "unblock" &&
+                  "bg-destructive text-destructive-foreground hover:bg-destructive/90",
               )}
             >
               {actionLoading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
@@ -712,7 +841,7 @@ export const FriendsBlockedPanel = ({
         </AlertDialogContent>
       </AlertDialog>
     </div>,
-    document.body
+    document.body,
   );
 };
 

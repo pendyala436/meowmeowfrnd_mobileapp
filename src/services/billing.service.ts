@@ -15,16 +15,11 @@
  *   tip                → full amount charged; tip_woman_pct% credited
  */
 
-
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from "@/integrations/supabase/client";
 
 // ─── Types ──────────────────────────────────────────────────────────────
 
-export type SessionType =
-  | 'chat'
-  | 'audio_call'
-  | 'video_call'
-  | 'private_group_call';
+export type SessionType = "chat" | "audio_call" | "video_call" | "private_group_call";
 
 export interface UnifiedPricing {
   chat_man_rate: number;
@@ -60,14 +55,17 @@ export interface BillingResult {
 
 export interface GiftTipResult {
   success: boolean;
-  type?: 'gift' | 'tip';
+  type?: "gift" | "tip";
   charged?: number;
   woman_credit?: number;
   woman_pct?: number;
   error?: string;
 }
 
-export interface ManBalance { balance: number; currency: string; }
+export interface ManBalance {
+  balance: number;
+  currency: string;
+}
 export interface WomanBalance {
   available_balance: number;
   total_earned: number;
@@ -80,7 +78,7 @@ export interface StatementRow {
   statement_id: string;
   user_id: string;
   full_name: string;
-  gender: 'male' | 'female';
+  gender: "male" | "female";
   year: number;
   month: number;
   opening_balance: number;
@@ -95,7 +93,7 @@ export interface StatementRow {
   tip_amount: number;
   recharge_amount: number;
   payout_amount: number;
-  payout_status: 'na' | 'pending' | 'approved' | 'paid' | 'rejected';
+  payout_status: "na" | "pending" | "approved" | "paid" | "rejected";
   pdf_url: string | null;
   excel_url: string | null;
   generated_at: string;
@@ -103,19 +101,25 @@ export interface StatementRow {
 }
 
 export const PRICING_DEFAULTS: UnifiedPricing = {
-  chat_man_rate: 4, chat_woman_rate: 2,
-  audio_man_rate: 6, audio_woman_rate: 3,
-  video_man_rate: 8, video_woman_rate: 4,
-  group_man_rate: 4, group_woman_rate: 1,
-  gift_woman_pct: 50, tip_woman_pct: 50,
-  withdrawal_fee_pct: 5, min_withdrawal_amount: 5000,
-  currency: 'INR',
+  chat_man_rate: 4,
+  chat_woman_rate: 2,
+  audio_man_rate: 6,
+  audio_woman_rate: 3,
+  video_man_rate: 8,
+  video_woman_rate: 4,
+  group_man_rate: 4,
+  group_woman_rate: 1,
+  gift_woman_pct: 50,
+  tip_woman_pct: 50,
+  withdrawal_fee_pct: 5,
+  min_withdrawal_amount: 5000,
+  currency: "INR",
 };
 
 // ─── Pricing ────────────────────────────────────────────────────────────
 
 export async function fetchUnifiedPricing(): Promise<UnifiedPricing> {
-  const { data, error } = await supabase.rpc('get_unified_pricing');
+  const { data, error } = await supabase.rpc("get_unified_pricing");
   if (error || !data) return PRICING_DEFAULTS;
   return data as unknown as UnifiedPricing;
 }
@@ -138,10 +142,15 @@ export function minimumBalanceFor(sessionType: SessionType, pricing: UnifiedPric
  * Without it, the server falls back to wall-clock minute floor (less safe).
  */
 export async function billMinute(
-  sessionId: string, sessionType: SessionType, minutes: number,
-  manId: string, womanId: string, manCount = 1, minuteIndex?: number,
+  sessionId: string,
+  sessionType: SessionType,
+  minutes: number,
+  manId: string,
+  womanId: string,
+  manCount = 1,
+  minuteIndex?: number,
 ): Promise<BillingResult> {
-  const { data, error } = await supabase.rpc('bill_session_minute', {
+  const { data, error } = await supabase.rpc("bill_session_minute", {
     p_session_id: sessionId,
     p_session_type: sessionType,
     p_minutes: minutes,
@@ -151,29 +160,33 @@ export async function billMinute(
     p_minute_index: minuteIndex ?? null,
   });
   if (error) {
-    console.error('[billing] RPC error', { sessionType, sessionId, minuteIndex, error });
+    console.error("[billing] RPC error", { sessionType, sessionId, minuteIndex, error });
     return { success: false, error: error.message };
   }
-  const parsed = (typeof data === 'string' ? JSON.parse(data) : data) as BillingResult | null;
-  if (!parsed) return { success: false, error: 'No response' };
+  const parsed = (typeof data === "string" ? JSON.parse(data) : data) as BillingResult | null;
+  if (!parsed) return { success: false, error: "No response" };
   if (!parsed.success) {
-    if (parsed.skipped === 'host_not_live' || parsed.skipped === 'waiting_for_replies' || parsed.skipped === 'not_answered') {
+    if (
+      parsed.skipped === "host_not_live" ||
+      parsed.skipped === "waiting_for_replies" ||
+      parsed.skipped === "not_answered"
+    ) {
       return parsed;
     }
-    console.error('[billing] RPC rejected', { sessionType, sessionId, minuteIndex, parsed });
+    console.error("[billing] RPC rejected", { sessionType, sessionId, minuteIndex, parsed });
   }
   return parsed;
 }
 
 export const billChatMinute = (s: string, m: number, mid: string, wid: string, idx?: number) =>
-  billMinute(s, 'chat', m, mid, wid, 1, idx);
+  billMinute(s, "chat", m, mid, wid, 1, idx);
 export const billAudioCallMinute = (s: string, m: number, mid: string, wid: string, idx?: number) =>
-  billMinute(s, 'audio_call', m, mid, wid, 1, idx);
+  billMinute(s, "audio_call", m, mid, wid, 1, idx);
 export const billVideoCallMinute = (s: string, m: number, mid: string, wid: string, idx?: number) =>
-  billMinute(s, 'video_call', m, mid, wid, 1, idx);
+  billMinute(s, "video_call", m, mid, wid, 1, idx);
 /** Group call: call ONCE PER ACTIVE MAN per heartbeat; woman earns per call. */
 export const billGroupCallMinute = (s: string, m: number, mid: string, wid: string, idx?: number) =>
-  billMinute(s, 'private_group_call', m, mid, wid, 1, idx);
+  billMinute(s, "private_group_call", m, mid, wid, 1, idx);
 
 /**
  * Final settlement at session end (or pause).
@@ -205,63 +218,88 @@ export async function billFinalPartialMinute(
   // Billing policy (client spec): ANY elapsed time >= 1 second rounds UP to a
   // full billable minute — no grace period. (1s -> 1 min; 2m1s -> 3 min.)
   return billMinute(
-    sessionId, sessionType, 1.0,
-    manId, womanId, manCount, fullMinutesAlreadyBilled,
+    sessionId,
+    sessionType,
+    1.0,
+    manId,
+    womanId,
+    manCount,
+    fullMinutesAlreadyBilled,
   );
 }
-
 
 // ─── Gifts & Tips ──────────────────────────────────────────────────────
 
 export async function sendGift(
-  manId: string, womanId: string, giftPrice: number,
-  description?: string, referenceId?: string,
+  manId: string,
+  womanId: string,
+  giftPrice: number,
+  description?: string,
+  referenceId?: string,
 ): Promise<GiftTipResult> {
-  const { data, error } = await supabase.rpc('bill_gift_or_tip', {
-    p_man_id: manId, p_woman_id: womanId, p_amount: giftPrice,
-    p_type: 'gift', p_description: description ?? null,
+  const { data, error } = await supabase.rpc("bill_gift_or_tip", {
+    p_man_id: manId,
+    p_woman_id: womanId,
+    p_amount: giftPrice,
+    p_type: "gift",
+    p_description: description ?? null,
     p_reference_id: referenceId ?? null,
   });
   if (error) return { success: false, error: error.message };
-  return (data as unknown as GiftTipResult) ?? { success: false, error: 'No response' };
+  return (data as unknown as GiftTipResult) ?? { success: false, error: "No response" };
 }
 
 export async function sendTip(
-  manId: string, womanId: string, amount: number, description?: string,
+  manId: string,
+  womanId: string,
+  amount: number,
+  description?: string,
 ): Promise<GiftTipResult> {
-  const { data, error } = await supabase.rpc('bill_gift_or_tip', {
-    p_man_id: manId, p_woman_id: womanId, p_amount: amount,
-    p_type: 'tip', p_description: description ?? null, p_reference_id: null,
+  const { data, error } = await supabase.rpc("bill_gift_or_tip", {
+    p_man_id: manId,
+    p_woman_id: womanId,
+    p_amount: amount,
+    p_type: "tip",
+    p_description: description ?? null,
+    p_reference_id: null,
   });
   if (error) return { success: false, error: error.message };
-  return (data as unknown as GiftTipResult) ?? { success: false, error: 'No response' };
+  return (data as unknown as GiftTipResult) ?? { success: false, error: "No response" };
 }
 
 // ─── Balances ──────────────────────────────────────────────────────────
 
 export async function getManBalance(userId: string): Promise<number> {
-  const { data } = await supabase.rpc('get_man_balance', { p_user_id: userId });
+  const { data } = await supabase.rpc("get_man_balance", { p_user_id: userId });
   if (!data) return 0;
   return Number((data as unknown as ManBalance).balance) || 0;
 }
 
 export async function getWomanBalance(userId: string): Promise<WomanBalance> {
-  const { data } = await supabase.rpc('get_woman_balance', { p_user_id: userId });
-  return (data as unknown as WomanBalance) ?? {
-    available_balance: 0, total_earned: 0, paid_out: 0,
-    today_earnings: 0, currency: 'INR',
-  };
+  const { data } = await supabase.rpc("get_woman_balance", { p_user_id: userId });
+  return (
+    (data as unknown as WomanBalance) ?? {
+      available_balance: 0,
+      total_earned: 0,
+      paid_out: 0,
+      today_earnings: 0,
+      currency: "INR",
+    }
+  );
 }
 
 // ─── Admin: Statements & Payouts ──────────────────────────────────────
 
 export async function listStatements(options?: {
-  gender?: 'male' | 'female';
-  year?: number; month?: number;
-  payoutStatus?: 'pending' | 'approved' | 'paid' | 'rejected';
-  userId?: string; limit?: number; offset?: number;
+  gender?: "male" | "female";
+  year?: number;
+  month?: number;
+  payoutStatus?: "pending" | "approved" | "paid" | "rejected";
+  userId?: string;
+  limit?: number;
+  offset?: number;
 }): Promise<StatementRow[]> {
-  const { data, error } = await supabase.rpc('admin_list_statements', {
+  const { data, error } = await supabase.rpc("admin_list_statements", {
     p_gender: options?.gender ?? null,
     p_year: options?.year ?? null,
     p_month: options?.month ?? null,
@@ -276,9 +314,14 @@ export async function listStatements(options?: {
 
 export async function updatePayout(
   statementId: string,
-  updates: { status?: 'approved' | 'paid' | 'rejected'; pdfUrl?: string; excelUrl?: string; notes?: string; },
+  updates: {
+    status?: "approved" | "paid" | "rejected";
+    pdfUrl?: string;
+    excelUrl?: string;
+    notes?: string;
+  },
 ): Promise<{ success: boolean; error?: string }> {
-  const { data, error } = await supabase.rpc('admin_update_payout', {
+  const { data, error } = await supabase.rpc("admin_update_payout", {
     p_statement_id: statementId,
     p_status: updates.status ?? null,
     p_pdf_url: updates.pdfUrl ?? null,
@@ -290,8 +333,9 @@ export async function updatePayout(
 }
 
 export async function runMonthlyClosing(year?: number, month?: number) {
-  const { data, error } = await supabase.rpc('run_monthly_closing', {
-    p_year: year ?? null, p_month: month ?? null,
+  const { data, error } = await supabase.rpc("run_monthly_closing", {
+    p_year: year ?? null,
+    p_month: month ?? null,
   });
   if (error) return { success: false, error: error.message };
   return data as { success: boolean; [k: string]: unknown };
@@ -299,8 +343,12 @@ export async function runMonthlyClosing(year?: number, month?: number) {
 
 /** Admin "Generate Now" button — snapshots all women's current available
  *  balance into pending payout statements immediately. */
-export async function generatePayoutSnapshotNow(): Promise<{ success: boolean; count?: number; error?: string }> {
-  const { data, error } = await supabase.rpc('generate_payout_snapshot_unified');
+export async function generatePayoutSnapshotNow(): Promise<{
+  success: boolean;
+  count?: number;
+  error?: string;
+}> {
+  const { data, error } = await supabase.rpc("generate_payout_snapshot_unified");
   if (error) return { success: false, error: error.message };
   return data as { success: boolean; count?: number };
 }

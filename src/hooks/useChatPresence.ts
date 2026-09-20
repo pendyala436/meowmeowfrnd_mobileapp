@@ -3,11 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type PartnerPresenceState =
   | "connecting"
-  | "in_chat"        // Partner has THIS chat window open and focused/visible
-  | "typing"         // Partner is typing in this chat
-  | "online_away"    // Partner is online (app open) but not in this chat tab
-  | "offline"        // Partner is not online
-  | "left_chat";     // Partner explicitly closed this chat window
+  | "in_chat" // Partner has THIS chat window open and focused/visible
+  | "typing" // Partner is typing in this chat
+  | "online_away" // Partner is online (app open) but not in this chat tab
+  | "offline" // Partner is not online
+  | "left_chat"; // Partner explicitly closed this chat window
 
 interface UseChatPresenceOptions {
   chatId: string;
@@ -75,7 +75,10 @@ export const useChatPresence = ({
       const next = computePartnerState(partnerMetas);
       setPartnerState((prev) => {
         // Presence drop on subscribe/remount is not a real leave — wait before showing offline.
-        if (next === "offline" && (prev === "in_chat" || prev === "typing" || prev === "online_away")) {
+        if (
+          next === "offline" &&
+          (prev === "in_chat" || prev === "typing" || prev === "online_away")
+        ) {
           if (leftDebounceRef.current) clearTimeout(leftDebounceRef.current);
           leftDebounceRef.current = setTimeout(() => {
             if (!isMountedRef.current) return;
@@ -190,7 +193,7 @@ export const useChatPresence = ({
         }, 2500);
       }
     },
-    [currentUserId]
+    [currentUserId],
   );
 
   /** Call on intentional leave (Stop Chat / Back / Close) so the counterpart exits immediately. */

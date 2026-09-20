@@ -7,15 +7,15 @@ import MeowLogo from "@/components/MeowLogo";
 import AuroraBackground from "@/components/AuroraBackground";
 import { useToast } from "@/hooks/use-toast";
 import { useGenderClassification } from "@/hooks/useGenderClassification";
-import { 
-  Camera, 
-  CheckCircle2, 
-  XCircle, 
-  Loader2, 
+import {
+  Camera,
+  CheckCircle2,
+  XCircle,
+  Loader2,
   Sparkles,
   AlertTriangle,
   User,
-  RefreshCw
+  RefreshCw,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -24,29 +24,32 @@ const AIProcessingScreen = () => {
   const { toast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  
+
   // Camera and capture state
   const [showCamera, setShowCamera] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [selfiePreview, setSelfiePreview] = useState<string | null>(null);
   const [countdown, setCountdown] = useState<number | null>(null);
-  
+
   // Verification state
-  const [verificationStatus, setVerificationStatus] = useState<"idle" | "verifying" | "success" | "failed">("idle");
+  const [verificationStatus, setVerificationStatus] = useState<
+    "idle" | "verifying" | "success" | "failed"
+  >("idle");
   const [verificationResult, setVerificationResult] = useState<any>(null);
   const [progress, setProgress] = useState(0);
-  
+
   // Gender classification hook
-  const { isVerifying, isLoadingModel, modelLoadProgress, classifyGender } = useGenderClassification();
-  
+  const { isVerifying, isLoadingModel, modelLoadProgress, classifyGender } =
+    useGenderClassification();
+
   // Get registered gender from localStorage
-  const registeredGender = sessionStorage.getItem("userGender") as 'male' | 'female' | null;
+  const registeredGender = sessionStorage.getItem("userGender") as "male" | "female" | null;
 
   // Start camera
   const startCamera = async () => {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user", width: 640, height: 480 }
+        video: { facingMode: "user", width: 640, height: 480 },
       });
       setStream(mediaStream);
       setShowCamera(true);
@@ -69,7 +72,7 @@ const AIProcessingScreen = () => {
   // Stop camera
   const stopCamera = useCallback(() => {
     if (stream) {
-      stream.getTracks().forEach(track => track.stop());
+      stream.getTracks().forEach((track) => track.stop());
       setStream(null);
     }
     setShowCamera(false);
@@ -83,7 +86,7 @@ const AIProcessingScreen = () => {
   // Countdown effect
   useEffect(() => {
     if (countdown === null) return;
-    
+
     if (countdown > 0) {
       const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
       return () => clearTimeout(timer);
@@ -107,11 +110,11 @@ const AIProcessingScreen = () => {
         ctx.translate(canvas.width, 0);
         ctx.scale(-1, 1);
         ctx.drawImage(video, 0, 0);
-        
+
         const imageData = canvas.toDataURL("image/jpeg", 0.9);
         setSelfiePreview(imageData);
         stopCamera();
-        
+
         // Start verification
         verifyGender(imageData);
       }
@@ -126,20 +129,20 @@ const AIProcessingScreen = () => {
     try {
       // Update progress during model loading
       const progressInterval = setInterval(() => {
-        setProgress(prev => Math.min(prev + 5, 80));
+        setProgress((prev) => Math.min(prev + 5, 80));
       }, 500);
 
       // Get expected gender from registration
       const expectedGender = registeredGender || undefined;
-      
+
       // Classify gender with 30-second timeout
       const classifyPromise = classifyGender(imageData, expectedGender);
       const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('AI_TIMEOUT')), 30000)
+        setTimeout(() => reject(new Error("AI_TIMEOUT")), 30000),
       );
-      
+
       const result = await Promise.race([classifyPromise, timeoutPromise]);
-      
+
       clearInterval(progressInterval);
       setProgress(100);
       setVerificationResult(result);
@@ -172,10 +175,10 @@ const AIProcessingScreen = () => {
       console.error("Verification error:", error);
       setProgress(100);
       setVerificationStatus("failed");
-      const isTimeout = error?.message === 'AI_TIMEOUT';
+      const isTimeout = error?.message === "AI_TIMEOUT";
       toast({
         title: isTimeout ? "Verification Timed Out" : "Verification Error",
-        description: isTimeout 
+        description: isTimeout
           ? "AI verification took too long. You can retry or skip for now."
           : "An error occurred. Please try again.",
         variant: "destructive",
@@ -186,23 +189,26 @@ const AIProcessingScreen = () => {
   // Save verification result to Supabase
   const saveVerificationResult = async (result: any) => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
       if (session?.user) {
         const user = session.user;
-        await supabase
-          .from("processing_logs")
-          .insert({
-            user_id: user.id,
-            processing_status: result.verified && result.genderMatches ? "completed" : "failed",
-            gender_verified: result.verified && result.genderMatches,
-            completed_at: new Date().toISOString(),
-            errors: result.verified && result.genderMatches ? null : [result.reason],
-          });
+        await supabase.from("processing_logs").insert({
+          user_id: user.id,
+          processing_status: result.verified && result.genderMatches ? "completed" : "failed",
+          gender_verified: result.verified && result.genderMatches,
+          completed_at: new Date().toISOString(),
+          errors: result.verified && result.genderMatches ? null : [result.reason],
+        });
       }
     } catch (error) {
       console.error("Error saving verification result:", error);
-      toast.error("Verification not saved", { description: "Your verification result could not be saved. Please complete the process again." });
+      toast.error("Verification not saved", {
+        description:
+          "Your verification result could not be saved. Please complete the process again.",
+      });
     }
   };
 
@@ -233,7 +239,7 @@ const AIProcessingScreen = () => {
   useEffect(() => {
     return () => {
       if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach((track) => track.stop());
       }
     };
   }, [stream]);
@@ -267,22 +273,20 @@ const AIProcessingScreen = () => {
             {/* Title */}
             <div>
               <h1 className="text-2xl font-bold text-foreground font-display">
-                {verificationStatus === "success" 
-                  ? "Verification Complete!" 
+                {verificationStatus === "success"
+                  ? "Verification Complete!"
                   : verificationStatus === "failed"
-                  ? "Verification Failed"
-                  : "Gender Verification"
-                }
+                    ? "Verification Failed"
+                    : "Gender Verification"}
               </h1>
               <p className="text-muted-foreground text-sm mt-1">
-                {verificationStatus === "idle" 
+                {verificationStatus === "idle"
                   ? "Take a selfie to verify your identity"
                   : verificationStatus === "verifying"
-                  ? "Analyzing your selfie..."
-                  : verificationStatus === "success"
-                  ? "Your identity has been verified"
-                  : "Please try again with a clearer photo"
-                }
+                    ? "Analyzing your selfie..."
+                    : verificationStatus === "success"
+                      ? "Your identity has been verified"
+                      : "Please try again with a clearer photo"}
               </p>
             </div>
 
@@ -290,7 +294,8 @@ const AIProcessingScreen = () => {
             {registeredGender && verificationStatus === "idle" && (
               <div className="p-3 bg-primary/5 rounded-xl border border-primary/20">
                 <p className="text-sm text-muted-foreground">
-                  Registered as: <span className="font-semibold text-primary capitalize">{registeredGender}</span>
+                  Registered as:{" "}
+                  <span className="font-semibold text-primary capitalize">{registeredGender}</span>
                 </p>
               </div>
             )}
@@ -313,17 +318,15 @@ const AIProcessingScreen = () => {
                   {/* Countdown overlay */}
                   {countdown !== null && (
                     <div className="absolute inset-0 flex items-center justify-center bg-background/50">
-                      <span className="text-6xl font-bold text-primary animate-pulse">{countdown}</span>
+                      <span className="text-6xl font-bold text-primary animate-pulse">
+                        {countdown}
+                      </span>
                     </div>
                   )}
                 </>
               ) : selfiePreview ? (
                 <>
-                  <img 
-                    src={selfiePreview} 
-                    alt="Selfie" 
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={selfiePreview} alt="Selfie" className="w-full h-full object-cover" />
                   {/* Verification overlay */}
                   {verificationStatus === "verifying" && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/80 gap-3">
@@ -381,15 +384,20 @@ const AIProcessingScreen = () => {
 
             {/* Verification Result */}
             {verificationResult && verificationStatus !== "verifying" && (
-              <div className={`p-3 rounded-xl text-sm ${
-                verificationStatus === "success"
-                  ? "bg-accent/10 text-accent border border-accent/20"
-                  : "bg-destructive/10 text-destructive border border-destructive/20"
-              }`}>
+              <div
+                className={`p-3 rounded-xl text-sm ${
+                  verificationStatus === "success"
+                    ? "bg-accent/10 text-accent border border-accent/20"
+                    : "bg-destructive/10 text-destructive border border-destructive/20"
+                }`}
+              >
                 {verificationStatus === "success" ? (
                   <p>
-                    ✓ Verified as <span className="font-semibold capitalize">{verificationResult.detectedGender}</span>
-                    {" "}({Math.round(verificationResult.confidence * 100)}% confidence)
+                    ✓ Verified as{" "}
+                    <span className="font-semibold capitalize">
+                      {verificationResult.detectedGender}
+                    </span>{" "}
+                    ({Math.round(verificationResult.confidence * 100)}% confidence)
                   </p>
                 ) : (
                   <p>{verificationResult.reason}</p>
@@ -400,12 +408,7 @@ const AIProcessingScreen = () => {
             {/* Action Buttons */}
             <div className="space-y-3 pt-2">
               {verificationStatus === "idle" && !showCamera && (
-                <Button
-                  variant="aurora"
-                  size="xl"
-                  className="w-full gap-2"
-                  onClick={startCamera}
-                >
+                <Button variant="aurora" size="xl" className="w-full gap-2" onClick={startCamera}>
                   <Camera className="w-5 h-5" />
                   Start Camera
                 </Button>
@@ -424,31 +427,18 @@ const AIProcessingScreen = () => {
               )}
 
               {verificationStatus === "success" && (
-                <Button
-                  variant="aurora"
-                  size="xl"
-                  className="w-full"
-                  onClick={handleContinue}
-                >
+                <Button variant="aurora" size="xl" className="w-full" onClick={handleContinue}>
                   Continue
                 </Button>
               )}
 
               {verificationStatus === "failed" && (
                 <div className="flex gap-3">
-                  <Button
-                    variant="outline"
-                    className="flex-1 gap-2"
-                    onClick={retryVerification}
-                  >
+                  <Button variant="outline" className="flex-1 gap-2" onClick={retryVerification}>
                     <RefreshCw className="w-4 h-4" />
                     Retry
                   </Button>
-                  <Button
-                    variant="aurora"
-                    className="flex-1"
-                    onClick={handleContinue}
-                  >
+                  <Button variant="aurora" className="flex-1" onClick={handleContinue}>
                     Continue Anyway
                   </Button>
                 </div>
@@ -467,11 +457,7 @@ const AIProcessingScreen = () => {
 
               {/* Cancel camera */}
               {showCamera && (
-                <Button
-                  variant="ghost"
-                  className="text-muted-foreground"
-                  onClick={stopCamera}
-                >
+                <Button variant="ghost" className="text-muted-foreground" onClick={stopCamera}>
                   Cancel
                 </Button>
               )}

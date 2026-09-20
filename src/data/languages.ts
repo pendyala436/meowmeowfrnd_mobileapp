@@ -569,8 +569,20 @@ export const languages: Language[] = [
   { code: "acx", name: "Omani Arabic", nativeName: "عماني", script: "Arabic", rtl: true },
   { code: "ayh", name: "Hadrami Arabic", nativeName: "حضرمي", script: "Arabic", rtl: true },
   { code: "ayn", name: "Sanaani Arabic", nativeName: "صنعاني", script: "Arabic", rtl: true },
-  { code: "ajp", name: "South Levantine Arabic", nativeName: "أردني/فلسطيني", script: "Arabic", rtl: true },
-  { code: "aao", name: "Algerian Saharan Arabic", nativeName: "صحراوي", script: "Arabic", rtl: true },
+  {
+    code: "ajp",
+    name: "South Levantine Arabic",
+    nativeName: "أردني/فلسطيني",
+    script: "Arabic",
+    rtl: true,
+  },
+  {
+    code: "aao",
+    name: "Algerian Saharan Arabic",
+    nativeName: "صحراوي",
+    script: "Arabic",
+    rtl: true,
+  },
   { code: "ssh", name: "Shihhi Arabic", nativeName: "شحي", script: "Arabic", rtl: true },
   { code: "shu", name: "Chadian Arabic", nativeName: "عربي تشادي", script: "Arabic", rtl: true },
   { code: "acq", name: "Ta'izzi-Adeni Arabic", nativeName: "تعزي", script: "Arabic", rtl: true },
@@ -682,7 +694,13 @@ export const languages: Language[] = [
   { code: "rhg", name: "Rohingya", nativeName: "Ruáingga", script: "Arabic", rtl: true },
   { code: "ccp", name: "Chakma", nativeName: "𑄌𑄋𑄴𑄟𑄳", script: "Chakma" },
   { code: "bgn", name: "Western Balochi", nativeName: "بلوچی رخشانی", script: "Arabic", rtl: true },
-  { code: "bcc", name: "Southern Balochi", nativeName: "بلوچی مکرانی", script: "Arabic", rtl: true },
+  {
+    code: "bcc",
+    name: "Southern Balochi",
+    nativeName: "بلوچی مکرانی",
+    script: "Arabic",
+    rtl: true,
+  },
   { code: "gbz", name: "Dari Zoroastrian", nativeName: "داری زرتشتی", script: "Arabic", rtl: true },
   { code: "dri", name: "Dari", nativeName: "دری", script: "Arabic", rtl: true },
   { code: "pbt", name: "Southern Pashto", nativeName: "پښتو", script: "Arabic", rtl: true },
@@ -926,7 +944,13 @@ export const languages: Language[] = [
   { code: "otk", name: "Old Turkish", nativeName: "𐰃𐰇𐰚𐱅𐰇𐰼𐰜", script: "Old_Turkic" },
   { code: "pal", name: "Pahlavi", nativeName: "Parsīk", script: "Pahlavi", rtl: true },
   { code: "sam", name: "Samaritan Aramaic", nativeName: "ארמית שומרונית", script: "Samaritan" },
-  { code: "tmr", name: "Jewish Babylonian Aramaic", nativeName: "ארמית בבלית", script: "Hebrew", rtl: true },
+  {
+    code: "tmr",
+    name: "Jewish Babylonian Aramaic",
+    nativeName: "ארמית בבלית",
+    script: "Hebrew",
+    rtl: true,
+  },
 
   // More Central Asian Languages
   { code: "evn", name: "Evenki", nativeName: "Эвэнкийн", script: "Cyrillic" },
@@ -960,7 +984,12 @@ export const languages: Language[] = [
   { code: "byn", name: "Bilin", nativeName: "ብሊን", script: "Ethiopic" },
   { code: "cad", name: "Caddo", nativeName: "Hasí:nay", script: "Latin" },
   { code: "cku", name: "Koasati", nativeName: "Koasati", script: "Latin" },
-  { code: "crj", name: "Southern East Cree", nativeName: "ᐃᔨᔫ ᐊᔨᒨᓐ", script: "Canadian_Aboriginal" },
+  {
+    code: "crj",
+    name: "Southern East Cree",
+    nativeName: "ᐃᔨᔫ ᐊᔨᒨᓐ",
+    script: "Canadian_Aboriginal",
+  },
   { code: "dhi", name: "Dhimal", nativeName: "ढिमाल", script: "Devanagari" },
   { code: "geh", name: "Hutterish", nativeName: "Hutterisch", script: "Latin" },
   { code: "hdh", name: "Honduras Sign Language", nativeName: "LESHO", script: "Latin" },
@@ -985,13 +1014,13 @@ export const languages: Language[] = [
 
 // Helper function to get language name by code
 export const getLanguageName = (code: string): string => {
-  const language = languages.find(lang => lang.code === code);
+  const language = languages.find((lang) => lang.code === code);
   return language?.name || code;
 };
 
 // Helper function to get native name by code
 export const getLanguageNativeName = (code: string): string => {
-  const language = languages.find(lang => lang.code === code);
+  const language = languages.find((lang) => lang.code === code);
   return language?.nativeName || code;
 };
 
@@ -1001,30 +1030,138 @@ export const getIndianLanguages = (): Language[] => {
     // English (widely spoken in India and an associate official language)
     "en",
     // Official 22
-    "hi", "bn", "te", "mr", "ta", "gu", "kn", "ml", "or", "pa",
-    "as", "mai", "sa", "ks", "ne", "sd", "kok", "doi", "mni", "sat", "brx", "ur",
+    "hi",
+    "bn",
+    "te",
+    "mr",
+    "ta",
+    "gu",
+    "kn",
+    "ml",
+    "or",
+    "pa",
+    "as",
+    "mai",
+    "sa",
+    "ks",
+    "ne",
+    "sd",
+    "kok",
+    "doi",
+    "mni",
+    "sat",
+    "brx",
+    "ur",
     // Regional 50+
-    "bho", "hne", "raj", "mwr", "mtr", "bgc", "mag", "anp", "bjj", "awa",
-    "bns", "bfy", "gbm", "kfy", "him", "kan", "tcy", "kfa", "bhb", "gon",
-    "lmn", "sck", "kru", "unr", "hoc", "khr", "hlb", "khn", "dcc", "wbr",
-    "bhd", "mup", "hoj", "dgo", "sjo", "mby", "saz", "bra", "kfk", "lah",
-    "psu", "pgg", "xnr", "srx", "jml", "dty", "thl", "bap",
+    "bho",
+    "hne",
+    "raj",
+    "mwr",
+    "mtr",
+    "bgc",
+    "mag",
+    "anp",
+    "bjj",
+    "awa",
+    "bns",
+    "bfy",
+    "gbm",
+    "kfy",
+    "him",
+    "kan",
+    "tcy",
+    "kfa",
+    "bhb",
+    "gon",
+    "lmn",
+    "sck",
+    "kru",
+    "unr",
+    "hoc",
+    "khr",
+    "hlb",
+    "khn",
+    "dcc",
+    "wbr",
+    "bhd",
+    "mup",
+    "hoj",
+    "dgo",
+    "sjo",
+    "mby",
+    "saz",
+    "bra",
+    "kfk",
+    "lah",
+    "psu",
+    "pgg",
+    "xnr",
+    "srx",
+    "jml",
+    "dty",
+    "thl",
+    "bap",
     // Northeast 50+
-    "lus", "kha", "grt", "mjw", "trp", "rah", "mrg", "njz", "apt", "adi",
-    "lep", "sip", "lif", "njo", "njh", "nsm", "njm", "nmf", "pck", "tcz",
-    "nbu", "nst", "nnp", "njb", "nag", "cmn", "kac", "mhu", "rnp", "dml",
-    "zza", "rkt", "kht", "phk", "aio", "sgt", "tai", "tur",
+    "lus",
+    "kha",
+    "grt",
+    "mjw",
+    "trp",
+    "rah",
+    "mrg",
+    "njz",
+    "apt",
+    "adi",
+    "lep",
+    "sip",
+    "lif",
+    "njo",
+    "njh",
+    "nsm",
+    "njm",
+    "nmf",
+    "pck",
+    "tcz",
+    "nbu",
+    "nst",
+    "nnp",
+    "njb",
+    "nag",
+    "cmn",
+    "kac",
+    "mhu",
+    "rnp",
+    "dml",
+    "zza",
+    "rkt",
+    "kht",
+    "phk",
+    "aio",
+    "sgt",
+    "tai",
+    "tur",
     // South Indian Tribal
-    "tcx", "bfq", "iru", "kfh", "vav", "abl", "wbq", "gok", "kxv", "kff",
-    "kdu", "yed", "sou"
+    "tcx",
+    "bfq",
+    "iru",
+    "kfh",
+    "vav",
+    "abl",
+    "wbq",
+    "gok",
+    "kxv",
+    "kff",
+    "kdu",
+    "yed",
+    "sou",
   ];
-  return languages.filter(lang => indianCodes.includes(lang.code));
+  return languages.filter((lang) => indianCodes.includes(lang.code));
 };
 
 // Get all world languages (non-Indian)
 export const getWorldLanguages = (): Language[] => {
-  const indianCodes = new Set(getIndianLanguages().map(l => l.code));
-  return languages.filter(lang => !indianCodes.has(lang.code));
+  const indianCodes = new Set(getIndianLanguages().map((l) => l.code));
+  return languages.filter((lang) => !indianCodes.has(lang.code));
 };
 
 // Get top 100 world languages
@@ -1034,12 +1171,12 @@ export const getTop100Languages = (): Language[] => {
 
 // Get languages by script
 export const getLanguagesByScript = (script: string): Language[] => {
-  return languages.filter(lang => lang.script === script);
+  return languages.filter((lang) => lang.script === script);
 };
 
 // Get RTL languages
 export const getRTLLanguages = (): Language[] => {
-  return languages.filter(lang => lang.rtl);
+  return languages.filter((lang) => lang.rtl);
 };
 
 // Get total language count
@@ -1050,22 +1187,23 @@ export const getTotalLanguageCount = (): number => {
 // Search languages by name or native name
 export const searchLanguages = (query: string): Language[] => {
   const q = query.toLowerCase();
-  return languages.filter(lang => 
-    lang.name.toLowerCase().includes(q) || 
-    lang.nativeName.toLowerCase().includes(q) ||
-    lang.code.toLowerCase().includes(q)
+  return languages.filter(
+    (lang) =>
+      lang.name.toLowerCase().includes(q) ||
+      lang.nativeName.toLowerCase().includes(q) ||
+      lang.code.toLowerCase().includes(q),
   );
 };
 
 // Get language by code
 export const getLanguageByCode = (code: string): Language | undefined => {
-  return languages.find(lang => lang.code === code);
+  return languages.find((lang) => lang.code === code);
 };
 
 // Get all unique scripts
 export const getAllScripts = (): string[] => {
   const scripts = new Set<string>();
-  languages.forEach(lang => {
+  languages.forEach((lang) => {
     if (lang.script) scripts.add(lang.script);
   });
   return Array.from(scripts).sort();
@@ -1073,49 +1211,109 @@ export const getAllScripts = (): string[] => {
 
 // Language code to name mapping for quick lookup
 export const languageCodeToName: Record<string, string> = Object.fromEntries(
-  languages.map(lang => [lang.code, lang.name])
+  languages.map((lang) => [lang.code, lang.name]),
 );
 
 // Get language families
 export const getLanguageFamilies = (): Record<string, Language[]> => {
   const families: Record<string, Language[]> = {
-    'Indo-European': [],
-    'Sino-Tibetan': [],
-    'Afro-Asiatic': [],
-    'Austronesian': [],
-    'Dravidian': [],
-    'Turkic': [],
-    'Niger-Congo': [],
-    'Uralic': [],
-    'Kartvelian': [],
-    'Other': []
+    "Indo-European": [],
+    "Sino-Tibetan": [],
+    "Afro-Asiatic": [],
+    Austronesian: [],
+    Dravidian: [],
+    Turkic: [],
+    "Niger-Congo": [],
+    Uralic: [],
+    Kartvelian: [],
+    Other: [],
   };
-  
+
   // Rough classification by script/region
-  languages.forEach(lang => {
-    if (['Devanagari', 'Bengali', 'Gujarati', 'Gurmukhi', 'Odia', 'Latin'].includes(lang.script || '') && 
-        ['hi', 'bn', 'mr', 'gu', 'pa', 'ne', 'en', 'de', 'fr', 'es', 'pt', 'it', 'nl', 'sv', 'no', 'da', 'pl', 'ru', 'uk', 'be', 'cs', 'sk', 'hr', 'sr', 'bg', 'sl', 'lt', 'lv', 'el', 'hy', 'fa', 'ps', 'ur', 'sd', 'ks'].includes(lang.code)) {
-      families['Indo-European'].push(lang);
-    } else if (['Han', 'Tibetan'].includes(lang.script || '') || ['zh', 'yue', 'wuu', 'nan', 'hak', 'bo', 'my', 'dz'].includes(lang.code)) {
-      families['Sino-Tibetan'].push(lang);
-    } else if (['Arabic', 'Hebrew', 'Ethiopic'].includes(lang.script || '') || ['ar', 'he', 'am', 'ti', 'ha', 'so', 'om'].includes(lang.code)) {
-      families['Afro-Asiatic'].push(lang);
-    } else if (['id', 'ms', 'tl', 'jv', 'su', 'ceb', 'mi', 'haw', 'sm', 'to', 'fj', 'ty'].includes(lang.code)) {
-      families['Austronesian'].push(lang);
-    } else if (['Telugu', 'Tamil', 'Kannada', 'Malayalam'].includes(lang.script || '') || ['te', 'ta', 'kn', 'ml', 'tcy'].includes(lang.code)) {
-      families['Dravidian'].push(lang);
-    } else if (['tr', 'az', 'uz', 'kk', 'ky', 'tk', 'tt', 'ba', 'cv', 'sah', 'crh', 'gag'].includes(lang.code)) {
-      families['Turkic'].push(lang);
-    } else if (['sw', 'lg', 'rw', 'rn', 'sn', 'zu', 'xh', 'yo', 'ig', 'wo', 'bm', 'ln'].includes(lang.code)) {
-      families['Niger-Congo'].push(lang);
-    } else if (['fi', 'et', 'hu', 'kv', 'udm', 'mhr'].includes(lang.code)) {
-      families['Uralic'].push(lang);
-    } else if (['Georgian'].includes(lang.script || '') || ['ka', 'xmf', 'sva'].includes(lang.code)) {
-      families['Kartvelian'].push(lang);
+  languages.forEach((lang) => {
+    if (
+      ["Devanagari", "Bengali", "Gujarati", "Gurmukhi", "Odia", "Latin"].includes(
+        lang.script || "",
+      ) &&
+      [
+        "hi",
+        "bn",
+        "mr",
+        "gu",
+        "pa",
+        "ne",
+        "en",
+        "de",
+        "fr",
+        "es",
+        "pt",
+        "it",
+        "nl",
+        "sv",
+        "no",
+        "da",
+        "pl",
+        "ru",
+        "uk",
+        "be",
+        "cs",
+        "sk",
+        "hr",
+        "sr",
+        "bg",
+        "sl",
+        "lt",
+        "lv",
+        "el",
+        "hy",
+        "fa",
+        "ps",
+        "ur",
+        "sd",
+        "ks",
+      ].includes(lang.code)
+    ) {
+      families["Indo-European"].push(lang);
+    } else if (
+      ["Han", "Tibetan"].includes(lang.script || "") ||
+      ["zh", "yue", "wuu", "nan", "hak", "bo", "my", "dz"].includes(lang.code)
+    ) {
+      families["Sino-Tibetan"].push(lang);
+    } else if (
+      ["Arabic", "Hebrew", "Ethiopic"].includes(lang.script || "") ||
+      ["ar", "he", "am", "ti", "ha", "so", "om"].includes(lang.code)
+    ) {
+      families["Afro-Asiatic"].push(lang);
+    } else if (
+      ["id", "ms", "tl", "jv", "su", "ceb", "mi", "haw", "sm", "to", "fj", "ty"].includes(lang.code)
+    ) {
+      families["Austronesian"].push(lang);
+    } else if (
+      ["Telugu", "Tamil", "Kannada", "Malayalam"].includes(lang.script || "") ||
+      ["te", "ta", "kn", "ml", "tcy"].includes(lang.code)
+    ) {
+      families["Dravidian"].push(lang);
+    } else if (
+      ["tr", "az", "uz", "kk", "ky", "tk", "tt", "ba", "cv", "sah", "crh", "gag"].includes(
+        lang.code,
+      )
+    ) {
+      families["Turkic"].push(lang);
+    } else if (
+      ["sw", "lg", "rw", "rn", "sn", "zu", "xh", "yo", "ig", "wo", "bm", "ln"].includes(lang.code)
+    ) {
+      families["Niger-Congo"].push(lang);
+    } else if (["fi", "et", "hu", "kv", "udm", "mhr"].includes(lang.code)) {
+      families["Uralic"].push(lang);
+    } else if (
+      ["Georgian"].includes(lang.script || "") ||
+      ["ka", "xmf", "sva"].includes(lang.code)
+    ) {
+      families["Kartvelian"].push(lang);
     } else {
-      families['Other'].push(lang);
+      families["Other"].push(lang);
     }
   });
-  
+
   return families;
 };

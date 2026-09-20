@@ -1,9 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import {
-  calculateMatchScore,
-  getQuickMatchScore,
-  type UserProfile,
-} from "./matchScoreCalculator";
+import { calculateMatchScore, getQuickMatchScore, type UserProfile } from "./matchScoreCalculator";
 
 vi.mock("@/lib/profile-queries", () => ({
   fetchPublicProfile: vi.fn(),
@@ -26,12 +22,7 @@ describe("calculateMatchScore", () => {
   it("awards language points for common languages", () => {
     const current = baseProfile({ preferred_language: "English" });
     const other = baseProfile({ user_id: "u2" });
-    const result = calculateMatchScore(
-      current,
-      other,
-      ["Hindi", "English"],
-      ["Hindi", "Tamil"],
-    );
+    const result = calculateMatchScore(current, other, ["Hindi", "English"], ["Hindi", "Tamil"]);
     expect(result.breakdown.languageScore).toBe(20);
   });
 

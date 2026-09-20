@@ -27,9 +27,10 @@ export const useProductionMode = () => {
           setIsProduction(true);
         } else if (data) {
           // Parse the JSON setting value
-          const value = typeof data.setting_value === 'object' 
-            ? data.setting_value 
-            : JSON.parse(data.setting_value as string);
+          const value =
+            typeof data.setting_value === "object"
+              ? data.setting_value
+              : JSON.parse(data.setting_value as string);
           setIsProduction(value === true || value === "true");
         } else {
           // No setting found - default to production

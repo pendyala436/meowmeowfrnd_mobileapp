@@ -7,11 +7,7 @@
     "output": "release",
     "buildResources": "build"
   },
-  "files": [
-    "dist/**/*",
-    "electron/**/*",
-    "public/icons/**/*"
-  ],
+  "files": ["dist/**/*", "electron/**/*", "public/icons/**/*"],
   "extraResources": [
     {
       "from": "public/icons",

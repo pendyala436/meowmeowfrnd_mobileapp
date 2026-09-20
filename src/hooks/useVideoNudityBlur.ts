@@ -21,12 +21,12 @@
  * blurred video using the returned `isBlurred` flag.
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from "react";
 
 // Lazy import to keep the model out of the initial bundle
 type NSFWModel = {
   classify: (
-    img: HTMLImageElement | HTMLVideoElement | HTMLCanvasElement
+    img: HTMLImageElement | HTMLVideoElement | HTMLCanvasElement,
   ) => Promise<Array<{ className: string; probability: number }>>;
 };
 
@@ -37,10 +37,7 @@ async function loadModel(): Promise<NSFWModel> {
   if (cachedModel) return cachedModel;
   if (loadingPromise) return loadingPromise;
   loadingPromise = (async () => {
-    const [{ load }] = await Promise.all([
-      import('nsfwjs'),
-      import('@tensorflow/tfjs'),
-    ]);
+    const [{ load }] = await Promise.all([import("nsfwjs"), import("@tensorflow/tfjs")]);
     const model = await load();
     cachedModel = model as unknown as NSFWModel;
     return cachedModel;
@@ -101,9 +98,9 @@ export function useVideoNudityBlur({
             const predictions = await model.classify(videoEl);
             const get = (name: string) =>
               predictions.find((p) => p.className === name)?.probability || 0;
-            const porn = get('Porn');
-            const hentai = get('Hentai');
-            const sexy = get('Sexy'); // ALLOWED — informational only
+            const porn = get("Porn");
+            const hentai = get("Hentai");
+            const sexy = get("Sexy"); // ALLOWED — informational only
 
             const isExplicit = porn >= threshold || hentai >= threshold;
             if (isExplicit) {
@@ -144,10 +141,10 @@ export function useVideoNudityBlur({
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
-    v.style.transition = 'filter 200ms ease-out';
-    v.style.filter = state.isBlurred ? 'blur(40px) saturate(0.6)' : '';
+    v.style.transition = "filter 200ms ease-out";
+    v.style.filter = state.isBlurred ? "blur(40px) saturate(0.6)" : "";
     return () => {
-      if (v) v.style.filter = '';
+      if (v) v.style.filter = "";
     };
   }, [state.isBlurred, videoRef]);
 

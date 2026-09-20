@@ -58,7 +58,7 @@ const LanguageCountryScreen = () => {
       title: "Preferences saved!",
       description: "Let's complete your profile.",
     });
-    
+
     navigate("/basic-info");
   };
 
@@ -67,9 +67,11 @@ const LanguageCountryScreen = () => {
   return (
     <div className="min-h-screen flex flex-col relative bg-background text-foreground">
       {/* Aurora Background */}
-      <Suspense fallback={
-        <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background to-secondary/30" />
-      }>
+      <Suspense
+        fallback={
+          <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background to-secondary/30" />
+        }
+      >
         <AuroraBackground />
       </Suspense>
 
@@ -144,7 +146,7 @@ const LanguageCountryScreen = () => {
             Continue
             <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
           </Button>
-          
+
           <p className="text-center text-xs text-muted-foreground mt-4">
             By continuing, you agree to our Terms of Service and Privacy Policy
           </p>

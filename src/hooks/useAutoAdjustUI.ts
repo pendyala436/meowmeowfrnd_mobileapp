@@ -39,11 +39,14 @@ export function useAutoAdjustUI(): void {
         html.setAttribute("data-memory", String(nav.deviceMemory));
       }
 
-      const isPWA = window.matchMedia("(display-mode: standalone)").matches || nav.standalone === true;
+      const isPWA =
+        window.matchMedia("(display-mode: standalone)").matches || nav.standalone === true;
       html.setAttribute("data-pwa", String(isPWA));
 
       const ua = navigator.userAgent;
-      const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+      const isIOS =
+        /iPad|iPhone|iPod/.test(ua) ||
+        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
       const isAndroid = /Android/.test(ua);
       html.setAttribute("data-ios", String(isIOS));
       html.setAttribute("data-android", String(isAndroid));
@@ -120,8 +123,14 @@ export function useAutoAdjustUI(): void {
       html.style.removeProperty("--vh");
 
       const attrs = [
-        "data-touch", "data-hover", "data-memory", "data-pwa",
-        "data-ios", "data-android", "data-orientation", "data-reduced-motion",
+        "data-touch",
+        "data-hover",
+        "data-memory",
+        "data-pwa",
+        "data-ios",
+        "data-android",
+        "data-orientation",
+        "data-reduced-motion",
       ];
       attrs.forEach((attr) => html.removeAttribute(attr));
     };

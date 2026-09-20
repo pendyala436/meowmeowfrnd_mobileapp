@@ -3,7 +3,12 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { Crown } from "lucide-react";
 import { usePresence } from "@/hooks/usePresence";
-import { PRESENCE_TEXT_CLASS, PRESENCE_DOT_CLASS, PRESENCE_LABEL, type PresenceStatus } from "@/lib/presence";
+import {
+  PRESENCE_TEXT_CLASS,
+  PRESENCE_DOT_CLASS,
+  PRESENCE_LABEL,
+  type PresenceStatus,
+} from "@/lib/presence";
 
 interface UserContactCardProps {
   /** User id — when provided, real-time presence status is shown */
@@ -38,7 +43,13 @@ interface UserContactCardProps {
 }
 
 const COUNTRY_LABEL: Record<string, string> = {
-  IN: "India", US: "USA", GB: "UK", CA: "Canada", AU: "Australia", AE: "UAE", SG: "Singapore",
+  IN: "India",
+  US: "USA",
+  GB: "UK",
+  CA: "Canada",
+  AU: "Australia",
+  AE: "UAE",
+  SG: "Singapore",
 };
 
 function statusDisplay(status: PresenceStatus, lastSeen: Date | null): string {
@@ -78,32 +89,37 @@ export const UserContactCard: React.FC<UserContactCardProps> = ({
   className,
 }) => {
   const presence = usePresence(userId, isTyping, { realtime: livePresence });
-  const status: PresenceStatus = statusOverride
-    ?? (userId ? presence.status : isOnline ? "online" : "offline");
+  const status: PresenceStatus =
+    statusOverride ?? (userId ? presence.status : isOnline ? "online" : "offline");
   const lastSeen = userId ? presence.lastSeen : null;
   const statusText = statusDisplay(status, lastSeen);
   const countryLabel = country ? (COUNTRY_LABEL[country] ?? country) : null;
 
   // Build the dotted segments
   const segments: React.ReactNode[] = [
-    <span key="name" className="font-semibold text-foreground truncate">{name}</span>,
+    <span key="name" className="font-semibold text-foreground truncate">
+      {name}
+    </span>,
   ];
   if (age) segments.push(<span key="age">{age}</span>);
   if (language) segments.push(<span key="lang">{language}</span>);
   if (state) segments.push(<span key="loc">{state}</span>);
   if (countryLabel) segments.push(<span key="ctry">{countryLabel}</span>);
   segments.push(
-    <span key="status" className={cn("font-medium inline-flex items-center gap-1", PRESENCE_TEXT_CLASS[status])}>
+    <span
+      key="status"
+      className={cn("font-medium inline-flex items-center gap-1", PRESENCE_TEXT_CLASS[status])}
+    >
       <span className={cn("w-1.5 h-1.5 rounded-full", PRESENCE_DOT_CLASS[status])} />
       {statusText}
-    </span>
+    </span>,
   );
 
   return (
     <div
       className={cn(
         "flex items-center gap-3 px-4 py-3 hover:bg-muted/50 active:bg-muted/70 transition-colors cursor-pointer border-b border-border/30 select-none",
-        className
+        className,
       )}
       onClick={onClick}
       onDoubleClick={onDoubleClick}
@@ -113,23 +129,29 @@ export const UserContactCard: React.FC<UserContactCardProps> = ({
         <Avatar className="h-12 w-12 border-2 border-background shadow-sm">
           <AvatarImage src={photoUrl || undefined} alt={name} />
           <AvatarFallback className="bg-gradient-to-br from-primary to-primary/60 text-primary-foreground text-sm font-semibold">
-            {String(name || "?").charAt(0).toUpperCase()}
+            {String(name || "?")
+              .charAt(0)
+              .toUpperCase()}
           </AvatarFallback>
         </Avatar>
         {activeChatCount !== undefined && activeChatCount > 0 ? (
           <div
             className={cn(
               "absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-background flex items-center justify-center text-[8px] font-bold",
-              activeChatCount >= 3 ? "bg-destructive text-destructive-foreground" : "bg-amber-500 text-white"
+              activeChatCount >= 3
+                ? "bg-destructive text-destructive-foreground"
+                : "bg-amber-500 text-white",
             )}
           >
             {activeChatCount}
           </div>
         ) : (
-          <div className={cn(
-            "absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-background",
-            PRESENCE_DOT_CLASS[status]
-          )} />
+          <div
+            className={cn(
+              "absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-background",
+              PRESENCE_DOT_CLASS[status],
+            )}
+          />
         )}
         {isPremium && (
           <div className="absolute -top-1 -left-1">
@@ -152,7 +174,12 @@ export const UserContactCard: React.FC<UserContactCardProps> = ({
           <div className="flex items-center gap-2 mt-0.5 text-[11px] text-muted-foreground truncate">
             {subtitle && <span className="truncate">{subtitle}</span>}
             {walletBalance !== undefined && (
-              <span className={cn("font-semibold", walletBalance > 0 ? "text-primary" : "text-muted-foreground")}>
+              <span
+                className={cn(
+                  "font-semibold",
+                  walletBalance > 0 ? "text-primary" : "text-muted-foreground",
+                )}
+              >
                 ₹{Math.round(walletBalance).toLocaleString("en-IN")}
               </span>
             )}

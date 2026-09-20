@@ -43,7 +43,11 @@ interface TLCommunicationTabProps {
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
-export function TLCommunicationTab({ currentUserId, userName, userPhoto }: TLCommunicationTabProps) {
+export function TLCommunicationTab({
+  currentUserId,
+  userName,
+  userPhoto,
+}: TLCommunicationTabProps) {
   const { toast } = useToast();
   const [messages, setMessages] = useState<TLMessage[]>([]);
   const [members, setMembers] = useState<TLMember[]>([]);
@@ -54,7 +58,9 @@ export function TLCommunicationTab({ currentUserId, userName, userPhoto }: TLCom
   const [showMembers, setShowMembers] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const profileCacheRef = useRef<Map<string, { name: string; photo: string | null; isAdmin: boolean }>>(new Map());
+  const profileCacheRef = useRef<
+    Map<string, { name: string; photo: string | null; isAdmin: boolean }>
+  >(new Map());
 
   useEffect(() => {
     if (!currentUserId) return;
@@ -94,7 +100,11 @@ export function TLCommunicationTab({ currentUserId, userName, userPhoto }: TLCom
       }
       for (const id of missing) {
         if (!profileCacheRef.current.has(id)) {
-          profileCacheRef.current.set(id, { name: adminSet.has(id) ? "Admin" : "Member", photo: null, isAdmin: adminSet.has(id) });
+          profileCacheRef.current.set(id, {
+            name: adminSet.has(id) ? "Admin" : "Member",
+            photo: null,
+            isAdmin: adminSet.has(id),
+          });
         }
       }
     }
@@ -105,7 +115,7 @@ export function TLCommunicationTab({ currentUserId, userName, userPhoto }: TLCom
     return {
       id: m.id,
       senderId: m.sender_id,
-      senderName: cached?.isAdmin ? "Admin" : (cached?.name || "Member"),
+      senderName: cached?.isAdmin ? "Admin" : cached?.name || "Member",
       senderPhoto: cached?.photo || null,
       message: m.message,
       fileUrl: m.file_url,
@@ -125,11 +135,18 @@ export function TLCommunicationTab({ currentUserId, userName, userPhoto }: TLCom
       .order("created_at", { ascending: true })
       .limit(300);
     if (error) {
-      toast({ title: "Messages unavailable", description: ERROR_MESSAGES.chat.loadFailed, variant: "destructive" });
+      toast({
+        title: "Messages unavailable",
+        description: ERROR_MESSAGES.chat.loadFailed,
+        variant: "destructive",
+      });
       return;
     }
     const rows = data ?? [];
-    await hydrateProfiles([...new Set(rows.map((m) => m.sender_id))]);
+    const senderIds = Array.from(
+      new Set<string>(rows.map((m: { sender_id: string }) => m.sender_id).filter(Boolean)),
+    );
+    await hydrateProfiles(senderIds);
     setMessages(rows.map(mapRow));
   };
 
@@ -138,38 +155,54 @@ export function TLCommunicationTab({ currentUserId, userName, userPhoto }: TLCom
       supabase.from("user_service_roles").select("user_id").eq("role", "tl_role"),
       supabase.from("user_roles").select("user_id").eq("role", "admin"),
     ]);
-    const ids = [...new Set([
-      ...(tlRows ?? []).map((r) => r.user_id),
-      ...(adminRows ?? []).map((r) => r.user_id),
-    ])];
-    if (!ids.length) { setMembers([]); return; }
+    const ids = [
+      ...new Set([
+        ...(tlRows ?? []).map((r) => r.user_id),
+        ...(adminRows ?? []).map((r) => r.user_id),
+      ]),
+    ];
+    if (!ids.length) {
+      setMembers([]);
+      return;
+    }
     await hydrateProfiles(ids);
-    const { data: statusRows } = await supabase.from("user_status").select("user_id, is_online").in("user_id", ids);
+    const { data: statusRows } = await supabase
+      .from("user_status")
+      .select("user_id, is_online")
+      .in("user_id", ids);
     const online = new Set((statusRows ?? []).filter((s) => s.is_online).map((s) => s.user_id));
-    setMembers(ids.map((id) => {
-      const cached = profileCacheRef.current.get(id);
-      return {
-        userId: id,
-        fullName: cached?.isAdmin ? "Admin" : (cached?.name || "Member"),
-        photoUrl: cached?.photo || null,
-        isOnline: online.has(id),
-        isAdmin: !!cached?.isAdmin,
-      };
-    }));
+    setMembers(
+      ids.map((id) => {
+        const cached = profileCacheRef.current.get(id);
+        return {
+          userId: id,
+          fullName: cached?.isAdmin ? "Admin" : cached?.name || "Member",
+          photoUrl: cached?.photo || null,
+          isOnline: online.has(id),
+          isAdmin: !!cached?.isAdmin,
+        };
+      }),
+    );
   };
 
   const subscribe = () => {
     const ch = supabase
       .channel("tl-communication")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "tl_communication_messages" }, async (payload) => {
-        const row = payload.new as any;
-        if (!row?.id) return;
-        await hydrateProfiles([row.sender_id]);
-        const mapped = mapRow(row);
-        setMessages((prev) => (prev.some((m) => m.id === mapped.id) ? prev : [...prev, mapped]));
-      })
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "tl_communication_messages" },
+        async (payload) => {
+          const row = payload.new as any;
+          if (!row?.id) return;
+          await hydrateProfiles([row.sender_id]);
+          const mapped = mapRow(row);
+          setMessages((prev) => (prev.some((m) => m.id === mapped.id) ? prev : [...prev, mapped]));
+        },
+      )
       .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    return () => {
+      supabase.removeChannel(ch);
+    };
   };
 
   const send = async () => {
@@ -190,7 +223,10 @@ export function TLCommunicationTab({ currentUserId, userName, userPhoto }: TLCom
         const path = `tl/${currentUserId}/${crypto.randomUUID()}.${ext}`;
         const { error: uploadError } = await supabase.storage
           .from("community-files")
-          .upload(path, selectedFile, { contentType: selectedFile.type || "application/octet-stream", upsert: false });
+          .upload(path, selectedFile, {
+            contentType: selectedFile.type || "application/octet-stream",
+            upsert: false,
+          });
         if (uploadError) throw uploadError;
         fileUrl = supabase.storage.from("community-files").getPublicUrl(path).data.publicUrl;
         fileType = selectedFile.type;
@@ -224,7 +260,11 @@ export function TLCommunicationTab({ currentUserId, userName, userPhoto }: TLCom
       setNewMessage("");
       setSelectedFile(null);
     } catch (err) {
-      toast({ title: "Send failed", description: classifyError(err).message, variant: "destructive" });
+      toast({
+        title: "Send failed",
+        description: classifyError(err).message,
+        variant: "destructive",
+      });
     } finally {
       setIsSending(false);
     }
@@ -240,7 +280,8 @@ export function TLCommunicationTab({ currentUserId, userName, userPhoto }: TLCom
   const fileIcon = (fileType: string | null) => {
     if (!fileType) return <File className="w-5 h-5" />;
     if (fileType.startsWith("image/")) return <Image className="w-5 h-5" />;
-    if (fileType.includes("pdf") || fileType.includes("document")) return <FileText className="w-5 h-5" />;
+    if (fileType.includes("pdf") || fileType.includes("document"))
+      return <FileText className="w-5 h-5" />;
     return <File className="w-5 h-5" />;
   };
 
@@ -249,9 +290,13 @@ export function TLCommunicationTab({ currentUserId, userName, userPhoto }: TLCom
   if (isLoading) {
     return (
       <Card className="h-full min-h-0 flex flex-col overflow-hidden">
-        <CardHeader className="pb-3"><Skeleton className="h-6 w-48" /></CardHeader>
+        <CardHeader className="pb-3">
+          <Skeleton className="h-6 w-48" />
+        </CardHeader>
         <CardContent className="space-y-3">
-          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-12 w-full" />)}
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-12 w-full" />
+          ))}
         </CardContent>
       </Card>
     );
@@ -272,7 +317,12 @@ export function TLCommunicationTab({ currentUserId, userName, userPhoto }: TLCom
               </p>
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={() => setShowMembers((v) => !v)} className="gap-2 shrink-0">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowMembers((v) => !v)}
+            className="gap-2 shrink-0"
+          >
             <Users className="w-4 h-4" />
             {showMembers ? "Hide" : "Members"}
           </Button>
@@ -289,41 +339,67 @@ export function TLCommunicationTab({ currentUserId, userName, userPhoto }: TLCom
                   <p>No messages yet</p>
                   <p className="text-sm">This group stays saved — it is not wiped after 7 days.</p>
                 </div>
-              ) : messages.map((msg) => (
-                <div key={msg.id} className={cn("flex gap-3", msg.isOwn && "flex-row-reverse")}>
-                  <Avatar className="w-8 h-8 flex-shrink-0">
-                    <AvatarImage src={msg.senderPhoto || undefined} />
-                    <AvatarFallback className="text-xs">{msg.senderName.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <div className={cn("max-w-[70%]", msg.isOwn && "text-right")}>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-medium">{msg.isOwn ? "You" : msg.senderName}</span>
-                      {msg.isAdmin && !msg.isOwn && (
-                        <span className="text-[9px] px-1 py-0.5 rounded bg-primary/15 text-primary">Admin</span>
-                      )}
-                      <span className="text-xs text-muted-foreground">
-                        {formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })}
-                      </span>
-                    </div>
-                    <div className={cn("rounded-lg p-3", msg.isOwn ? "bg-primary text-primary-foreground" : "bg-muted")}>
-                      {msg.message && <p className="text-sm whitespace-pre-wrap break-words">{msg.message}</p>}
-                      {msg.fileUrl && (
-                        <div className="mt-2">
-                          {msg.fileType?.startsWith("image/") ? (
-                            <img src={msg.fileUrl} alt={msg.fileName || "image"} className="max-h-48 rounded" />
-                          ) : (
-                            <a href={msg.fileUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs underline">
-                              {fileIcon(msg.fileType)}
-                              <span>{msg.fileName || "File"} {formatFileSize(msg.fileSize)}</span>
-                              <Download className="w-3 h-3" />
-                            </a>
-                          )}
-                        </div>
-                      )}
+              ) : (
+                messages.map((msg) => (
+                  <div key={msg.id} className={cn("flex gap-3", msg.isOwn && "flex-row-reverse")}>
+                    <Avatar className="w-8 h-8 flex-shrink-0">
+                      <AvatarImage src={msg.senderPhoto || undefined} />
+                      <AvatarFallback className="text-xs">
+                        {msg.senderName.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className={cn("max-w-[70%]", msg.isOwn && "text-right")}>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-sm font-medium">
+                          {msg.isOwn ? "You" : msg.senderName}
+                        </span>
+                        {msg.isAdmin && !msg.isOwn && (
+                          <span className="text-[9px] px-1 py-0.5 rounded bg-primary/15 text-primary">
+                            Admin
+                          </span>
+                        )}
+                        <span className="text-xs text-muted-foreground">
+                          {formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })}
+                        </span>
+                      </div>
+                      <div
+                        className={cn(
+                          "rounded-lg p-3",
+                          msg.isOwn ? "bg-primary text-primary-foreground" : "bg-muted",
+                        )}
+                      >
+                        {msg.message && (
+                          <p className="text-sm whitespace-pre-wrap break-words">{msg.message}</p>
+                        )}
+                        {msg.fileUrl && (
+                          <div className="mt-2">
+                            {msg.fileType?.startsWith("image/") ? (
+                              <img
+                                src={msg.fileUrl}
+                                alt={msg.fileName || "image"}
+                                className="max-h-48 rounded"
+                              />
+                            ) : (
+                              <a
+                                href={msg.fileUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 text-xs underline"
+                              >
+                                {fileIcon(msg.fileType)}
+                                <span>
+                                  {msg.fileName || "File"} {formatFileSize(msg.fileSize)}
+                                </span>
+                                <Download className="w-3 h-3" />
+                              </a>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
               <div ref={messagesEndRef} />
             </div>
           </ScrollArea>
@@ -333,7 +409,11 @@ export function TLCommunicationTab({ currentUserId, userName, userPhoto }: TLCom
               <div className="flex items-center gap-2 text-xs bg-muted rounded px-2 py-1">
                 <Paperclip className="w-3 h-3" />
                 <span className="truncate flex-1">{selectedFile.name}</span>
-                <button type="button" onClick={() => setSelectedFile(null)} aria-label="Remove file">
+                <button
+                  type="button"
+                  onClick={() => setSelectedFile(null)}
+                  aria-label="Remove file"
+                >
                   <X className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -345,16 +425,32 @@ export function TLCommunicationTab({ currentUserId, userName, userPhoto }: TLCom
                 className="hidden"
                 onChange={(e) => setSelectedFile(e.target.files?.[0] ?? null)}
               />
-              <Button type="button" variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} aria-label="Attach file">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => fileInputRef.current?.click()}
+                aria-label="Attach file"
+              >
                 <Paperclip className="w-4 h-4" />
               </Button>
               <Input
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 placeholder="Message the TL group…"
-                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void send(); } }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    void send();
+                  }
+                }}
               />
-              <Button onClick={() => void send()} disabled={isSending || (!newMessage.trim() && !selectedFile)} size="icon" aria-label="Send">
+              <Button
+                onClick={() => void send()}
+                disabled={isSending || (!newMessage.trim() && !selectedFile)}
+                size="icon"
+                aria-label="Send"
+              >
                 <Send className="w-4 h-4" />
               </Button>
             </div>
@@ -371,9 +467,16 @@ export function TLCommunicationTab({ currentUserId, userName, userPhoto }: TLCom
                     <div className="relative">
                       <Avatar className="w-7 h-7">
                         <AvatarImage src={m.photoUrl || undefined} />
-                        <AvatarFallback className="text-[10px]">{m.fullName.charAt(0)}</AvatarFallback>
+                        <AvatarFallback className="text-[10px]">
+                          {m.fullName.charAt(0)}
+                        </AvatarFallback>
                       </Avatar>
-                      <span className={cn("absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-background", m.isOnline ? "bg-green-500" : "bg-muted-foreground")} />
+                      <span
+                        className={cn(
+                          "absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-background",
+                          m.isOnline ? "bg-green-500" : "bg-muted-foreground",
+                        )}
+                      />
                     </div>
                     <span className="text-xs truncate flex-1">{m.fullName}</span>
                     {m.isAdmin && <span className="text-[9px] text-primary">Admin</span>}

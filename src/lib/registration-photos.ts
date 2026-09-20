@@ -19,7 +19,7 @@ export function dataUrlToBlob(dataUrl: string): Blob | null {
 export async function uploadRegistrationPhoto(
   userId: string,
   dataUrl: string,
-  pathSuffix: string
+  pathSuffix: string,
 ): Promise<string | null> {
   const blob = dataUrlToBlob(dataUrl);
   if (!blob) return null;

@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { shouldBlockIncoming } from './useSessionPriority';
+import { useState, useEffect, useRef } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { shouldBlockIncoming } from "./useSessionPriority";
 
 interface IncomingCall {
   callId: string;
@@ -19,36 +19,36 @@ const warmAudioContext = () => {
   if (audioContextWarmed) return;
   audioContextWarmed = true;
   try {
-    if (!ringAudioContext || ringAudioContext.state === 'closed') {
+    if (!ringAudioContext || ringAudioContext.state === "closed") {
       ringAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
     // Resume suspended context (iOS requires user gesture)
-    if (ringAudioContext.state === 'suspended') {
+    if (ringAudioContext.state === "suspended") {
       ringAudioContext.resume();
     }
   } catch (e) {
-    console.warn('[IncomingCalls] Failed to pre-warm AudioContext:', e);
+    console.warn("[IncomingCalls] Failed to pre-warm AudioContext:", e);
   }
 };
 
 // Register once on first user interaction
-if (typeof document !== 'undefined') {
+if (typeof document !== "undefined") {
   const handler = () => {
     warmAudioContext();
-    document.removeEventListener('click', handler);
-    document.removeEventListener('touchstart', handler);
+    document.removeEventListener("click", handler);
+    document.removeEventListener("touchstart", handler);
   };
-  document.addEventListener('click', handler, { once: true });
-  document.addEventListener('touchstart', handler, { once: true });
+  document.addEventListener("click", handler, { once: true });
+  document.addEventListener("touchstart", handler, { once: true });
 }
 
 const playRingSound = () => {
   try {
-    if (!ringAudioContext || ringAudioContext.state === 'closed') {
+    if (!ringAudioContext || ringAudioContext.state === "closed") {
       ringAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
     // GEN-001 FIX: Resume if suspended (iOS Safari)
-    if (ringAudioContext.state === 'suspended') {
+    if (ringAudioContext.state === "suspended") {
       ringAudioContext.resume();
     }
     const ctx = ringAudioContext;
@@ -70,7 +70,7 @@ const playRingSound = () => {
 
         // Alternate between two bell frequencies for metallic ring
         osc.frequency.setValueAtTime(bellFreqs[i % 2], t);
-        osc.type = 'square';
+        osc.type = "square";
 
         // Sharp attack, quick decay — like a bell hammer strike
         gain.gain.setValueAtTime(0, t);
@@ -140,54 +140,62 @@ export const useIncomingCalls = (currentUserId: string | null, userGender?: "mal
     const channel = supabase
       .channel(`incoming-calls-${currentUserId}`)
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'video_call_sessions',
-          filter: `${filterColumn}=eq.${currentUserId}`
+          event: "INSERT",
+          schema: "public",
+          table: "video_call_sessions",
+          filter: `${filterColumn}=eq.${currentUserId}`,
         },
         async (payload) => {
           const call = payload.new as any;
-          
-          if (call.status === 'ringing' || call.status === 'connecting') {
+
+          if (call.status === "ringing" || call.status === "connecting") {
             // Priority check: block incoming call if already in a P3 session
-            const callType = call.call_type === 'audio' ? 'audio_call' : 'video_call';
+            const callType = call.call_type === "audio" ? "audio_call" : "video_call";
             if (shouldBlockIncoming(callType)) {
-              console.log('[IncomingCalls] Blocked by session priority — already in an active call/group');
+              console.log(
+                "[IncomingCalls] Blocked by session priority — already in an active call/group",
+              );
               // Auto-decline the call so caller gets feedback
               await supabase
-                .from('video_call_sessions')
-                .update({ status: 'declined', end_reason: 'busy' })
-                .eq('call_id', call.call_id);
+                .from("video_call_sessions")
+                .update({ status: "declined", end_reason: "busy" })
+                .eq("call_id", call.call_id);
               return;
             }
 
             // Skip if this is a call the current user initiated (by call_id tracking)
             if (outgoingCallIds.has(call.call_id)) {
-              console.log('[IncomingCalls] Skipping own outgoing call (by call_id):', call.call_id);
+              console.log("[IncomingCalls] Skipping own outgoing call (by call_id):", call.call_id);
               return;
             }
 
             const callerId = call[callerColumn];
-            
+
             // Skip if the caller is the current user — this means WE initiated it
             if (callerId === currentUserId) {
-              console.log('[IncomingCalls] Skipping own outgoing call (caller is self):', call.call_id);
+              console.log(
+                "[IncomingCalls] Skipping own outgoing call (caller is self):",
+                call.call_id,
+              );
               return;
             }
 
             // Additional check: if the call_id contains our user ID as initiator pattern
             if (call.call_id && call.call_id.startsWith(`call_${currentUserId}_`)) {
-              console.log('[IncomingCalls] Skipping own outgoing call (call_id pattern):', call.call_id);
+              console.log(
+                "[IncomingCalls] Skipping own outgoing call (call_id pattern):",
+                call.call_id,
+              );
               return;
             }
-            
+
             // Fetch caller info via secure RPC (excludes sensitive fields)
             const { fetchPublicProfile } = await import("@/lib/profile-queries");
             const callerProfile = await fetchPublicProfile(callerId);
 
-            let callerName = callerProfile?.full_name || 'Someone';
+            let callerName = callerProfile?.full_name || "Someone";
             let callerPhoto = callerProfile?.photo_url || null;
 
             // Fallback to gender-specific profile table
@@ -195,12 +203,12 @@ export const useIncomingCalls = (currentUserId: string | null, userGender?: "mal
               const fallbackTable = gender === "male" ? "female_profiles" : "male_profiles";
               const { data: fallbackProfile } = await supabase
                 .from(fallbackTable)
-                .select('full_name, photo_url')
-                .eq('user_id', callerId)
+                .select("full_name, photo_url")
+                .eq("user_id", callerId)
                 .single();
-              
+
               if (fallbackProfile) {
-                callerName = fallbackProfile.full_name || 'Someone';
+                callerName = fallbackProfile.full_name || "Someone";
                 callerPhoto = fallbackProfile.photo_url;
               }
             }
@@ -209,26 +217,28 @@ export const useIncomingCalls = (currentUserId: string | null, userGender?: "mal
               callId: call.call_id,
               callerUserId: callerId,
               callerName,
-              callerPhoto
+              callerPhoto,
             });
           }
-        }
+        },
       )
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'video_call_sessions',
-          filter: `${filterColumn}=eq.${currentUserId}`
+          event: "UPDATE",
+          schema: "public",
+          table: "video_call_sessions",
+          filter: `${filterColumn}=eq.${currentUserId}`,
         },
         (payload) => {
           const call = payload.new as any;
-          if (['ended', 'declined', 'missed', 'timeout_cleanup'].includes(call.status) && 
-              incomingCallRef.current?.callId === call.call_id) {
+          if (
+            ["ended", "declined", "missed", "timeout_cleanup"].includes(call.status) &&
+            incomingCallRef.current?.callId === call.call_id
+          ) {
             setIncomingCall(null);
           }
-        }
+        },
       )
       .subscribe();
 
@@ -252,38 +262,42 @@ export const useIncomingCalls = (currentUserId: string | null, userGender?: "mal
       }
 
       const { data: ringingCalls } = await supabase
-        .from('video_call_sessions')
-        .select('call_id, man_user_id, woman_user_id, call_type, status, created_at')
+        .from("video_call_sessions")
+        .select("call_id, man_user_id, woman_user_id, call_type, status, created_at")
         .eq(filterColumn, currentUserId)
-        .in('status', ['ringing', 'connecting'])
-        .order('created_at', { ascending: false })
+        .in("status", ["ringing", "connecting"])
+        .order("created_at", { ascending: false })
         .limit(1);
 
       if (ringingCalls && ringingCalls.length > 0) {
         const call = ringingCalls[0];
         const callAge = Date.now() - new Date(call.created_at).getTime();
-        
+
         // Only process calls less than 35 seconds old
         if (callAge <= 35000) {
           const callerId = call[callerColumn];
-          if (callerId !== currentUserId && !outgoingCallIds.has(call.call_id) && !call.call_id?.startsWith(`call_${currentUserId}_`)) {
-            const callType = call.call_type === 'audio' ? 'audio_call' : 'video_call';
+          if (
+            callerId !== currentUserId &&
+            !outgoingCallIds.has(call.call_id) &&
+            !call.call_id?.startsWith(`call_${currentUserId}_`)
+          ) {
+            const callType = call.call_type === "audio" ? "audio_call" : "video_call";
             if (!shouldBlockIncoming(callType as any)) {
               // Fetch caller info
               const { fetchPublicProfile } = await import("@/lib/profile-queries");
               const callerProfile = await fetchPublicProfile(callerId);
-              let callerName = callerProfile?.full_name || 'Someone';
+              let callerName = callerProfile?.full_name || "Someone";
               let callerPhoto = callerProfile?.photo_url || null;
 
               if (!callerProfile) {
                 const fallbackTable = gender === "male" ? "female_profiles" : "male_profiles";
                 const { data: fallbackProfile } = await supabase
                   .from(fallbackTable)
-                  .select('full_name, photo_url')
-                  .eq('user_id', callerId)
+                  .select("full_name, photo_url")
+                  .eq("user_id", callerId)
                   .single();
                 if (fallbackProfile) {
-                  callerName = fallbackProfile.full_name || 'Someone';
+                  callerName = fallbackProfile.full_name || "Someone";
                   callerPhoto = fallbackProfile.photo_url;
                 }
               }
@@ -294,7 +308,7 @@ export const useIncomingCalls = (currentUserId: string | null, userGender?: "mal
                 callId: call.call_id,
                 callerUserId: callerId,
                 callerName,
-                callerPhoto
+                callerPhoto,
               });
               schedulePoll();
               return;

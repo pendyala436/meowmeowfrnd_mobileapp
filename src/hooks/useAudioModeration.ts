@@ -20,8 +20,8 @@
  *       replaces) the post-call review by admin moderators.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { moderateMessage, type ViolationType } from '@/lib/content-moderation';
+import { useCallback, useEffect, useRef, useState } from "react";
+import { moderateMessage, type ViolationType } from "@/lib/content-moderation";
 
 // Browser SpeechRecognition typings (not in standard lib.d.ts)
 type AnySpeechRecognition = any;
@@ -55,12 +55,12 @@ export interface AudioModerationState {
 
 const playBeep = (durationMs: number) => {
   try {
-    const Ctx = (window.AudioContext || (window as any).webkitAudioContext);
+    const Ctx = window.AudioContext || (window as any).webkitAudioContext;
     if (!Ctx) return;
     const ctx = new Ctx();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-    osc.type = 'sine';
+    osc.type = "sine";
     osc.frequency.value = 1000; // classic censor beep
     gain.gain.value = 0.25;
     osc.connect(gain).connect(ctx.destination);
@@ -76,7 +76,7 @@ const playBeep = (durationMs: number) => {
 
 export function useAudioModeration({
   localStream,
-  language = 'en-IN',
+  language = "en-IN",
   enabled = true,
   beepDurationMs = 600,
 }: AudioModerationOptions): AudioModerationState {
@@ -108,7 +108,7 @@ export function useAudioModeration({
         setState((s) => ({ ...s, isBeeping: false }));
       }, beepDurationMs);
     },
-    [localStream, beepDurationMs]
+    [localStream, beepDurationMs],
   );
 
   useEffect(() => {
@@ -127,24 +127,33 @@ export function useAudioModeration({
 
     recognition.onresult = (event: any) => {
       for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcript: string = event.results[i][0]?.transcript || '';
+        const transcript: string = event.results[i][0]?.transcript || "";
         if (!transcript.trim()) continue;
         const result = moderateMessage(transcript);
-        if (result.isBlocked && (result.detectedType === 'sexual_content' || result.detectedType === 'hate_speech' || result.detectedType === 'harmful_content')) {
-          triggerBeep(result.reason || 'Inappropriate speech detected', result.detectedType);
+        if (
+          result.isBlocked &&
+          (result.detectedType === "sexual_content" ||
+            result.detectedType === "hate_speech" ||
+            result.detectedType === "harmful_content")
+        ) {
+          triggerBeep(result.reason || "Inappropriate speech detected", result.detectedType);
         }
       }
     };
 
     recognition.onerror = () => {
       // Auto-restart on transient errors (network/no-speech)
-      try { recognition.stop(); } catch { }
+      try {
+        recognition.stop();
+      } catch {}
     };
 
     recognition.onend = () => {
       // Keep listening for the duration of the call
       if (enabled) {
-        try { recognition.start(); } catch { }
+        try {
+          recognition.start();
+        } catch {}
       }
     };
 
@@ -156,7 +165,9 @@ export function useAudioModeration({
     }
 
     return () => {
-      try { recognition.stop(); } catch { }
+      try {
+        recognition.stop();
+      } catch {}
       recognitionRef.current = null;
       if (beepTimeoutRef.current) clearTimeout(beepTimeoutRef.current);
     };

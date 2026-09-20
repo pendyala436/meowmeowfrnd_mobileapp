@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import MeowLogo from "@/components/MeowLogo";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  Phone, 
+import {
+  Phone,
   PhoneOff,
   ArrowLeft,
   Circle,
@@ -19,19 +19,21 @@ import {
   IndianRupee,
   Shield,
   Sparkles,
-  Info
+  Info,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { isVisibilityStatusChange } from "@/lib/presence";
 import { Badge } from "@/components/ui/badge";
 import { isIndianLanguage } from "@/data/supportedLanguages";
-import { filterWomenByNLLBRules, getVisibilityExplanation, WomanProfile, ProfileVisibility, getVisibilityWeight, shouldShowProfile } from "@/hooks/useNLLBVisibility";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+  filterWomenByNLLBRules,
+  getVisibilityExplanation,
+  WomanProfile,
+  ProfileVisibility,
+  getVisibilityWeight,
+  shouldShowProfile,
+} from "@/hooks/useNLLBVisibility";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface MatchableWoman {
   userId: string;
@@ -56,7 +58,9 @@ const MatchingScreen = () => {
   const [currentUserLanguage, setCurrentUserLanguage] = useState<string>("");
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const [selectedWoman, setSelectedWoman] = useState<MatchableWoman | null>(null);
-  const [connectionStatus, setConnectionStatus] = useState<"idle" | "searching" | "connecting" | "connected" | "reconnecting">("idle");
+  const [connectionStatus, setConnectionStatus] = useState<
+    "idle" | "searching" | "connecting" | "connected" | "reconnecting"
+  >("idle");
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
   const reconnectAttempts = useRef(0);
   const maxReconnectAttempts = 3;
@@ -81,33 +85,43 @@ const MatchingScreen = () => {
     };
 
     const statusChannel = supabase
-      .channel('women-status-changes')
+      .channel("women-status-changes")
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*',
-          schema: 'public',
-          table: 'user_status'
+          event: "*",
+          schema: "public",
+          table: "user_status",
         },
         (payload) => {
-          if (!isVisibilityStatusChange(payload as { eventType?: string; new?: Record<string, unknown>; old?: Record<string, unknown> }, userStatusSnapshotRef.current)) return;
+          if (
+            !isVisibilityStatusChange(
+              payload as {
+                eventType?: string;
+                new?: Record<string, unknown>;
+                old?: Record<string, unknown>;
+              },
+              userStatusSnapshotRef.current,
+            )
+          )
+            return;
           scheduleReload();
-        }
+        },
       )
       .subscribe();
 
     const availabilityChannel = supabase
-      .channel('women-availability-changes')
+      .channel("women-availability-changes")
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*',
-          schema: 'public',
-          table: 'women_availability'
+          event: "*",
+          schema: "public",
+          table: "women_availability",
         },
         () => {
           scheduleReload();
-        }
+        },
       )
       .subscribe();
 
@@ -119,8 +133,10 @@ const MatchingScreen = () => {
 
   const loadMatchableWomen = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
       if (!session?.user) {
         navigate("/");
         return;
@@ -146,7 +162,7 @@ const MatchingScreen = () => {
       // If user has a male_profiles record, they're male
       // If user has a profile with gender, use that
       const isMaleUser = maleProfile !== null || currentProfile?.gender?.toLowerCase() === "male";
-      
+
       if (!isMaleUser) {
         toast({
           title: "Access Denied",
@@ -164,13 +180,14 @@ const MatchingScreen = () => {
         .eq("user_id", user.id)
         .limit(1);
 
-      const motherTongue = userLanguages?.[0]?.language_name || 
-                          maleProfile?.primary_language ||
-                          maleProfile?.preferred_language ||
-                          currentProfile?.primary_language || 
-                          currentProfile?.preferred_language || 
-                          "English";
-      
+      const motherTongue =
+        userLanguages?.[0]?.language_name ||
+        maleProfile?.primary_language ||
+        maleProfile?.preferred_language ||
+        currentProfile?.primary_language ||
+        currentProfile?.preferred_language ||
+        "English";
+
       setCurrentUserLanguage(motherTongue);
 
       // Fetch online women (exclude busy = currently in audio/video/group call)
@@ -180,7 +197,7 @@ const MatchingScreen = () => {
         .eq("is_online", true)
         .neq("status_text", "busy");
 
-      const onlineUserIds = onlineStatus?.map(s => s.user_id) || [];
+      const onlineUserIds = onlineStatus?.map((s) => s.user_id) || [];
 
       if (onlineUserIds.length === 0) {
         setMatchableWomen([]);
@@ -191,7 +208,9 @@ const MatchingScreen = () => {
       // Fetch female profiles with country info and AI verification status
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("user_id, full_name, photo_url, age, primary_language, preferred_language, country, ai_approved, approval_status")
+        .select(
+          "user_id, full_name, photo_url, age, primary_language, preferred_language, country, ai_approved, approval_status",
+        )
         .ilike("gender", "female")
         .in("user_id", onlineUserIds);
 
@@ -201,9 +220,7 @@ const MatchingScreen = () => {
         .select("user_id, is_available, current_chat_count, max_concurrent_chats")
         .in("user_id", onlineUserIds);
 
-      const availabilityMap = new Map(
-        (availability as any[] || []).map(a => [a.user_id, a])
-      );
+      const availabilityMap = new Map(((availability as any[]) || []).map((a) => [a.user_id, a]));
 
       // Fetch user settings for profile visibility
       const { data: userSettings } = await supabase
@@ -212,7 +229,7 @@ const MatchingScreen = () => {
         .in("user_id", onlineUserIds);
 
       const settingsMap = new Map(
-        userSettings?.map(s => [s.user_id, s.profile_visibility]) || []
+        userSettings?.map((s) => [s.user_id, s.profile_visibility]) || [],
       );
 
       // Fetch languages for each user
@@ -224,15 +241,17 @@ const MatchingScreen = () => {
             .eq("user_id", profile.user_id)
             .limit(1);
 
-          const womanLanguage = languages?.[0]?.language_name || 
-                               profile.primary_language || 
-                               profile.preferred_language || 
-                               "Unknown";
+          const womanLanguage =
+            languages?.[0]?.language_name ||
+            profile.primary_language ||
+            profile.preferred_language ||
+            "Unknown";
 
           const avail = availabilityMap.get(profile.user_id);
           const isBusy = avail ? avail.current_chat_count >= avail.max_concurrent_chats : false;
           const aiVerified = profile.ai_approved === true && profile.approval_status === "approved";
-          const profileVisibility = (settingsMap.get(profile.user_id) || "high") as ProfileVisibility;
+          const profileVisibility = (settingsMap.get(profile.user_id) ||
+            "high") as ProfileVisibility;
 
           return {
             userId: profile.user_id,
@@ -245,28 +264,28 @@ const MatchingScreen = () => {
             isBusy,
             currentChatCount: avail?.current_chat_count || 0,
             aiVerified,
-            
+
             profileVisibility,
           };
-        })
+        }),
       );
 
       // Apply profile visibility filtering (probability-based)
-      const visibilityFilteredWomen = women.filter(w => {
+      const visibilityFilteredWomen = women.filter((w) => {
         // Simple probability-based visibility using profileVisibility
         const vis = (w as any).profileVisibility as string;
-        if (vis === 'low') return Math.random() < 0.25;
-        if (vis === 'medium') return Math.random() < 0.5;
+        if (vis === "low") return Math.random() < 0.25;
+        if (vis === "medium") return Math.random() < 0.5;
         return true; // high, very_high
       });
 
       // Apply Language visibility rules
       const visibilityResult = filterWomenByNLLBRules(
-        visibilityFilteredWomen.map(w => ({
+        visibilityFilteredWomen.map((w) => ({
           ...w,
           aiVerified: w.aiVerified,
         })),
-        motherTongue
+        motherTongue,
       );
 
       // Sort visible women: visibility priority first, then not busy, then by chat count
@@ -275,10 +294,10 @@ const MatchingScreen = () => {
         const visA = getVisibilityWeight(a, motherTongue);
         const visB = getVisibilityWeight(b, motherTongue);
         if (visA !== visB) return visB - visA;
-        
+
         // Then by busy status
         if (a.isBusy !== b.isBusy) return a.isBusy ? 1 : -1;
-        
+
         // Finally by chat count
         return a.currentChatCount - b.currentChatCount;
       });
@@ -296,77 +315,80 @@ const MatchingScreen = () => {
     }
   };
 
-  const findNextAvailableWoman = useCallback(async (excludeUserId?: string): Promise<MatchableWoman | null> => {
-    try {
-      // Use backend to find best match with load balancing
-      const { data, error } = await supabase.functions.invoke("chat-manager", {
-        body: {
-          action: "find_match",
-          man_user_id: currentUserId,
-          preferred_language: currentUserLanguage
-        }
-      });
+  const findNextAvailableWoman = useCallback(
+    async (excludeUserId?: string): Promise<MatchableWoman | null> => {
+      try {
+        // Use backend to find best match with load balancing
+        const { data, error } = await supabase.functions.invoke("chat-manager", {
+          body: {
+            action: "find_match",
+            man_user_id: currentUserId,
+            preferred_language: currentUserLanguage,
+          },
+        });
 
-      if (error || !data?.success) {
-        // Backend matching failed, falling back to local matching
-        // Fallback to local matching if backend fails
-        const availableWomen = matchableWomen.filter(w => 
-          !w.isBusy && 
-          w.isOnline && 
-          w.userId !== excludeUserId
-        );
+        if (error || !data?.success) {
+          // Backend matching failed, falling back to local matching
+          // Fallback to local matching if backend fails
+          const availableWomen = matchableWomen.filter(
+            (w) => !w.isBusy && w.isOnline && w.userId !== excludeUserId,
+          );
 
-        // Priority 1: Same language women
-        const sameLanguageWomen = availableWomen.filter(
-          w => w.motherTongue.toLowerCase() === currentUserLanguage.toLowerCase()
-        );
+          // Priority 1: Same language women
+          const sameLanguageWomen = availableWomen.filter(
+            (w) => w.motherTongue.toLowerCase() === currentUserLanguage.toLowerCase(),
+          );
 
-        if (sameLanguageWomen.length > 0) {
-          // Sort by load (lowest first)
-          return sameLanguageWomen.sort((a, b) => a.currentChatCount - b.currentChatCount)[0];
-        }
-
-        // Priority 2: For non-Indian language men, fallback to Indian women
-        const manHasIndianLanguage = isIndianLanguage(currentUserLanguage);
-        
-        if (!manHasIndianLanguage) {
-          const indianLanguageWomen = availableWomen.filter(w => isIndianLanguage(w.motherTongue));
-          if (indianLanguageWomen.length > 0) {
-            return indianLanguageWomen.sort((a, b) => a.currentChatCount - b.currentChatCount)[0];
+          if (sameLanguageWomen.length > 0) {
+            // Sort by load (lowest first)
+            return sameLanguageWomen.sort((a, b) => a.currentChatCount - b.currentChatCount)[0];
           }
-          return null;
+
+          // Priority 2: For non-Indian language men, fallback to Indian women
+          const manHasIndianLanguage = isIndianLanguage(currentUserLanguage);
+
+          if (!manHasIndianLanguage) {
+            const indianLanguageWomen = availableWomen.filter((w) =>
+              isIndianLanguage(w.motherTongue),
+            );
+            if (indianLanguageWomen.length > 0) {
+              return indianLanguageWomen.sort((a, b) => a.currentChatCount - b.currentChatCount)[0];
+            }
+            return null;
+          }
+
+          return availableWomen.sort((a, b) => a.currentChatCount - b.currentChatCount)[0] || null;
         }
 
-        return availableWomen.sort((a, b) => a.currentChatCount - b.currentChatCount)[0] || null;
-      }
+        // Find the matched woman in our local list
+        const matchedWoman = matchableWomen.find((w) => w.userId === data.woman_user_id);
+        if (matchedWoman) {
+          return matchedWoman;
+        }
 
-      // Find the matched woman in our local list
-      const matchedWoman = matchableWomen.find(w => w.userId === data.woman_user_id);
-      if (matchedWoman) {
-        return matchedWoman;
-      }
+        // If not in local list, construct from backend data
+        return {
+          userId: data.woman_user_id,
+          fullName: data.profile?.full_name || "User",
+          age: null,
+          photoUrl: data.profile?.photo_url,
+          motherTongue: data.profile?.primary_language || "Unknown",
+          country: data.profile?.country,
+          isOnline: true,
+          isBusy: false,
+          currentChatCount: data.current_load || 0,
+          aiVerified: true,
 
-      // If not in local list, construct from backend data
-      return {
-        userId: data.woman_user_id,
-        fullName: data.profile?.full_name || "User",
-        age: null,
-        photoUrl: data.profile?.photo_url,
-        motherTongue: data.profile?.primary_language || "Unknown",
-        country: data.profile?.country,
-        isOnline: true,
-        isBusy: false,
-        currentChatCount: data.current_load || 0,
-        aiVerified: true,
-        
-        profileVisibility: "high" as ProfileVisibility
-      };
-    } catch (error) {
-      console.error("Error finding match:", error);
-      // Return null - caller handles no-match gracefully
-      return null;
-    }
-  }, [matchableWomen, currentUserLanguage, currentUserId]);
+          profileVisibility: "high" as ProfileVisibility,
+        };
+      } catch (error) {
+        console.error("Error finding match:", error);
+        // Return null - caller handles no-match gracefully
+        return null;
+      }
+    },
+    [matchableWomen, currentUserLanguage, currentUserId],
+  );
 
   const initiateChat = async (woman: MatchableWoman) => {
     if (!currentUserId) return;
@@ -377,7 +399,9 @@ const MatchingScreen = () => {
 
     try {
       // Check wallet balance first (canonical SoT RPC)
-      const { data: walletRpc } = await supabase.rpc("get_men_wallet_balance", { p_user_id: currentUserId });
+      const { data: walletRpc } = await supabase.rpc("get_men_wallet_balance", {
+        p_user_id: currentUserId,
+      });
       const balance = Number((walletRpc as Record<string, number> | null)?.balance) || 0;
 
       if (balance <= 0) {
@@ -396,8 +420,8 @@ const MatchingScreen = () => {
           action: "start_chat",
           man_user_id: currentUserId,
           woman_user_id: woman.userId,
-          preferred_language: currentUserLanguage
-        }
+          preferred_language: currentUserLanguage,
+        },
       });
 
       if (error) throw error;
@@ -415,7 +439,7 @@ const MatchingScreen = () => {
           title: "Connected!",
           description: `You're now chatting with ${woman.fullName}`,
         });
-        
+
         // Navigate to dashboard - parallel chat container will show the chat
         navigate("/dashboard");
       } else if (data?.message === "Insufficient balance") {
@@ -431,7 +455,9 @@ const MatchingScreen = () => {
       }
     } catch (error) {
       console.error("Error initiating chat:", error);
-      toast.error("Chat unavailable", { description: classifyError(error, "start the chat").message });
+      toast.error("Chat unavailable", {
+        description: classifyError(error, "start the chat").message,
+      });
       // Try to connect to next available woman
       await handleAutoConnect(woman.userId);
     } finally {
@@ -441,9 +467,9 @@ const MatchingScreen = () => {
 
   const handleAutoConnect = async (excludeUserId?: string) => {
     setConnectionStatus("searching");
-    
+
     const nextWoman = await findNextAvailableWoman(excludeUserId);
-    
+
     if (nextWoman) {
       toast({
         title: "Finding available user...",
@@ -474,14 +500,14 @@ const MatchingScreen = () => {
 
     reconnectAttempts.current += 1;
     setConnectionStatus("reconnecting");
-    
+
     await loadMatchableWomen();
     await handleAutoConnect(selectedWoman?.userId);
   };
 
   const handleQuickConnect = async () => {
     const availableWoman = await findNextAvailableWoman();
-    
+
     if (availableWoman) {
       await initiateChat(availableWoman);
     } else {
@@ -508,10 +534,10 @@ const MatchingScreen = () => {
   const visibilityExplanation = getVisibilityExplanation(currentUserLanguage);
 
   const sameLanguageWomen = matchableWomen.filter(
-    w => w.motherTongue.toLowerCase() === currentUserLanguage.toLowerCase()
+    (w) => w.motherTongue.toLowerCase() === currentUserLanguage.toLowerCase(),
   );
   const otherWomen = matchableWomen.filter(
-    w => w.motherTongue.toLowerCase() !== currentUserLanguage.toLowerCase()
+    (w) => w.motherTongue.toLowerCase() !== currentUserLanguage.toLowerCase(),
   );
 
   return (
@@ -519,16 +545,16 @@ const MatchingScreen = () => {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border/50">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <button 
+          <button
             onClick={() => navigate("/dashboard")}
             className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
             <span className="text-sm font-medium">Back</span>
           </button>
-          
+
           <MeowLogo size="sm" />
-          
+
           <div className="flex items-center gap-2">
             <Circle className="w-3 h-3 fill-emerald-500 text-emerald-500" />
             <span className="text-sm text-muted-foreground">{matchableWomen.length} online</span>
@@ -550,13 +576,17 @@ const MatchingScreen = () => {
               {connectionStatus === "connecting" && (
                 <>
                   <Phone className="w-5 h-5 text-primary animate-bounce" />
-                  <span className="text-foreground">Connecting to {selectedWoman?.fullName}...</span>
+                  <span className="text-foreground">
+                    Connecting to {selectedWoman?.fullName}...
+                  </span>
                 </>
               )}
               {connectionStatus === "reconnecting" && (
                 <>
                   <RefreshCw className="w-5 h-5 text-primary animate-spin" />
-                  <span className="text-foreground">Reconnecting... Attempt {reconnectAttempts.current}/{maxReconnectAttempts}</span>
+                  <span className="text-foreground">
+                    Reconnecting... Attempt {reconnectAttempts.current}/{maxReconnectAttempts}
+                  </span>
                 </>
               )}
             </div>
@@ -576,9 +606,7 @@ const MatchingScreen = () => {
                   {manHasIndianLanguage ? "Same Language Priority" : "Cross-Language Mode"}
                 </Badge>
               </div>
-              <p className="text-sm text-muted-foreground">
-                {visibilityExplanation}
-              </p>
+              <p className="text-sm text-muted-foreground">{visibilityExplanation}</p>
             </div>
             <TooltipProvider>
               <Tooltip>
@@ -586,7 +614,10 @@ const MatchingScreen = () => {
                   <Info className="w-5 h-5 text-muted-foreground" />
                 </TooltipTrigger>
                 <TooltipContent className="max-w-xs">
-                  <p>Messages will be translated automatically when needed. You can chat with anyone regardless of language!</p>
+                  <p>
+                    Messages will be translated automatically when needed. You can chat with anyone
+                    regardless of language!
+                  </p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -600,11 +631,13 @@ const MatchingScreen = () => {
               <h2 className="text-xl font-bold text-foreground mb-1">Quick Connect</h2>
               <p className="text-sm text-muted-foreground">
                 Auto-connect to the best available match
-                {sameLanguageWomen.length > 0 ? ` who speaks ${currentUserLanguage}` : " with auto-translation"}
+                {sameLanguageWomen.length > 0
+                  ? ` who speaks ${currentUserLanguage}`
+                  : " with auto-translation"}
               </p>
             </div>
-            <Button 
-              variant="aurora" 
+            <Button
+              variant="aurora"
               size="lg"
               onClick={handleQuickConnect}
               disabled={isConnecting || matchableWomen.length === 0}
@@ -635,9 +668,9 @@ const MatchingScreen = () => {
               </Badge>
             </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
               {sameLanguageWomen.map((woman) => (
-                <WomanCard 
+                <WomanCard
                   key={woman.userId}
                   woman={woman}
                   onConnect={() => initiateChat(woman)}
@@ -669,7 +702,7 @@ const MatchingScreen = () => {
 
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
               {otherWomen.map((woman) => (
-                <WomanCard 
+                <WomanCard
                   key={woman.userId}
                   woman={woman}
                   onConnect={() => initiateChat(woman)}
@@ -690,7 +723,7 @@ const MatchingScreen = () => {
             </div>
             <h2 className="text-2xl font-bold text-foreground mb-2">No one online right now</h2>
             <p className="text-muted-foreground mb-6">
-              {manHasIndianLanguage 
+              {manHasIndianLanguage
                 ? `Check back later to find users who speak ${currentUserLanguage}`
                 : "Check back later to find users with auto-translation support"}
             </p>
@@ -713,22 +746,24 @@ interface WomanCardProps {
   showTranslationBadge?: boolean;
 }
 
-const WomanCard = ({ woman, onConnect, onViewProfile, isConnecting, isPriority, showTranslationBadge }: WomanCardProps) => {
+const WomanCard = ({
+  woman,
+  onConnect,
+  onViewProfile,
+  isConnecting,
+  isPriority,
+  showTranslationBadge,
+}: WomanCardProps) => {
   return (
-    <Card className={`overflow-hidden transition-all hover:shadow-lg ${
-      isPriority ? "ring-2 ring-primary/50" : ""
-    } ${woman.isBusy ? "opacity-70" : ""}`}>
+    <Card
+      className={`overflow-hidden transition-all hover:shadow-lg ${
+        isPriority ? "ring-2 ring-primary/50" : ""
+      } ${woman.isBusy ? "opacity-70" : ""}`}
+    >
       {/* Photo */}
-      <div 
-        className="relative aspect-[4/3] bg-muted cursor-pointer"
-        onClick={onViewProfile}
-      >
+      <div className="relative aspect-[4/3] bg-muted cursor-pointer" onClick={onViewProfile}>
         {woman.photoUrl ? (
-          <img 
-            src={woman.photoUrl} 
-            alt={woman.fullName}
-            className="w-full h-full object-cover"
-          />
+          <img src={woman.photoUrl} alt={woman.fullName} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-rose-500/20">
             <span className="text-4xl font-bold text-primary/50">
@@ -740,7 +775,9 @@ const WomanCard = ({ woman, onConnect, onViewProfile, isConnecting, isPriority, 
         {/* Status badges */}
         <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 flex flex-col gap-0.5 sm:gap-1">
           <div className="flex items-center gap-1 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full bg-background/80 backdrop-blur-sm">
-            <Circle className={`w-1.5 h-1.5 sm:w-2 sm:h-2 ${woman.isBusy ? "fill-amber-500 text-amber-500" : "fill-emerald-500 text-emerald-500"} animate-pulse`} />
+            <Circle
+              className={`w-1.5 h-1.5 sm:w-2 sm:h-2 ${woman.isBusy ? "fill-amber-500 text-amber-500" : "fill-emerald-500 text-emerald-500"} animate-pulse`}
+            />
             <span className="text-[9px] sm:text-xs font-medium text-foreground">
               {woman.isBusy ? "Busy" : "Free"}
             </span>
@@ -772,7 +809,9 @@ const WomanCard = ({ woman, onConnect, onViewProfile, isConnecting, isPriority, 
       {/* Info */}
       <div className="p-2.5 sm:p-4 space-y-2 sm:space-y-3">
         <div>
-          <h4 className="font-semibold text-sm sm:text-base text-foreground truncate">{woman.fullName}</h4>
+          <h4 className="font-semibold text-sm sm:text-base text-foreground truncate">
+            {woman.fullName}
+          </h4>
           <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm text-muted-foreground flex-wrap">
             {woman.age && <span>{woman.age} yrs</span>}
             <span>•</span>
@@ -791,7 +830,7 @@ const WomanCard = ({ woman, onConnect, onViewProfile, isConnecting, isPriority, 
 
         {/* Actions */}
         <div className="flex gap-1.5 sm:gap-2">
-          <Button 
+          <Button
             variant={woman.isBusy ? "outline" : "gradient"}
             size="sm"
             className="flex-1 text-[10px] xs:text-xs sm:text-sm gap-1 !px-2 sm:!px-3"
@@ -812,12 +851,7 @@ const WomanCard = ({ woman, onConnect, onViewProfile, isConnecting, isPriority, 
               </>
             )}
           </Button>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={onViewProfile}
-            className="!px-2 sm:!px-3"
-          >
+          <Button variant="outline" size="sm" onClick={onViewProfile} className="!px-2 sm:!px-3">
             <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </Button>
         </div>

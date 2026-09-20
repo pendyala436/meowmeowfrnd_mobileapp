@@ -1,11 +1,11 @@
 /**
  * Network Monitor
- * 
+ *
  * Cross-platform network status detection for Web, PWA, and Mobile.
  * Uses Navigator.connection API with fallbacks for unsupported browsers.
  */
 
-import type { NetworkStatus, ApiEventHandler, ApiEvent } from './types';
+import type { NetworkStatus, ApiEventHandler, ApiEvent } from "./types";
 
 interface NetworkInformationLike extends EventTarget {
   type?: string;
@@ -29,11 +29,11 @@ class NetworkMonitor {
 
   private constructor() {
     this.status = {
-      isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
-      connectionType: 'unknown',
+      isOnline: typeof navigator !== "undefined" ? navigator.onLine : true,
+      connectionType: "unknown",
     };
 
-    if (typeof navigator !== 'undefined' && typeof window !== 'undefined') {
+    if (typeof navigator !== "undefined" && typeof window !== "undefined") {
       this.initializeConnectionInfo();
       this.setupEventListeners();
     }
@@ -59,36 +59,36 @@ class NetworkMonitor {
       this.status = {
         isOnline: navigator.onLine,
         connectionType: this.mapConnectionType(this.connection.type),
-        effectiveType: this.connection.effectiveType as NetworkStatus['effectiveType'],
+        effectiveType: this.connection.effectiveType as NetworkStatus["effectiveType"],
         downlink: this.connection.downlink,
         rtt: this.connection.rtt,
       };
     } else {
       this.status = {
         isOnline: navigator.onLine,
-        connectionType: 'unknown',
+        connectionType: "unknown",
       };
     }
   }
 
-  private mapConnectionType(type?: string): NetworkStatus['connectionType'] {
+  private mapConnectionType(type?: string): NetworkStatus["connectionType"] {
     switch (type) {
-      case 'wifi':
-        return 'wifi';
-      case 'cellular':
-        return 'cellular';
-      case 'ethernet':
-        return 'ethernet';
+      case "wifi":
+        return "wifi";
+      case "cellular":
+        return "cellular";
+      case "ethernet":
+        return "ethernet";
       default:
-        return 'unknown';
+        return "unknown";
     }
   }
 
   private addConnectionChangeListener(): void {
     if (!this.connection) return;
 
-    if (typeof this.connection.addEventListener === 'function') {
-      this.connection.addEventListener('change', this.handleConnectionChange);
+    if (typeof this.connection.addEventListener === "function") {
+      this.connection.addEventListener("change", this.handleConnectionChange);
       return;
     }
 
@@ -98,8 +98,8 @@ class NetworkMonitor {
   private removeConnectionChangeListener(): void {
     if (!this.connection) return;
 
-    if (typeof this.connection.removeEventListener === 'function') {
-      this.connection.removeEventListener('change', this.handleConnectionChange);
+    if (typeof this.connection.removeEventListener === "function") {
+      this.connection.removeEventListener("change", this.handleConnectionChange);
       return;
     }
 
@@ -107,8 +107,8 @@ class NetworkMonitor {
   }
 
   private setupEventListeners(): void {
-    window.addEventListener('online', this.handleOnline);
-    window.addEventListener('offline', this.handleOffline);
+    window.addEventListener("online", this.handleOnline);
+    window.addEventListener("offline", this.handleOffline);
 
     if (this.connection) {
       this.addConnectionChangeListener();
@@ -119,7 +119,7 @@ class NetworkMonitor {
     this.status.isOnline = true;
     this.updateConnectionStatus();
     this.emit({
-      type: 'network:online',
+      type: "network:online",
       timestamp: Date.now(),
       data: this.status,
     });
@@ -128,7 +128,7 @@ class NetworkMonitor {
   private handleOffline = (): void => {
     this.status.isOnline = false;
     this.emit({
-      type: 'network:offline',
+      type: "network:offline",
       timestamp: Date.now(),
       data: this.status,
     });
@@ -139,29 +139,29 @@ class NetworkMonitor {
   };
 
   private emit(event: ApiEvent): void {
-    this.listeners.forEach(listener => {
+    this.listeners.forEach((listener) => {
       try {
         listener(event);
       } catch (error) {
-        console.error('Network monitor listener error:', error);
+        console.error("Network monitor listener error:", error);
       }
     });
   }
 
   getStatus(): NetworkStatus {
-    if (typeof navigator !== 'undefined') {
+    if (typeof navigator !== "undefined") {
       this.status.isOnline = navigator.onLine;
     }
     return { ...this.status };
   }
 
   isOnline(): boolean {
-    return typeof navigator !== 'undefined' ? navigator.onLine : true;
+    return typeof navigator !== "undefined" ? navigator.onLine : true;
   }
 
   isSlowConnection(): boolean {
     const effectiveType = this.status.effectiveType;
-    return effectiveType === 'slow-2g' || effectiveType === '2g';
+    return effectiveType === "slow-2g" || effectiveType === "2g";
   }
 
   subscribe(handler: ApiEventHandler): () => void {
@@ -172,9 +172,9 @@ class NetworkMonitor {
   }
 
   destroy(): void {
-    if (typeof window !== 'undefined') {
-      window.removeEventListener('online', this.handleOnline);
-      window.removeEventListener('offline', this.handleOffline);
+    if (typeof window !== "undefined") {
+      window.removeEventListener("online", this.handleOnline);
+      window.removeEventListener("offline", this.handleOffline);
     }
     this.removeConnectionChangeListener();
     this.listeners.clear();

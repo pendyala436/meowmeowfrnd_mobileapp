@@ -59,7 +59,12 @@ describe("ProtectedRoute auth helpers", () => {
     });
 
     it("returns false for undefined userId", () => {
-      expect(isGenderVerified(undefined)).toBe(false);
+      if (LOGIN_GENDER_VERIFY_ENABLED) {
+        expect(isGenderVerified(undefined)).toBe(false);
+      } else {
+        // Feature off: login gender gate is skipped for all callers.
+        expect(isGenderVerified(undefined)).toBe(true);
+      }
     });
 
     it("is per-user — different user remains unverified", () => {

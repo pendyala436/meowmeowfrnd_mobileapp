@@ -25,7 +25,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { isIndianLanguage } from "@/data/supportedLanguages";
 
-
 interface RandomChatButtonProps {
   userGender: "male" | "female";
   userLanguage: string;
@@ -35,7 +34,7 @@ interface RandomChatButtonProps {
   size?: "default" | "lg" | "sm";
   className?: string;
   onInsufficientBalance?: () => void;
-  
+
   chatMode?: "paid" | "free" | "exclusive_free";
 }
 
@@ -48,8 +47,8 @@ export const RandomChatButton = ({
   size = "lg",
   className = "",
   onInsufficientBalance,
-  
-  chatMode = "paid"
+
+  chatMode = "paid",
 }: RandomChatButtonProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -67,7 +66,6 @@ export const RandomChatButton = ({
   } | null>(null);
 
   const findRandomPartner = async () => {
-
     // Men need some wallet balance to start chat (women earn, no balance needed)
     if (userGender === "male") {
       if (walletBalance <= 0) {
@@ -84,12 +82,14 @@ export const RandomChatButton = ({
     setMatchedUser(null);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session?.user) {
         toast({
           title: "Error",
           description: "You must be logged in to start a chat",
-          variant: "destructive"
+          variant: "destructive",
         });
         setSearchDialogOpen(false);
         return;
@@ -99,14 +99,14 @@ export const RandomChatButton = ({
       if (userGender === "male") {
         // Men looking for women - language-agnostic, based on availability and load
         setSearchStatus("Finding an available partner for you...");
-        
+
         const { data, error } = await supabase.functions.invoke("chat-manager", {
           body: {
             action: "get_available_indian_woman",
             man_user_id: user.id,
             preferred_language: userLanguage,
-            man_country: userCountry
-          }
+            man_country: userCountry,
+          },
         });
 
         if (error) throw error;
@@ -114,7 +114,7 @@ export const RandomChatButton = ({
         if (data.success && data.woman_user_id) {
           const womanLanguage = data.profile?.primary_language || "Unknown";
           const isSameLanguage = womanLanguage.toLowerCase() === userLanguage.toLowerCase();
-          
+
           setSearchStatus("Found a match!");
           setMatchedUser({
             userId: data.woman_user_id,
@@ -129,7 +129,7 @@ export const RandomChatButton = ({
       } else {
         // Women looking for men - language-agnostic random matching
         setSearchStatus("Finding an available partner for you...");
-        
+
         // Get online men
         const { data: onlineStatuses } = await supabase
           .from("user_status")
@@ -141,7 +141,7 @@ export const RandomChatButton = ({
           return;
         }
 
-        const onlineUserIds = onlineStatuses.map(s => s.user_id);
+        const onlineUserIds = onlineStatuses.map((s) => s.user_id);
 
         // Get men profiles
         const { data: menProfiles } = await supabase
@@ -157,26 +157,26 @@ export const RandomChatButton = ({
 
         // Filter men based on woman's chat mode
         let qualifiedMen;
-        
+
         if (chatMode === "paid") {
-          const { data: walletData } = await supabase.rpc('get_men_with_balance', {
-            p_user_ids: menProfiles.map(m => m.user_id)
+          const { data: walletData } = await supabase.rpc("get_men_with_balance", {
+            p_user_ids: menProfiles.map((m) => m.user_id),
           });
           const menWithBalance = walletData?.map((w: any) => w.user_id) || [];
-          qualifiedMen = menProfiles.filter(m => menWithBalance.includes(m.user_id));
-          
+          qualifiedMen = menProfiles.filter((m) => menWithBalance.includes(m.user_id));
+
           if (qualifiedMen.length === 0) {
             setSearchStatus("No available men with wallet balance. Please try again later.");
             return;
           }
         } else {
-          const { data: walletData } = await supabase.rpc('get_men_with_balance', {
-            p_user_ids: menProfiles.map(m => m.user_id)
+          const { data: walletData } = await supabase.rpc("get_men_with_balance", {
+            p_user_ids: menProfiles.map((m) => m.user_id),
           });
           const menWithBalance = new Set(walletData?.map((w: any) => w.user_id) || []);
-          const regularMen = menProfiles.filter(m => !menWithBalance.has(m.user_id));
+          const regularMen = menProfiles.filter((m) => !menWithBalance.has(m.user_id));
           qualifiedMen = regularMen.length > 0 ? regularMen : menProfiles;
-          
+
           if (qualifiedMen.length === 0) {
             setSearchStatus("No available men right now. Please try again later.");
             return;
@@ -188,10 +188,13 @@ export const RandomChatButton = ({
           .from("active_chat_sessions")
           .select("man_user_id")
           .eq("status", "active")
-          .in("man_user_id", qualifiedMen.map(m => m.user_id));
+          .in(
+            "man_user_id",
+            qualifiedMen.map((m) => m.user_id),
+          );
 
-        const busyMenIds = new Set(activeSessions?.map(s => s.man_user_id) || []);
-        const freeMen = qualifiedMen.filter(m => !busyMenIds.has(m.user_id));
+        const busyMenIds = new Set(activeSessions?.map((s) => s.man_user_id) || []);
+        const freeMen = qualifiedMen.filter((m) => !busyMenIds.has(m.user_id));
         const poolToSearch = freeMen.length > 0 ? freeMen : qualifiedMen;
 
         if (poolToSearch.length === 0) {
@@ -201,7 +204,7 @@ export const RandomChatButton = ({
 
         // Randomly pick from all available men (language-agnostic)
         const chosenMan = poolToSearch[Math.floor(Math.random() * poolToSearch.length)];
-        
+
         // Get language info for display only
         const { data: userLanguages } = await supabase
           .from("user_languages")
@@ -209,7 +212,8 @@ export const RandomChatButton = ({
           .eq("user_id", chosenMan.user_id)
           .limit(1);
 
-        const manLang = userLanguages?.[0]?.language_name || chosenMan.primary_language || "Unknown";
+        const manLang =
+          userLanguages?.[0]?.language_name || chosenMan.primary_language || "Unknown";
         const isSameLanguage = manLang.toLowerCase() === userLanguage.toLowerCase();
 
         setSearchStatus("Found a match!");
@@ -227,7 +231,7 @@ export const RandomChatButton = ({
       toast({
         title: "Error",
         description: classifyError(error, "find a chat partner").message,
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsSearching(false);
@@ -238,7 +242,9 @@ export const RandomChatButton = ({
     if (!matchedUser) return;
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session?.user) return;
       const user = session.user;
 
@@ -248,8 +254,8 @@ export const RandomChatButton = ({
           body: {
             action: "start_chat",
             man_user_id: user.id,
-            woman_user_id: matchedUser.userId
-          }
+            woman_user_id: matchedUser.userId,
+          },
         });
 
         if (error) throw error;
@@ -264,7 +270,7 @@ export const RandomChatButton = ({
           toast({
             title: "Cannot Start Chat",
             description: data.message || "Unable to start chat session",
-            variant: "destructive"
+            variant: "destructive",
           });
           return;
         }
@@ -275,7 +281,7 @@ export const RandomChatButton = ({
             chat_id: data.chat_id,
             sender_id: user.id,
             receiver_id: matchedUser.userId,
-            message: "👋 Hi!"
+            message: "👋 Hi!",
           });
         }
       } else if (userGender === "female") {
@@ -284,8 +290,8 @@ export const RandomChatButton = ({
           body: {
             action: "start_chat",
             man_user_id: matchedUser.userId,
-            woman_user_id: user.id
-          }
+            woman_user_id: user.id,
+          },
         });
 
         if (error) throw error;
@@ -300,7 +306,7 @@ export const RandomChatButton = ({
           toast({
             title: "Cannot Start Chat",
             description: data.message || "Unable to start chat session",
-            variant: "destructive"
+            variant: "destructive",
           });
           return;
         }
@@ -312,7 +318,7 @@ export const RandomChatButton = ({
             chat_id: data.chat_id,
             sender_id: user.id,
             receiver_id: matchedUser.userId,
-            message: "👋 Hi!"
+            message: "👋 Hi!",
           });
         }
       }
@@ -327,7 +333,7 @@ export const RandomChatButton = ({
       toast({
         title: "Error",
         description: classifyError(error, "start the chat").message,
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
@@ -364,10 +370,9 @@ export const RandomChatButton = ({
               {matchedUser ? "Match Found!" : "Finding a Partner"}
             </DialogTitle>
             <DialogDescription>
-              {matchedUser 
+              {matchedUser
                 ? "We found someone for you to chat with!"
-                : `Looking for available ${userGender === "male" ? "women" : "men"}...`
-              }
+                : `Looking for available ${userGender === "male" ? "women" : "men"}...`}
             </DialogDescription>
           </DialogHeader>
 
@@ -387,11 +392,7 @@ export const RandomChatButton = ({
                   <X className="h-8 w-8 text-muted-foreground" />
                 </div>
                 <p className="text-muted-foreground">{searchStatus}</p>
-                <Button 
-                  variant="auroraOutline" 
-                  className="mt-4"
-                  onClick={findRandomPartner}
-                >
+                <Button variant="auroraOutline" className="mt-4" onClick={findRandomPartner}>
                   Try Again
                 </Button>
               </div>
@@ -401,8 +402,8 @@ export const RandomChatButton = ({
               <div className="text-center">
                 <div className="relative w-20 h-20 mx-auto mb-4">
                   {matchedUser.photoUrl ? (
-                    <img 
-                      src={matchedUser.photoUrl} 
+                    <img
+                      src={matchedUser.photoUrl}
                       alt={matchedUser.fullName}
                       className="w-20 h-20 rounded-full object-cover border-4 border-primary/20"
                     />
@@ -417,9 +418,7 @@ export const RandomChatButton = ({
                 </div>
                 <h3 className="text-lg font-semibold">{matchedUser.fullName}</h3>
                 <div className="flex items-center justify-center gap-2 mb-4">
-                  <p className="text-sm text-muted-foreground">
-                    Speaks {matchedUser.language}
-                  </p>
+                  <p className="text-sm text-muted-foreground">Speaks {matchedUser.language}</p>
                   {matchedUser.isSameLanguage ? (
                     <Badge variant="successOutline" className="text-xs">
                       Same language
@@ -452,15 +451,11 @@ export const RandomChatButton = ({
               <Wallet className="h-5 w-5 text-destructive" />
               Recharge Required
             </AlertDialogTitle>
-            <AlertDialogDescription>
-              {rechargeMessage}
-            </AlertDialogDescription>
+            <AlertDialogDescription>{rechargeMessage}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => navigate('/wallet')}>
-              Recharge Now
-            </AlertDialogAction>
+            <AlertDialogAction onClick={() => navigate("/wallet")}>Recharge Now</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

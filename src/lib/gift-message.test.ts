@@ -8,9 +8,7 @@ import {
 
 describe("formatGiftMessage", () => {
   it("builds a prefixed gift payload", () => {
-    expect(formatGiftMessage("🌹", "Rose", 50, "Ada")).toBe(
-      `${GIFT_PREFIX}🌹::Rose::50::Ada`,
-    );
+    expect(formatGiftMessage("🌹", "Rose", 50, "Ada")).toBe(`${GIFT_PREFIX}🌹::Rose::50::Ada`);
   });
 });
 

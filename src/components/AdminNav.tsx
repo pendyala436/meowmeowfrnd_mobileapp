@@ -17,13 +17,38 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import MeowLogo from "@/components/MeowLogo";
 import {
-  Users, MessageSquare, BarChart3, Settings, Shield, FileText, Clock,
-  DollarSign, Activity, Gift, Globe, Database, AlertTriangle, Languages,
-  LogOut, Menu, Home, UserCheck, History, Search, ClipboardList, Megaphone,
-  MoreVertical, Bell, RefreshCw, ToggleLeft,
+  Users,
+  MessageSquare,
+  BarChart3,
+  Settings,
+  Shield,
+  FileText,
+  Clock,
+  DollarSign,
+  Activity,
+  Gift,
+  Globe,
+  Database,
+  AlertTriangle,
+  Languages,
+  LogOut,
+  Menu,
+  Home,
+  UserCheck,
+  History,
+  Search,
+  ClipboardList,
+  Megaphone,
+  MoreVertical,
+  Bell,
+  RefreshCw,
+  ToggleLeft,
 } from "lucide-react";
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -54,26 +79,60 @@ const AdminNav = ({ children }: AdminNavProps) => {
       : location.pathname.startsWith(path);
 
   const navItems: NavItem[] = [
-    { title: "Dashboard",         path: "/admin",                icon: <Home className="h-4 w-4" /> },
-    { title: "Online & Chat",     path: "/admin/messenger",      icon: <MessageSquare className="h-4 w-4" /> },
-    { title: "TL",                path: "/admin/tl",             icon: <Shield className="h-4 w-4" /> },
-    { title: "User Management",   path: "/admin/users",          icon: <Users className="h-4 w-4" />, badge: pendingApprovals },
-    { title: "Analytics",         path: "/admin/analytics",      icon: <BarChart3 className="h-4 w-4" /> },
-    { title: "Chat Monitoring",   path: "/admin/chat-monitoring", icon: <MessageSquare className="h-4 w-4" /> },
-    { title: "Language Groups",   path: "/admin/languages",      icon: <Globe className="h-4 w-4" /> },
-    { title: "Language Limits",   path: "/admin/language-limits",icon: <Languages className="h-4 w-4" /> },
-    { title: "KYC Management",    path: "/admin/kyc",            icon: <UserCheck className="h-4 w-4" /> },
-    { title: "User Lookup",       path: "/admin/user-lookup",    icon: <Search className="h-4 w-4" /> },
-    { title: "Moderation",        path: "/admin/moderation",     icon: <Shield className="h-4 w-4" /> },
-    { title: "Policy Alerts",     path: "/admin/policy-alerts",  icon: <AlertTriangle className="h-4 w-4" />, badge: policyAlerts },
-    { title: "Performance",       path: "/admin/performance",    icon: <Activity className="h-4 w-4" /> },
-    { title: "Legal Documents",   path: "/admin/legal-documents",icon: <FileText className="h-4 w-4" /> },
-    { title: "Backups",           path: "/admin/backups",        icon: <Database className="h-4 w-4" /> },
-    { title: "Audit Logs",        path: "/admin/audit-logs",     icon: <ClipboardList className="h-4 w-4" /> }, // FIX #15/#31: was Clock
-    { title: "Messaging",         path: "/admin/messaging",      icon: <Megaphone className="h-4 w-4" /> },     // FIX #32: was MessageSquare
-    { title: "Settings",          path: "/admin/settings",       icon: <Settings className="h-4 w-4" /> },
-    { title: "Enable / Disable",  path: "/admin/enable-disable", icon: <ToggleLeft className="h-4 w-4" /> },
-    { title: "Payout Statements", path: "/admin/payout-statements", icon: <DollarSign className="h-4 w-4" /> },
+    { title: "Dashboard", path: "/admin", icon: <Home className="h-4 w-4" /> },
+    {
+      title: "Online & Chat",
+      path: "/admin/messenger",
+      icon: <MessageSquare className="h-4 w-4" />,
+    },
+    { title: "TL", path: "/admin/tl", icon: <Shield className="h-4 w-4" /> },
+    {
+      title: "User Management",
+      path: "/admin/users",
+      icon: <Users className="h-4 w-4" />,
+      badge: pendingApprovals,
+    },
+    { title: "Analytics", path: "/admin/analytics", icon: <BarChart3 className="h-4 w-4" /> },
+    {
+      title: "Chat Monitoring",
+      path: "/admin/chat-monitoring",
+      icon: <MessageSquare className="h-4 w-4" />,
+    },
+    { title: "Language Groups", path: "/admin/languages", icon: <Globe className="h-4 w-4" /> },
+    {
+      title: "Language Limits",
+      path: "/admin/language-limits",
+      icon: <Languages className="h-4 w-4" />,
+    },
+    { title: "KYC Management", path: "/admin/kyc", icon: <UserCheck className="h-4 w-4" /> },
+    { title: "User Lookup", path: "/admin/user-lookup", icon: <Search className="h-4 w-4" /> },
+    { title: "Moderation", path: "/admin/moderation", icon: <Shield className="h-4 w-4" /> },
+    {
+      title: "Policy Alerts",
+      path: "/admin/policy-alerts",
+      icon: <AlertTriangle className="h-4 w-4" />,
+      badge: policyAlerts,
+    },
+    { title: "Performance", path: "/admin/performance", icon: <Activity className="h-4 w-4" /> },
+    {
+      title: "Legal Documents",
+      path: "/admin/legal-documents",
+      icon: <FileText className="h-4 w-4" />,
+    },
+    { title: "Backups", path: "/admin/backups", icon: <Database className="h-4 w-4" /> },
+    { title: "Audit Logs", path: "/admin/audit-logs", icon: <ClipboardList className="h-4 w-4" /> }, // FIX #15/#31: was Clock
+    { title: "Messaging", path: "/admin/messaging", icon: <Megaphone className="h-4 w-4" /> }, // FIX #32: was MessageSquare
+    { title: "Settings", path: "/admin/settings", icon: <Settings className="h-4 w-4" /> },
+    {
+      title: "Enable / Disable",
+      path: "/admin/enable-disable",
+      icon: <ToggleLeft className="h-4 w-4" />,
+    },
+    {
+      title: "Payout Statements",
+      path: "/admin/payout-statements",
+      icon: <DollarSign className="h-4 w-4" />,
+    },
   ];
 
   const activeItem = navItems.find((item) => isActive(item.path)) || navItems[0];
@@ -83,10 +142,20 @@ const AdminNav = ({ children }: AdminNavProps) => {
     // FIX #4: Use realtime subscription for live badge counts
     const channel = supabase
       .channel("admin-nav-counts")
-      .on("postgres_changes", { event: "*", schema: "public", table: "female_profiles" }, loadCounts)
-      .on("postgres_changes", { event: "*", schema: "public", table: "policy_violation_alerts" }, loadCounts)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "female_profiles" },
+        loadCounts,
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "policy_violation_alerts" },
+        loadCounts,
+      )
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const loadCounts = async () => {
@@ -113,7 +182,9 @@ const AdminNav = ({ children }: AdminNavProps) => {
     // FIX #23/#30: Clear admin cache BEFORE sign-out
     clearAdminCache();
 
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (session?.user) {
       await supabase
         .from("user_status")
@@ -135,15 +206,13 @@ const AdminNav = ({ children }: AdminNavProps) => {
           "w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors relative",
           active
             ? "bg-white/20 text-white border-l-4 border-white"
-            : "text-white/70 hover:bg-white/10 hover:text-white border-l-4 border-transparent"
+            : "text-white/70 hover:bg-white/10 hover:text-white border-l-4 border-transparent",
         )}
       >
         {item.icon}
         <span className="flex-1 text-left">{item.title}</span>
         {item.badge !== undefined && item.badge > 0 && (
-          <Badge
-            className="text-[10px] px-1.5 py-0.5 bg-white/25 text-white border-0 font-bold"
-          >
+          <Badge className="text-[10px] px-1.5 py-0.5 bg-white/25 text-white border-0 font-bold">
             {item.badge}
           </Badge>
         )}
@@ -260,9 +329,7 @@ const AdminNav = ({ children }: AdminNavProps) => {
 
       {/* ── Main Content (full width, scrolls in both axes) ───────── */}
       <main className="overflow-x-auto overflow-y-auto pb-[calc(72px+env(safe-area-inset-bottom))]">
-        <div className="max-w-7xl mx-auto p-3 sm:p-4 md:p-6 min-w-max">
-          {children}
-        </div>
+        <div className="max-w-7xl mx-auto p-3 sm:p-4 md:p-6 min-w-max">{children}</div>
       </main>
 
       {/* ── WhatsApp-style Bottom Tab Bar (horizontally scrollable) ── */}
@@ -284,9 +351,7 @@ const AdminNav = ({ children }: AdminNavProps) => {
                 }}
                 className={cn(
                   "relative flex flex-col items-center justify-center gap-0.5 shrink-0 min-w-[68px] px-2 py-2 transition-colors",
-                  active
-                    ? "text-white"
-                    : "text-white/60 hover:text-white"
+                  active ? "text-white" : "text-white/60 hover:text-white",
                 )}
                 aria-current={active ? "page" : undefined}
               >

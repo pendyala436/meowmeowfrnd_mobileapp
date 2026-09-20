@@ -1,16 +1,17 @@
 /**
  * useDeviceDetect.ts
- * 
+ *
  * Comprehensive device detection hook for ALL platforms
  * Supports: Mobile, Tablets, Laptops, Desktops, Chromebooks, Foldables, TVs
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from "react";
 
 export interface DeviceInfo {
   // Device category
-  deviceCategory: 'mobile' | 'phablet' | 'tablet' | 'laptop' | 'desktop' | 'tv' | 'wearable' | 'unknown';
-  
+  deviceCategory:
+    "mobile" | "phablet" | "tablet" | "laptop" | "desktop" | "tv" | "wearable" | "unknown";
+
   // Device types
   isMobile: boolean;
   isPhablet: boolean;
@@ -22,9 +23,23 @@ export interface DeviceInfo {
   isFoldable: boolean;
   isFoldOpen: boolean;
   isChromebook: boolean;
-  
+
   // Operating System - Comprehensive support
-  os: 'ios' | 'ipados' | 'android' | 'windows' | 'macos' | 'linux' | 'chromeos' | 'tvos' | 'tizen' | 'webos' | 'fireos' | 'watchos' | 'wearos' | 'unknown';
+  os:
+    | "ios"
+    | "ipados"
+    | "android"
+    | "windows"
+    | "macos"
+    | "linux"
+    | "chromeos"
+    | "tvos"
+    | "tizen"
+    | "webos"
+    | "fireos"
+    | "watchos"
+    | "wearos"
+    | "unknown";
   osVersion: string;
   isIOS: boolean;
   isIPadOS: boolean;
@@ -39,9 +54,23 @@ export interface DeviceInfo {
   isFireOS: boolean;
   isWatchOS: boolean;
   isWearOS: boolean;
-  
+
   // Browser - All major browsers worldwide
-  browser: 'chrome' | 'safari' | 'firefox' | 'edge' | 'opera' | 'samsung' | 'brave' | 'vivaldi' | 'uc' | 'qq' | 'baidu' | 'yandex' | 'silk' | 'unknown';
+  browser:
+    | "chrome"
+    | "safari"
+    | "firefox"
+    | "edge"
+    | "opera"
+    | "samsung"
+    | "brave"
+    | "vivaldi"
+    | "uc"
+    | "qq"
+    | "baidu"
+    | "yandex"
+    | "silk"
+    | "unknown";
   browserVersion: string;
   isChrome: boolean;
   isSafari: boolean;
@@ -56,7 +85,7 @@ export interface DeviceInfo {
   isBaidu: boolean;
   isYandex: boolean;
   isSilk: boolean;
-  
+
   // Specific devices - All major manufacturers
   isIPhone: boolean;
   isIPad: boolean;
@@ -82,7 +111,7 @@ export interface DeviceInfo {
   isSamsungTV: boolean;
   isLGTV: boolean;
   isSonyTV: boolean;
-  
+
   // Input capabilities
   isTouch: boolean;
   isStylus: boolean;
@@ -91,14 +120,14 @@ export interface DeviceInfo {
   hasMicrophone: boolean;
   hasKeyboard: boolean;
   hasGamepad: boolean;
-  
+
   // PWA/Native
   isPWA: boolean;
   isStandalone: boolean;
   isNativeApp: boolean;
   isCapacitor: boolean;
   isElectron: boolean;
-  
+
   // Display
   isRetina: boolean;
   isRetina3x: boolean;
@@ -109,13 +138,13 @@ export interface DeviceInfo {
   screenWidth: number;
   screenHeight: number;
   pixelRatio: number;
-  
+
   // Preferences
   prefersReducedMotion: boolean;
   prefersDarkMode: boolean;
   prefersHighContrast: boolean;
   prefersReducedTransparency: boolean;
-  
+
   // Network
   isOnline: boolean;
   connectionType: string;
@@ -123,10 +152,18 @@ export interface DeviceInfo {
 }
 
 export function useDeviceDetect(): DeviceInfo {
-  const [screenWidth, setScreenWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
-  const [screenHeight, setScreenHeight] = useState(typeof window !== 'undefined' ? window.innerHeight : 768);
-  const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
-  const [isLandscape, setIsLandscape] = useState(typeof window !== 'undefined' ? window.innerWidth > window.innerHeight : true);
+  const [screenWidth, setScreenWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 1024,
+  );
+  const [screenHeight, setScreenHeight] = useState(
+    typeof window !== "undefined" ? window.innerHeight : 768,
+  );
+  const [isOnline, setIsOnline] = useState(
+    typeof navigator !== "undefined" ? navigator.onLine : true,
+  );
+  const [isLandscape, setIsLandscape] = useState(
+    typeof window !== "undefined" ? window.innerWidth > window.innerHeight : true,
+  );
 
   useEffect(() => {
     const handleResize = () => {
@@ -138,30 +175,30 @@ export function useDeviceDetect(): DeviceInfo {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
 
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
 
     return () => {
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
     };
   }, []);
 
   const deviceInfo = useMemo<DeviceInfo>(() => {
-    if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+    if (typeof window === "undefined" || typeof navigator === "undefined") {
       return getDefaultDeviceInfo();
     }
 
     const ua = navigator.userAgent.toLowerCase();
-    const platform = navigator.platform?.toLowerCase() || '';
+    const platform = navigator.platform?.toLowerCase() || "";
 
     // ========================================
     // COMPREHENSIVE OS DETECTION
     // ========================================
-    const isIOS = /iphone|ipod/.test(ua) || (platform === 'iphone');
-    const isIPadOS = /ipad/.test(ua) || (platform === 'macintel' && navigator.maxTouchPoints > 1);
+    const isIOS = /iphone|ipod/.test(ua) || platform === "iphone";
+    const isIPadOS = /ipad/.test(ua) || (platform === "macintel" && navigator.maxTouchPoints > 1);
     const isAndroid = /android/.test(ua);
     const isWindows = /win/.test(platform) || /windows/.test(ua);
     const isMacOS = /mac/.test(platform) && !isIOS && !isIPadOS;
@@ -182,18 +219,18 @@ export function useDeviceDetect(): DeviceInfo {
     const isIPad = isIPadOS;
     const isAppleWatch = isWatchOS;
     const isAppleTV = isTvOS;
-    
+
     // Samsung devices
     const isSamsungGalaxy = /samsung|sm-g|sm-a|sm-n|sm-s/.test(ua);
     const isSamsungFold = /sm-f/.test(ua);
     const isGalaxyTab = /sm-t|sm-x/.test(ua);
     const isGalaxyWatch = /sm-r/.test(ua);
     const isSamsungTV = isTizen && /smart-tv|samsungtv/.test(ua);
-    
+
     // Google devices
     const isPixel = /pixel/.test(ua);
     const isAndroidTV = /android.*tv|googletv/.test(ua);
-    
+
     // Other manufacturers
     const isOnePlus = /oneplus/.test(ua);
     const isXiaomi = /xiaomi|mi\s|redmi|poco/.test(ua);
@@ -202,16 +239,18 @@ export function useDeviceDetect(): DeviceInfo {
     const isVivo = /vivo/.test(ua);
     const isRealme = /realme|rmx/.test(ua);
     const isKindleFire = /kindle|kf|silk/.test(ua);
-    
+
     // TV detection
     const isLGTV = isWebOS;
     const isSonyTV = /sony.*tv|bravia/.test(ua);
-    const isSmartTV = isTizen || isWebOS || isAndroidTV || isTvOS || /smart-tv|hbbtv|netcast/.test(ua);
-    const isTV = isSmartTV || (screenWidth >= 1920 && screenHeight >= 1080 && !/mobile|tablet/.test(ua));
-    
+    const isSmartTV =
+      isTizen || isWebOS || isAndroidTV || isTvOS || /smart-tv|hbbtv|netcast/.test(ua);
+    const isTV =
+      isSmartTV || (screenWidth >= 1920 && screenHeight >= 1080 && !/mobile|tablet/.test(ua));
+
     // Wearable detection
     const isWearable = isWatchOS || isWearOS || isGalaxyWatch || isAppleWatch;
-    
+
     // Foldable detection
     const isFoldable = isSamsungFold || /fold|razr|surface duo/.test(ua) || screenWidth <= 300;
     const isFoldOpen = isFoldable && screenWidth > 500;
@@ -227,11 +266,23 @@ export function useDeviceDetect(): DeviceInfo {
     const isLaptop = screenWidth >= 1024 && screenWidth < 1280 && !isTV;
     const isDesktop = screenWidth >= 1280 && !isTV;
     const isChromebook = isChromeOS && screenWidth >= 1024;
-    
+
     // Device category
-    const deviceCategory = isWearable ? 'wearable' : isTV ? 'tv' : isDesktop ? 'desktop' : 
-                          isLaptop ? 'laptop' : isTablet ? 'tablet' : isPhablet ? 'phablet' : 
-                          isMobile ? 'mobile' : 'unknown';
+    const deviceCategory = isWearable
+      ? "wearable"
+      : isTV
+        ? "tv"
+        : isDesktop
+          ? "desktop"
+          : isLaptop
+            ? "laptop"
+            : isTablet
+              ? "tablet"
+              : isPhablet
+                ? "phablet"
+                : isMobile
+                  ? "mobile"
+                  : "unknown";
 
     // ========================================
     // COMPREHENSIVE BROWSER DETECTION
@@ -248,62 +299,67 @@ export function useDeviceDetect(): DeviceInfo {
     const isEdge = /edge|edg/.test(ua);
     const isFirefox = /firefox|fxios/.test(ua);
     const isSafari = /safari/.test(ua) && !/chrome|chromium|crios|fxios|edge|edg/.test(ua);
-    const isChrome = (/chrome|crios/.test(ua)) && !/edge|edg|opr|opera|brave|vivaldi|samsungbrowser|ucbrowser|qqbrowser|yabrowser/.test(ua);
+    const isChrome =
+      /chrome|crios/.test(ua) &&
+      !/edge|edg|opr|opera|brave|vivaldi|samsungbrowser|ucbrowser|qqbrowser|yabrowser/.test(ua);
 
     // Get browser version
     const getBrowserVersion = () => {
-      if (isChrome) return ua.match(/(?:chrome|crios)\/(\d+)/)?.[1] || '';
-      if (isSafari) return ua.match(/version\/(\d+)/)?.[1] || '';
-      if (isFirefox) return ua.match(/(?:firefox|fxios)\/(\d+)/)?.[1] || '';
-      if (isEdge) return ua.match(/edg\/(\d+)/)?.[1] || '';
-      if (isOpera) return ua.match(/opr\/(\d+)/)?.[1] || '';
-      if (isSamsung) return ua.match(/samsungbrowser\/(\d+)/)?.[1] || '';
-      if (isUCBrowser) return ua.match(/ucbrowser\/(\d+)/)?.[1] || '';
-      return '';
+      if (isChrome) return ua.match(/(?:chrome|crios)\/(\d+)/)?.[1] || "";
+      if (isSafari) return ua.match(/version\/(\d+)/)?.[1] || "";
+      if (isFirefox) return ua.match(/(?:firefox|fxios)\/(\d+)/)?.[1] || "";
+      if (isEdge) return ua.match(/edg\/(\d+)/)?.[1] || "";
+      if (isOpera) return ua.match(/opr\/(\d+)/)?.[1] || "";
+      if (isSamsung) return ua.match(/samsungbrowser\/(\d+)/)?.[1] || "";
+      if (isUCBrowser) return ua.match(/ucbrowser\/(\d+)/)?.[1] || "";
+      return "";
     };
 
     // Get OS version
     const getOSVersion = () => {
-      if (isIOS || isIPadOS) return ua.match(/os (\d+[._]\d+)/)?.[1]?.replace('_', '.') || '';
-      if (isAndroid) return ua.match(/android (\d+\.?\d*)/)?.[1] || '';
+      if (isIOS || isIPadOS) return ua.match(/os (\d+[._]\d+)/)?.[1]?.replace("_", ".") || "";
+      if (isAndroid) return ua.match(/android (\d+\.?\d*)/)?.[1] || "";
       if (isWindows) {
         const ntVersion = ua.match(/windows nt (\d+\.?\d*)/)?.[1];
-        if (ntVersion === '10.0') return '10/11';
-        if (ntVersion === '6.3') return '8.1';
-        if (ntVersion === '6.2') return '8';
-        if (ntVersion === '6.1') return '7';
-        return ntVersion || '';
+        if (ntVersion === "10.0") return "10/11";
+        if (ntVersion === "6.3") return "8.1";
+        if (ntVersion === "6.2") return "8";
+        if (ntVersion === "6.1") return "7";
+        return ntVersion || "";
       }
-      if (isMacOS) return ua.match(/mac os x (\d+[._]\d+)/)?.[1]?.replace('_', '.') || '';
-      if (isChromeOS) return ua.match(/cros[^)]*?(\d+)/)?.[1] || '';
-      return '';
+      if (isMacOS) return ua.match(/mac os x (\d+[._]\d+)/)?.[1]?.replace("_", ".") || "";
+      if (isChromeOS) return ua.match(/cros[^)]*?(\d+)/)?.[1] || "";
+      return "";
     };
 
     // ========================================
     // INPUT CAPABILITIES
     // ========================================
-    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    const isMouse = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-    const isStylus = window.matchMedia('(hover: none) and (pointer: fine)').matches;
-    const hasKeyboard = 'keyboard' in navigator || window.matchMedia('(hover: hover)').matches;
-    const hasGamepad = 'getGamepads' in navigator;
+    const isTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+    const isMouse = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    const isStylus = window.matchMedia("(hover: none) and (pointer: fine)").matches;
+    const hasKeyboard = "keyboard" in navigator || window.matchMedia("(hover: hover)").matches;
+    const hasGamepad = "getGamepads" in navigator;
 
     // ========================================
     // PWA/NATIVE DETECTION
     // ========================================
-    const isPWA = window.matchMedia('(display-mode: standalone)').matches ||
-                  (window.navigator as any).standalone === true ||
-                  document.referrer.includes('android-app://');
+    const isPWA =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      (window.navigator as any).standalone === true ||
+      document.referrer.includes("android-app://");
     const isCapacitor = !!(window as any).Capacitor?.isNativePlatform?.();
     const isElectron = !!(window as any).process?.versions?.electron;
 
     // ========================================
     // USER PREFERENCES
     // ========================================
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const prefersHighContrast = window.matchMedia('(prefers-contrast: high)').matches;
-    const prefersReducedTransparency = window.matchMedia('(prefers-reduced-transparency: reduce)').matches;
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const prefersDarkMode = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const prefersHighContrast = window.matchMedia("(prefers-contrast: high)").matches;
+    const prefersReducedTransparency = window.matchMedia(
+      "(prefers-reduced-transparency: reduce)",
+    ).matches;
 
     // ========================================
     // DISPLAY CHARACTERISTICS
@@ -317,22 +373,66 @@ export function useDeviceDetect(): DeviceInfo {
     // NETWORK
     // ========================================
     const connection = (navigator as any).connection;
-    const connectionType = connection?.effectiveType || 'unknown';
-    const isSlowConnection = connectionType === '2g' || connectionType === 'slow-2g';
+    const connectionType = connection?.effectiveType || "unknown";
+    const isSlowConnection = connectionType === "2g" || connectionType === "slow-2g";
 
     // Determine OS
-    const os = isIOS ? 'ios' : isIPadOS ? 'ipados' : isAndroid ? 'android' : 
-              isWindows ? 'windows' : isMacOS ? 'macos' : isLinux ? 'linux' : 
-              isChromeOS ? 'chromeos' : isTvOS ? 'tvos' : isTizen ? 'tizen' : 
-              isWebOS ? 'webos' : isFireOS ? 'fireos' : isWatchOS ? 'watchos' : 
-              isWearOS ? 'wearos' : 'unknown';
+    const os = isIOS
+      ? "ios"
+      : isIPadOS
+        ? "ipados"
+        : isAndroid
+          ? "android"
+          : isWindows
+            ? "windows"
+            : isMacOS
+              ? "macos"
+              : isLinux
+                ? "linux"
+                : isChromeOS
+                  ? "chromeos"
+                  : isTvOS
+                    ? "tvos"
+                    : isTizen
+                      ? "tizen"
+                      : isWebOS
+                        ? "webos"
+                        : isFireOS
+                          ? "fireos"
+                          : isWatchOS
+                            ? "watchos"
+                            : isWearOS
+                              ? "wearos"
+                              : "unknown";
 
     // Determine browser
-    const browser = isChrome ? 'chrome' : isSafari ? 'safari' : isFirefox ? 'firefox' :
-                   isEdge ? 'edge' : isOpera ? 'opera' : isSamsung ? 'samsung' : 
-                   isBrave ? 'brave' : isVivaldi ? 'vivaldi' : isUCBrowser ? 'uc' :
-                   isQQBrowser ? 'qq' : isBaidu ? 'baidu' : isYandex ? 'yandex' :
-                   isSilk ? 'silk' : 'unknown';
+    const browser = isChrome
+      ? "chrome"
+      : isSafari
+        ? "safari"
+        : isFirefox
+          ? "firefox"
+          : isEdge
+            ? "edge"
+            : isOpera
+              ? "opera"
+              : isSamsung
+                ? "samsung"
+                : isBrave
+                  ? "brave"
+                  : isVivaldi
+                    ? "vivaldi"
+                    : isUCBrowser
+                      ? "uc"
+                      : isQQBrowser
+                        ? "qq"
+                        : isBaidu
+                          ? "baidu"
+                          : isYandex
+                            ? "yandex"
+                            : isSilk
+                              ? "silk"
+                              : "unknown";
 
     return {
       deviceCategory,
@@ -403,8 +503,8 @@ export function useDeviceDetect(): DeviceInfo {
       isTouch,
       isStylus,
       isMouse,
-      hasCamera: !!(navigator.mediaDevices?.getUserMedia),
-      hasMicrophone: !!(navigator.mediaDevices?.getUserMedia),
+      hasCamera: !!navigator.mediaDevices?.getUserMedia,
+      hasMicrophone: !!navigator.mediaDevices?.getUserMedia,
       hasKeyboard,
       hasGamepad,
       isPWA,
@@ -436,7 +536,7 @@ export function useDeviceDetect(): DeviceInfo {
 
 function getDefaultDeviceInfo(): DeviceInfo {
   return {
-    deviceCategory: 'desktop',
+    deviceCategory: "desktop",
     isMobile: false,
     isPhablet: false,
     isTablet: false,
@@ -447,8 +547,8 @@ function getDefaultDeviceInfo(): DeviceInfo {
     isFoldable: false,
     isFoldOpen: false,
     isChromebook: false,
-    os: 'unknown',
-    osVersion: '',
+    os: "unknown",
+    osVersion: "",
     isIOS: false,
     isIPadOS: false,
     isAndroid: false,
@@ -462,8 +562,8 @@ function getDefaultDeviceInfo(): DeviceInfo {
     isFireOS: false,
     isWatchOS: false,
     isWearOS: false,
-    browser: 'unknown',
-    browserVersion: '',
+    browser: "unknown",
+    browserVersion: "",
     isChrome: false,
     isSafari: false,
     isFirefox: false,
@@ -527,7 +627,7 @@ function getDefaultDeviceInfo(): DeviceInfo {
     prefersHighContrast: false,
     prefersReducedTransparency: false,
     isOnline: true,
-    connectionType: 'unknown',
+    connectionType: "unknown",
     isSlowConnection: false,
   };
 }
@@ -535,15 +635,15 @@ function getDefaultDeviceInfo(): DeviceInfo {
 // Utility hook for responsive breakpoints
 export function useBreakpoint() {
   const { screenWidth } = useDeviceDetect();
-  
+
   return {
     xs: screenWidth >= 320,
     sm: screenWidth >= 480,
     md: screenWidth >= 768,
     lg: screenWidth >= 1024,
     xl: screenWidth >= 1280,
-    '2xl': screenWidth >= 1536,
-    '3xl': screenWidth >= 1920,
+    "2xl": screenWidth >= 1536,
+    "3xl": screenWidth >= 1920,
   };
 }
 

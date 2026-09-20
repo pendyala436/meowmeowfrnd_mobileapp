@@ -1,14 +1,14 @@
-import { useEffect, useMemo, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { AdminSideChat } from '@/components/AdminSideChat';
-import { TLCommunicationTab } from '@/components/TLCommunicationTab';
-import { Users, Crown, Search, Loader2, Wallet, CircleOff } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { AdminSideChat } from "@/components/AdminSideChat";
+import { TLCommunicationTab } from "@/components/TLCommunicationTab";
+import { Users, Crown, Search, Loader2, Wallet, CircleOff } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 
 export interface DirectoryUser {
   user_id: string;
@@ -43,27 +43,42 @@ function UserRow({
   unread,
   onClick,
 }: {
-  u: { full_name: string; photo_url?: string | null; is_online?: boolean; last_seen?: string | null };
+  u: {
+    full_name: string;
+    photo_url?: string | null;
+    is_online?: boolean;
+    last_seen?: string | null;
+  };
   unread?: number;
   onClick: () => void;
 }) {
   const seen = u.last_seen
-    ? (u.is_online ? 'Online' : `Last ${formatDistanceToNow(new Date(u.last_seen), { addSuffix: true })}`)
-    : (u.is_online ? 'Online' : 'Offline');
+    ? u.is_online
+      ? "Online"
+      : `Last ${formatDistanceToNow(new Date(u.last_seen), { addSuffix: true })}`
+    : u.is_online
+      ? "Online"
+      : "Offline";
   return (
     <button
       onClick={onClick}
       className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted/60 transition-colors text-left"
     >
       <div className="relative w-9 h-9 rounded-full overflow-hidden bg-primary/15 flex items-center justify-center shrink-0">
-        {u.photo_url ? <img src={u.photo_url} alt="" className="w-full h-full object-cover" /> : <Users className="w-4 h-4 text-primary" />}
-        <span className={`absolute -bottom-0 -right-0 w-2.5 h-2.5 rounded-full border-2 border-background ${u.is_online ? 'bg-[#4CAF50]' : 'bg-[#9E9E9E]'}`} />
+        {u.photo_url ? (
+          <img src={u.photo_url} alt="" className="w-full h-full object-cover" />
+        ) : (
+          <Users className="w-4 h-4 text-primary" />
+        )}
+        <span
+          className={`absolute -bottom-0 -right-0 w-2.5 h-2.5 rounded-full border-2 border-background ${u.is_online ? "bg-[#4CAF50]" : "bg-[#9E9E9E]"}`}
+        />
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">{u.full_name}</p>
         <p className="text-[10px] text-muted-foreground">{seen}</p>
       </div>
-      {typeof unread === 'number' && unread > 0 && (
+      {typeof unread === "number" && unread > 0 && (
         <Badge className="bg-primary text-primary-foreground border-0 text-[10px]">{unread}</Badge>
       )}
     </button>
@@ -71,23 +86,31 @@ function UserRow({
 }
 
 async function loadDirectoryFallback(): Promise<DirectoryUser[]> {
-  const [{ data: profs }, { data: statusRows }, { data: adminRows }, { data: wallets }] = await Promise.all([
-    supabase.from('profiles').select('user_id, full_name, gender, photo_url'),
-    supabase.from('user_status').select('user_id, is_online, last_seen'),
-    supabase.from('user_roles').select('user_id').eq('role', 'admin'),
-    supabase.from('wallets').select('user_id, balance'),
-  ]);
+  const [{ data: profs }, { data: statusRows }, { data: adminRows }, { data: wallets }] =
+    await Promise.all([
+      supabase.from("profiles").select("user_id, full_name, gender, photo_url"),
+      supabase.from("user_status").select("user_id, is_online, last_seen"),
+      supabase.from("user_roles").select("user_id").eq("role", "admin"),
+      supabase.from("wallets").select("user_id, balance"),
+    ]);
 
   const adminSet = new Set((adminRows ?? []).map((r) => r.user_id));
-  const statusBy = new Map((statusRows ?? []).map((s) => [s.user_id, s]));
-  const balBy = new Map((wallets ?? []).map((w) => [w.user_id, Number(w.balance) || 0]));
+  const statusBy = new Map<string, { is_online: boolean; last_seen: string | null }>(
+    (statusRows ?? []).map((s) => [
+      s.user_id,
+      { is_online: !!s.is_online, last_seen: s.last_seen ?? null },
+    ]),
+  );
+  const balBy = new Map<string, number>(
+    (wallets ?? []).map((w) => [w.user_id, Number(w.balance) || 0]),
+  );
 
   const recharged = new Set<string>();
   const { data: rechargeRows } = await supabase
-    .from('wallet_transactions')
-    .select('user_id')
-    .eq('type', 'credit')
-    .eq('transaction_type', 'recharge');
+    .from("wallet_transactions")
+    .select("user_id")
+    .eq("type", "credit")
+    .eq("transaction_type", "recharge");
   for (const r of rechargeRows ?? []) {
     if (r.user_id) recharged.add(r.user_id);
   }
@@ -96,10 +119,10 @@ async function loadDirectoryFallback(): Promise<DirectoryUser[]> {
     .filter((p) => p.user_id && !adminSet.has(p.user_id))
     .map((p) => {
       const st = statusBy.get(p.user_id);
-      const gender = (p.gender || '').toLowerCase() || null;
+      const gender = (p.gender || "").toLowerCase() || null;
       return {
         user_id: p.user_id,
-        full_name: p.full_name || 'User',
+        full_name: p.full_name || "User",
         gender,
         photo_url: p.photo_url || null,
         is_online: !!st?.is_online,
@@ -111,13 +134,16 @@ async function loadDirectoryFallback(): Promise<DirectoryUser[]> {
 
 interface AdminDirectoryChatProps {
   showTl?: boolean;
-  defaultTab?: 'online' | 'chats' | 'tl';
+  defaultTab?: "online" | "chats" | "tl";
 }
 
-export function AdminDirectoryChat({ showTl = true, defaultTab = 'online' }: AdminDirectoryChatProps) {
+export function AdminDirectoryChat({
+  showTl = true,
+  defaultTab = "online",
+}: AdminDirectoryChatProps) {
   const [adminId, setAdminId] = useState<string | null>(null);
-  const [tab, setTab] = useState<'online' | 'chats' | 'tl'>(defaultTab);
-  const [search, setSearch] = useState('');
+  const [tab, setTab] = useState<"online" | "chats" | "tl">(defaultTab);
+  const [search, setSearch] = useState("");
   const [directory, setDirectory] = useState<DirectoryUser[]>([]);
   const [threads, setThreads] = useState<Thread[]>([]);
   const [loading, setLoading] = useState(true);
@@ -128,44 +154,50 @@ export function AdminDirectoryChat({ showTl = true, defaultTab = 'online' }: Adm
   }, []);
 
   const loadDirectory = async () => {
-    const { data, error } = await supabase.rpc('get_admin_user_directory');
+    const { data, error } = await supabase.rpc("get_admin_user_directory");
     if (!error && data) {
       const list = (Array.isArray(data) ? data : []) as DirectoryUser[];
       if (list.length > 0) {
-        setDirectory(list.map((u) => ({
-          ...u,
-          gender: (u.gender || '').toLowerCase() || null,
-          is_online: !!u.is_online,
-          has_recharged: !!u.has_recharged,
-        })));
+        setDirectory(
+          list.map((u) => ({
+            ...u,
+            gender: (u.gender || "").toLowerCase() || null,
+            is_online: !!u.is_online,
+            has_recharged: !!u.has_recharged,
+          })),
+        );
         return;
       }
     }
     try {
       setDirectory(await loadDirectoryFallback());
     } catch (e) {
-      console.warn('[AdminDirectory] fallback failed', e);
+      console.warn("[AdminDirectory] fallback failed", e);
       setDirectory([]);
     }
   };
 
   const loadThreads = async () => {
     const { data } = await supabase
-      .from('admin_user_messages')
-      .select('target_user_id, sender_role, message, created_at, is_read')
-      .eq('target_group', 'direct')
-      .order('created_at', { ascending: false })
+      .from("admin_user_messages")
+      .select("target_user_id, sender_role, message, created_at, is_read")
+      .eq("target_group", "direct")
+      .order("created_at", { ascending: false })
       .limit(500);
     const grouped = new Map<string, Thread>();
     for (const m of (data ?? []) as any[]) {
       const uid = m.target_user_id as string;
       if (!uid) continue;
       const cur = grouped.get(uid);
-      const unreadInc = m.sender_role === 'user' && !m.is_read ? 1 : 0;
+      const unreadInc = m.sender_role === "user" && !m.is_read ? 1 : 0;
       if (!cur) {
         grouped.set(uid, {
-          user_id: uid, full_name: 'User', gender: null,
-          last_message: m.message, last_time: m.created_at, unread: unreadInc,
+          user_id: uid,
+          full_name: "User",
+          gender: null,
+          last_message: m.message,
+          last_time: m.created_at,
+          unread: unreadInc,
         });
       } else {
         cur.unread += unreadInc;
@@ -174,10 +206,15 @@ export function AdminDirectoryChat({ showTl = true, defaultTab = 'online' }: Adm
     const ids = Array.from(grouped.keys());
     if (ids.length) {
       const { data: profs } = await supabase
-        .from('profiles').select('user_id, full_name, gender').in('user_id', ids);
+        .from("profiles")
+        .select("user_id, full_name, gender")
+        .in("user_id", ids);
       for (const p of (profs ?? []) as any[]) {
         const t = grouped.get(p.user_id);
-        if (t) { t.full_name = p.full_name ?? 'User'; t.gender = p.gender ?? null; }
+        if (t) {
+          t.full_name = p.full_name ?? "User";
+          t.gender = p.gender ?? null;
+        }
       }
     }
     setThreads(Array.from(grouped.values()).sort((a, b) => b.last_time.localeCompare(a.last_time)));
@@ -188,27 +225,47 @@ export function AdminDirectoryChat({ showTl = true, defaultTab = 'online' }: Adm
     Promise.all([loadDirectory(), loadThreads()]).finally(() => setLoading(false));
     const iv = setInterval(loadDirectory, 20_000);
     const ch = supabase
-      .channel('admin-directory-live')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'admin_user_messages' }, () => loadThreads())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'user_status' }, () => loadDirectory())
+      .channel("admin-directory-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "admin_user_messages" }, () =>
+        loadThreads(),
+      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "user_status" }, () =>
+        loadDirectory(),
+      )
       .subscribe();
-    return () => { clearInterval(iv); supabase.removeChannel(ch); };
+    return () => {
+      clearInterval(iv);
+      supabase.removeChannel(ch);
+    };
   }, []);
 
   const q = search.trim().toLowerCase();
   const matches = (name: string) => !q || name.toLowerCase().includes(q);
-  const genderOf = (g: string | null) => (g || '').toLowerCase();
+  const genderOf = (g: string | null) => (g || "").toLowerCase();
 
   const menRecharged = useMemo(
-    () => sortPresence(directory.filter((o) => genderOf(o.gender) === 'male' && o.has_recharged && matches(o.full_name))),
+    () =>
+      sortPresence(
+        directory.filter(
+          (o) => genderOf(o.gender) === "male" && o.has_recharged && matches(o.full_name),
+        ),
+      ),
     [directory, q],
   );
   const menNoRecharge = useMemo(
-    () => sortPresence(directory.filter((o) => genderOf(o.gender) === 'male' && !o.has_recharged && matches(o.full_name))),
+    () =>
+      sortPresence(
+        directory.filter(
+          (o) => genderOf(o.gender) === "male" && !o.has_recharged && matches(o.full_name),
+        ),
+      ),
     [directory, q],
   );
   const women = useMemo(
-    () => sortPresence(directory.filter((o) => genderOf(o.gender) === 'female' && matches(o.full_name))),
+    () =>
+      sortPresence(
+        directory.filter((o) => genderOf(o.gender) === "female" && matches(o.full_name)),
+      ),
     [directory, q],
   );
 
@@ -224,9 +281,11 @@ export function AdminDirectoryChat({ showTl = true, defaultTab = 'online' }: Adm
           <div className="p-1.5 space-y-1">
             {menRecharged.length === 0 ? (
               <p className="text-center text-xs text-muted-foreground py-6">No matching men</p>
-            ) : menRecharged.map((u) => (
-              <UserRow key={u.user_id} u={u} onClick={() => open(u.user_id, u.full_name)} />
-            ))}
+            ) : (
+              menRecharged.map((u) => (
+                <UserRow key={u.user_id} u={u} onClick={() => open(u.user_id, u.full_name)} />
+              ))
+            )}
           </div>
         </ScrollArea>
       </div>
@@ -238,9 +297,11 @@ export function AdminDirectoryChat({ showTl = true, defaultTab = 'online' }: Adm
           <div className="p-1.5 space-y-1">
             {menNoRecharge.length === 0 ? (
               <p className="text-center text-xs text-muted-foreground py-6">No matching men</p>
-            ) : menNoRecharge.map((u) => (
-              <UserRow key={u.user_id} u={u} onClick={() => open(u.user_id, u.full_name)} />
-            ))}
+            ) : (
+              menNoRecharge.map((u) => (
+                <UserRow key={u.user_id} u={u} onClick={() => open(u.user_id, u.full_name)} />
+              ))
+            )}
           </div>
         </ScrollArea>
       </div>
@@ -252,9 +313,11 @@ export function AdminDirectoryChat({ showTl = true, defaultTab = 'online' }: Adm
           <div className="p-1.5 space-y-1">
             {women.length === 0 ? (
               <p className="text-center text-xs text-muted-foreground py-6">No matching women</p>
-            ) : women.map((u) => (
-              <UserRow key={u.user_id} u={u} onClick={() => open(u.user_id, u.full_name)} />
-            ))}
+            ) : (
+              women.map((u) => (
+                <UserRow key={u.user_id} u={u} onClick={() => open(u.user_id, u.full_name)} />
+              ))
+            )}
           </div>
         </ScrollArea>
       </div>
@@ -274,17 +337,29 @@ export function AdminDirectoryChat({ showTl = true, defaultTab = 'online' }: Adm
       </div>
 
       {loading && directory.length === 0 ? (
-        <div className="flex justify-center py-10"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>
+        <div className="flex justify-center py-10">
+          <Loader2 className="w-5 h-5 animate-spin text-primary" />
+        </div>
       ) : (
         <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
-          <TabsList className={`grid w-full ${showTl ? 'grid-cols-3' : 'grid-cols-2'}`}>
+          <TabsList className={`grid w-full ${showTl ? "grid-cols-3" : "grid-cols-2"}`}>
             <TabsTrigger value="online" className="text-xs">
-              Online <Badge variant="secondary" className="ml-1 text-[10px]">{directory.filter((d) => d.is_online).length}</Badge>
+              Online{" "}
+              <Badge variant="secondary" className="ml-1 text-[10px]">
+                {directory.filter((d) => d.is_online).length}
+              </Badge>
             </TabsTrigger>
             <TabsTrigger value="chats" className="text-xs">
-              Chats <Badge variant="secondary" className="ml-1 text-[10px]">{threads.length}</Badge>
+              Chats{" "}
+              <Badge variant="secondary" className="ml-1 text-[10px]">
+                {threads.length}
+              </Badge>
             </TabsTrigger>
-            {showTl && <TabsTrigger value="tl" className="text-xs">TL Comm</TabsTrigger>}
+            {showTl && (
+              <TabsTrigger value="tl" className="text-xs">
+                TL Comm
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="online" className="mt-3">
@@ -302,24 +377,37 @@ export function AdminDirectoryChat({ showTl = true, defaultTab = 'online' }: Adm
                     <p className="text-center text-xs text-muted-foreground py-6">
                       No threads yet. Use the lists below to chat with any user.
                     </p>
-                  ) : threads.filter((t) => matches(t.full_name)).map((t) => (
-                    <button key={t.user_id} onClick={() => open(t.user_id, t.full_name)}
-                      className="w-full flex items-start gap-3 px-3 py-2 rounded-lg hover:bg-muted/60 text-left">
-                      <div className="w-9 h-9 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
-                        <Users className="w-4 h-4 text-primary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="text-sm font-medium truncate">{t.full_name}</p>
-                          <span className="text-[10px] text-muted-foreground shrink-0">
-                            {new Date(t.last_time).toLocaleDateString()}
-                          </span>
-                        </div>
-                        <p className="text-xs text-muted-foreground truncate">{t.last_message}</p>
-                      </div>
-                      {t.unread > 0 && <Badge className="bg-primary text-primary-foreground border-0 text-[10px]">{t.unread}</Badge>}
-                    </button>
-                  ))}
+                  ) : (
+                    threads
+                      .filter((t) => matches(t.full_name))
+                      .map((t) => (
+                        <button
+                          key={t.user_id}
+                          onClick={() => open(t.user_id, t.full_name)}
+                          className="w-full flex items-start gap-3 px-3 py-2 rounded-lg hover:bg-muted/60 text-left"
+                        >
+                          <div className="w-9 h-9 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+                            <Users className="w-4 h-4 text-primary" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="text-sm font-medium truncate">{t.full_name}</p>
+                              <span className="text-[10px] text-muted-foreground shrink-0">
+                                {new Date(t.last_time).toLocaleDateString()}
+                              </span>
+                            </div>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {t.last_message}
+                            </p>
+                          </div>
+                          {t.unread > 0 && (
+                            <Badge className="bg-primary text-primary-foreground border-0 text-[10px]">
+                              {t.unread}
+                            </Badge>
+                          )}
+                        </button>
+                      ))
+                  )}
                 </div>
               </ScrollArea>
             </div>
@@ -332,7 +420,9 @@ export function AdminDirectoryChat({ showTl = true, defaultTab = 'online' }: Adm
                 {adminId ? (
                   <TLCommunicationTab currentUserId={adminId} userName="Admin" />
                 ) : (
-                  <div className="flex justify-center py-10"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>
+                  <div className="flex justify-center py-10">
+                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                  </div>
                 )}
               </div>
             </TabsContent>
@@ -342,9 +432,13 @@ export function AdminDirectoryChat({ showTl = true, defaultTab = 'online' }: Adm
 
       <Dialog open={!!active} onOpenChange={(v) => !v && setActive(null)}>
         <DialogContent className="sm:max-w-lg p-0 overflow-hidden">
-          <DialogTitle className="sr-only">Chat with {active?.name ?? 'user'}</DialogTitle>
+          <DialogTitle className="sr-only">Chat with {active?.name ?? "user"}</DialogTitle>
           {active && adminId && (
-            <AdminSideChat adminId={adminId} targetUserId={active.id} targetUserName={active.name} />
+            <AdminSideChat
+              adminId={adminId}
+              targetUserId={active.id}
+              targetUserName={active.name}
+            />
           )}
         </DialogContent>
       </Dialog>

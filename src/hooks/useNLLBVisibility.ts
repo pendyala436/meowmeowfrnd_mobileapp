@@ -26,27 +26,21 @@ interface VisibilityResult {
 
 export function filterWomenByNLLBRules(
   women: WomanProfile[],
-  manLanguage: string
+  manLanguage: string,
 ): VisibilityResult {
   const manHasIndianLanguage = isIndianLanguage(manLanguage);
 
-  const eligibleWomen = women.filter(woman =>
-    woman.isOnline && woman.aiVerified
-  );
+  const eligibleWomen = women.filter((woman) => woman.isOnline && woman.aiVerified);
 
   if (manHasIndianLanguage) {
-    const sameLanguageWomen = eligibleWomen.filter(woman =>
-      woman.motherTongue.toLowerCase() === manLanguage.toLowerCase()
+    const sameLanguageWomen = eligibleWomen.filter(
+      (woman) => woman.motherTongue.toLowerCase() === manLanguage.toLowerCase(),
     );
-    const indianWomen = eligibleWomen.filter(woman =>
-      isIndianLanguage(woman.motherTongue)
-    );
+    const indianWomen = eligibleWomen.filter((woman) => isIndianLanguage(woman.motherTongue));
     const visibleWomen = sameLanguageWomen.length > 0 ? sameLanguageWomen : indianWomen;
     return { visibleWomen, hiddenCount: women.length - visibleWomen.length };
   } else {
-    const indianWomen = eligibleWomen.filter(woman =>
-      isIndianLanguage(woman.motherTongue)
-    );
+    const indianWomen = eligibleWomen.filter((woman) => isIndianLanguage(woman.motherTongue));
     return { visibleWomen: indianWomen, hiddenCount: women.length - indianWomen.length };
   }
 }
@@ -55,7 +49,10 @@ export function shouldShowProfile(woman: WomanProfile, manLanguage: string): boo
   if (!woman.isOnline || !woman.aiVerified) return false;
   const manHasIndianLanguage = isIndianLanguage(manLanguage);
   if (manHasIndianLanguage) {
-    return woman.motherTongue.toLowerCase() === manLanguage.toLowerCase() || isIndianLanguage(woman.motherTongue);
+    return (
+      woman.motherTongue.toLowerCase() === manLanguage.toLowerCase() ||
+      isIndianLanguage(woman.motherTongue)
+    );
   }
   return isIndianLanguage(woman.motherTongue);
 }

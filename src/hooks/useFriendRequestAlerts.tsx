@@ -9,7 +9,7 @@ import { ToastAction } from "@/components/ui/toast";
 
 export function useFriendRequestAlerts(
   currentUserId: string | null,
-  options?: { onOpenFriends?: () => void }
+  options?: { onOpenFriends?: () => void },
 ) {
   const { toast } = useToast();
   const seenRef = useRef<Set<string>>(new Set());
@@ -49,10 +49,17 @@ export function useFriendRequestAlerts(
                 if (error) throw error;
                 const result = data as { success?: boolean; error?: string };
                 if (result && result.success === false) {
-                  toast({ title: "Could not accept", description: result.error, variant: "destructive" });
+                  toast({
+                    title: "Could not accept",
+                    description: result.error,
+                    variant: "destructive",
+                  });
                   return;
                 }
-                toast({ title: "Friend Added!", description: `You are now friends with ${fromName}.` });
+                toast({
+                  title: "Friend Added!",
+                  description: `You are now friends with ${fromName}.`,
+                });
               } catch (e: any) {
                 toast({
                   title: "Could not accept",
@@ -84,7 +91,7 @@ export function useFriendRequestAlerts(
           if (row?.status === "pending" && row.id && row.user_id) {
             void handleIncoming(row.id, row.user_id);
           }
-        }
+        },
       )
       .on(
         "postgres_changes",
@@ -112,7 +119,7 @@ export function useFriendRequestAlerts(
               ),
             });
           }
-        }
+        },
       )
       .subscribe();
 

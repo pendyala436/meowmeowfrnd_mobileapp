@@ -1,9 +1,9 @@
 /**
  * PinnedMessages.tsx - Displays pinned messages bar at top of chat
  */
-import { useState } from 'react';
-import { Pin, ChevronDown, ChevronUp, X } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useState } from "react";
+import { Pin, ChevronDown, ChevronUp, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface PinnedMessage {
   id: string;
@@ -17,11 +17,7 @@ interface PinnedMessagesProps {
   onUnpin?: (messageId: string) => void;
 }
 
-export const PinnedMessages = ({
-  messages,
-  onJumpToMessage,
-  onUnpin,
-}: PinnedMessagesProps) => {
+export const PinnedMessages = ({ messages, onJumpToMessage, onUnpin }: PinnedMessagesProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -53,14 +49,20 @@ export const PinnedMessages = ({
             </span>
             <div className="flex flex-col">
               <button
-                onClick={(e) => { e.stopPropagation(); setCurrentIndex(Math.max(0, currentIndex - 1)); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCurrentIndex(Math.max(0, currentIndex - 1));
+                }}
                 className="p-0.5 hover:bg-muted rounded"
                 disabled={currentIndex === 0}
               >
                 <ChevronUp className="h-3 w-3" />
               </button>
               <button
-                onClick={(e) => { e.stopPropagation(); setCurrentIndex(Math.min(messages.length - 1, currentIndex + 1)); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCurrentIndex(Math.min(messages.length - 1, currentIndex + 1));
+                }}
                 className="p-0.5 hover:bg-muted rounded"
                 disabled={currentIndex >= messages.length - 1}
               >
@@ -77,10 +79,13 @@ export const PinnedMessages = ({
             <div
               key={msg.id}
               className={cn(
-                'flex items-center gap-2 px-4 py-2 hover:bg-muted/50 cursor-pointer',
-                i === currentIndex && 'bg-primary/5'
+                "flex items-center gap-2 px-4 py-2 hover:bg-muted/50 cursor-pointer",
+                i === currentIndex && "bg-primary/5",
               )}
-              onClick={() => { setCurrentIndex(i); onJumpToMessage?.(msg.id); }}
+              onClick={() => {
+                setCurrentIndex(i);
+                onJumpToMessage?.(msg.id);
+              }}
             >
               <div className="flex-1 min-w-0">
                 <p className="text-[10px] font-semibold text-muted-foreground">{msg.senderName}</p>
@@ -88,7 +93,10 @@ export const PinnedMessages = ({
               </div>
               {onUnpin && (
                 <button
-                  onClick={(e) => { e.stopPropagation(); onUnpin(msg.id); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onUnpin(msg.id);
+                  }}
                   className="p-1 hover:bg-muted rounded"
                 >
                   <X className="h-3 w-3 text-muted-foreground" />

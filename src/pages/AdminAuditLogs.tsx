@@ -7,18 +7,31 @@ import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { 
-  ArrowLeft, 
-  Search, 
-  Download, 
+import {
+  ArrowLeft,
+  Search,
+  Download,
   RefreshCw,
   Calendar as CalendarIcon,
   Shield,
@@ -34,7 +47,7 @@ import {
   CheckCircle,
   XCircle,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
 } from "lucide-react";
 
 interface AuditLog {
@@ -114,13 +127,13 @@ const AdminAuditLogs = () => {
     } finally {
       setLoading(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Real-time subscription for audit logs
   useRealtimeSubscription({
     table: "audit_logs",
-    onUpdate: loadLogs
+    onUpdate: loadLogs,
   });
 
   useEffect(() => {
@@ -128,10 +141,11 @@ const AdminAuditLogs = () => {
   }, [loadLogs]);
 
   const filteredLogs = useMemo(() => {
-    return logs.filter(log => {
+    return logs.filter((log) => {
       // Search filter
       const searchLower = searchQuery.toLowerCase();
-      const matchesSearch = !searchQuery || 
+      const matchesSearch =
+        !searchQuery ||
         log.action.toLowerCase().includes(searchLower) ||
         log.admin_email?.toLowerCase().includes(searchLower) ||
         log.details?.toLowerCase().includes(searchLower) ||
@@ -141,7 +155,8 @@ const AdminAuditLogs = () => {
       const matchesActionType = actionTypeFilter === "all" || log.action_type === actionTypeFilter;
 
       // Resource type filter
-      const matchesResourceType = resourceTypeFilter === "all" || log.resource_type === resourceTypeFilter;
+      const matchesResourceType =
+        resourceTypeFilter === "all" || log.resource_type === resourceTypeFilter;
 
       // Status filter
       const matchesStatus = statusFilter === "all" || log.status === statusFilter;
@@ -151,7 +166,14 @@ const AdminAuditLogs = () => {
       const matchesDateFrom = !dateRange.from || logDate >= dateRange.from;
       const matchesDateTo = !dateRange.to || logDate <= new Date(dateRange.to.getTime() + 86400000);
 
-      return matchesSearch && matchesActionType && matchesResourceType && matchesStatus && matchesDateFrom && matchesDateTo;
+      return (
+        matchesSearch &&
+        matchesActionType &&
+        matchesResourceType &&
+        matchesStatus &&
+        matchesDateFrom &&
+        matchesDateTo
+      );
     });
   }, [logs, searchQuery, actionTypeFilter, resourceTypeFilter, statusFilter, dateRange]);
 
@@ -162,12 +184,12 @@ const AdminAuditLogs = () => {
 
   const totalPages = Math.ceil(filteredLogs.length / itemsPerPage);
 
-  const uniqueActionTypes = [...new Set(logs.map(l => l.action_type))];
-  const uniqueResourceTypes = [...new Set(logs.map(l => l.resource_type))];
+  const uniqueActionTypes = [...new Set(logs.map((l) => l.action_type))];
+  const uniqueResourceTypes = [...new Set(logs.map((l) => l.resource_type))];
 
   const exportCSV = () => {
     const headers = ["Timestamp", "Admin", "Action", "Type", "Resource", "Details", "Status"];
-    const rows = filteredLogs.map(log => [
+    const rows = filteredLogs.map((log) => [
       new Date(log.created_at).toISOString(),
       log.admin_email || log.admin_id,
       log.action,
@@ -178,7 +200,7 @@ const AdminAuditLogs = () => {
     ]);
 
     const csvContent = [headers, ...rows]
-      .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+      .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
       .join("\n");
 
     const blob = new Blob([csvContent], { type: "text/csv" });
@@ -189,7 +211,9 @@ const AdminAuditLogs = () => {
     link.click();
     URL.revokeObjectURL(url);
 
-    toast.success("Export complete", { description: `Exported ${filteredLogs.length} log entries` });
+    toast.success("Export complete", {
+      description: `Exported ${filteredLogs.length} log entries`,
+    });
   };
 
   const clearFilters = () => {
@@ -201,7 +225,13 @@ const AdminAuditLogs = () => {
     setCurrentPage(1);
   };
 
-  const hasActiveFilters = searchQuery || actionTypeFilter !== "all" || resourceTypeFilter !== "all" || statusFilter !== "all" || dateRange.from || dateRange.to;
+  const hasActiveFilters =
+    searchQuery ||
+    actionTypeFilter !== "all" ||
+    resourceTypeFilter !== "all" ||
+    statusFilter !== "all" ||
+    dateRange.from ||
+    dateRange.to;
 
   if (adminLoading || !isAdmin) {
     return (
@@ -213,9 +243,11 @@ const AdminAuditLogs = () => {
 
   if (loading) {
     return (
-      <AdminNav><div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent" />
-      </div></AdminNav>
+      <AdminNav>
+        <div className="flex items-center justify-center py-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent" />
+        </div>
+      </AdminNav>
     );
   }
 
@@ -250,19 +282,19 @@ const AdminAuditLogs = () => {
           </Card>
           <Card className="p-4">
             <div className="text-2xl font-bold text-primary">
-              {logs.filter(l => l.status === "success").length}
+              {logs.filter((l) => l.status === "success").length}
             </div>
             <div className="text-sm text-muted-foreground">Successful</div>
           </Card>
           <Card className="p-4">
             <div className="text-2xl font-bold text-destructive">
-              {logs.filter(l => l.status === "failed").length}
+              {logs.filter((l) => l.status === "failed").length}
             </div>
             <div className="text-sm text-muted-foreground">Failed</div>
           </Card>
           <Card className="p-4">
             <div className="text-2xl font-bold text-foreground">
-              {new Set(logs.map(l => l.admin_email)).size}
+              {new Set(logs.map((l) => l.admin_email)).size}
             </div>
             <div className="text-sm text-muted-foreground">Active Admins</div>
           </Card>
@@ -275,7 +307,12 @@ const AdminAuditLogs = () => {
               <Filter className="h-4 w-4 text-primary" />
               Filters
               {hasActiveFilters && (
-                <Button variant="ghost" size="sm" onClick={clearFilters} className="ml-auto text-xs">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearFilters}
+                  className="ml-auto text-xs"
+                >
                   Clear all
                 </Button>
               )}
@@ -298,33 +335,55 @@ const AdminAuditLogs = () => {
               </div>
 
               {/* Action Type Filter */}
-              <Select value={actionTypeFilter} onValueChange={(v) => { setActionTypeFilter(v); setCurrentPage(1); }}>
+              <Select
+                value={actionTypeFilter}
+                onValueChange={(v) => {
+                  setActionTypeFilter(v);
+                  setCurrentPage(1);
+                }}
+              >
                 <SelectTrigger className="bg-background">
                   <SelectValue placeholder="Action Type" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover border border-border z-50">
                   <SelectItem value="all">All Types</SelectItem>
-                  {uniqueActionTypes.map(type => (
-                    <SelectItem key={type} value={type} className="capitalize">{type}</SelectItem>
+                  {uniqueActionTypes.map((type) => (
+                    <SelectItem key={type} value={type} className="capitalize">
+                      {type}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
 
               {/* Resource Type Filter */}
-              <Select value={resourceTypeFilter} onValueChange={(v) => { setResourceTypeFilter(v); setCurrentPage(1); }}>
+              <Select
+                value={resourceTypeFilter}
+                onValueChange={(v) => {
+                  setResourceTypeFilter(v);
+                  setCurrentPage(1);
+                }}
+              >
                 <SelectTrigger className="bg-background">
                   <SelectValue placeholder="Resource" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover border border-border z-50">
                   <SelectItem value="all">All Resources</SelectItem>
-                  {uniqueResourceTypes.map(type => (
-                    <SelectItem key={type} value={type} className="capitalize">{type}</SelectItem>
+                  {uniqueResourceTypes.map((type) => (
+                    <SelectItem key={type} value={type} className="capitalize">
+                      {type}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
 
               {/* Status Filter */}
-              <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setCurrentPage(1); }}>
+              <Select
+                value={statusFilter}
+                onValueChange={(v) => {
+                  setStatusFilter(v);
+                  setCurrentPage(1);
+                }}
+              >
                 <SelectTrigger className="bg-background">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
@@ -345,11 +404,14 @@ const AdminAuditLogs = () => {
                     {dateRange.from ? format(dateRange.from, "MMM dd, yyyy") : "Start Date"}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 bg-popover border border-border z-50" align="start">
+                <PopoverContent
+                  className="w-auto p-0 bg-popover border border-border z-50"
+                  align="start"
+                >
                   <Calendar
                     mode="single"
                     selected={dateRange.from}
-                    onSelect={(date) => setDateRange(prev => ({ ...prev, from: date }))}
+                    onSelect={(date) => setDateRange((prev) => ({ ...prev, from: date }))}
                     initialFocus
                   />
                 </PopoverContent>
@@ -362,20 +424,23 @@ const AdminAuditLogs = () => {
                     {dateRange.to ? format(dateRange.to, "MMM dd, yyyy") : "End Date"}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 bg-popover border border-border z-50" align="start">
+                <PopoverContent
+                  className="w-auto p-0 bg-popover border border-border z-50"
+                  align="start"
+                >
                   <Calendar
                     mode="single"
                     selected={dateRange.to}
-                    onSelect={(date) => setDateRange(prev => ({ ...prev, to: date }))}
+                    onSelect={(date) => setDateRange((prev) => ({ ...prev, to: date }))}
                     initialFocus
                   />
                 </PopoverContent>
               </Popover>
 
               {(dateRange.from || dateRange.to) && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setDateRange({ from: undefined, to: undefined })}
                 >
                   Clear dates
@@ -397,90 +462,96 @@ const AdminAuditLogs = () => {
           <CardContent className="p-0">
             <ScrollArea className="h-[500px]">
               <div className="min-w-[800px]">
-              <Table>
-                <TableHeader className="sticky top-0 bg-background z-10">
-                  <TableRow>
-                    <TableHead className="w-[180px]">Timestamp</TableHead>
-                    <TableHead>Admin</TableHead>
-                    <TableHead>Action</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Resource</TableHead>
-                    <TableHead className="min-w-[200px]">Details</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {paginatedLogs.map((log, index) => {
-                    const ActionIcon = ACTION_TYPE_ICONS[log.action_type] || Edit;
-                    const ResourceIcon = RESOURCE_TYPE_ICONS[log.resource_type] || FileText;
-                    
-                    return (
-                      <TableRow 
-                        key={log.id}
-                        className="animate-in fade-in slide-in-from-left-2"
-                        style={{ animationDelay: `${index * 20}ms` }}
-                      >
-                        <TableCell className="font-mono text-xs text-muted-foreground">
-                          {format(new Date(log.created_at), "MMM dd, yyyy")}
-                          <br />
-                          {format(new Date(log.created_at), "HH:mm:ss")}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center">
-                              <User className="h-3.5 w-3.5 text-primary" />
+                <Table>
+                  <TableHeader className="sticky top-0 bg-background z-10">
+                    <TableRow>
+                      <TableHead className="w-[180px]">Timestamp</TableHead>
+                      <TableHead>Admin</TableHead>
+                      <TableHead>Action</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Resource</TableHead>
+                      <TableHead className="min-w-[200px]">Details</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedLogs.map((log, index) => {
+                      const ActionIcon = ACTION_TYPE_ICONS[log.action_type] || Edit;
+                      const ResourceIcon = RESOURCE_TYPE_ICONS[log.resource_type] || FileText;
+
+                      return (
+                        <TableRow
+                          key={log.id}
+                          className="animate-in fade-in slide-in-from-left-2"
+                          style={{ animationDelay: `${index * 20}ms` }}
+                        >
+                          <TableCell className="font-mono text-xs text-muted-foreground">
+                            {format(new Date(log.created_at), "MMM dd, yyyy")}
+                            <br />
+                            {format(new Date(log.created_at), "HH:mm:ss")}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center">
+                                <User className="h-3.5 w-3.5 text-primary" />
+                              </div>
+                              <span className="text-sm truncate max-w-[120px]">
+                                {log.admin_email || "System"}
+                              </span>
                             </div>
-                            <span className="text-sm truncate max-w-[120px]">
-                              {log.admin_email || "System"}
+                          </TableCell>
+                          <TableCell className="font-medium text-foreground">
+                            {log.action}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant="outline"
+                              className={`gap-1 ${ACTION_TYPE_COLORS[log.action_type] || ACTION_TYPE_COLORS.view}`}
+                            >
+                              <ActionIcon className="h-3 w-3" />
+                              {log.action_type}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1.5">
+                              <ResourceIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                              <span className="capitalize text-sm">{log.resource_type}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-sm text-muted-foreground line-clamp-2">
+                              {log.details || "-"}
                             </span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="font-medium text-foreground">
-                          {log.action}
-                        </TableCell>
-                        <TableCell>
-                          <Badge 
-                            variant="outline" 
-                            className={`gap-1 ${ACTION_TYPE_COLORS[log.action_type] || ACTION_TYPE_COLORS.view}`}
-                          >
-                            <ActionIcon className="h-3 w-3" />
-                            {log.action_type}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1.5">
-                            <ResourceIcon className="h-3.5 w-3.5 text-muted-foreground" />
-                            <span className="capitalize text-sm">{log.resource_type}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-sm text-muted-foreground line-clamp-2">
-                            {log.details || "-"}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          {log.status === "success" ? (
-                            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 gap-1">
-                              <CheckCircle className="h-3 w-3" />
-                              Success
-                            </Badge>
-                          ) : log.status === "failed" ? (
-                            <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 gap-1">
-                              <XCircle className="h-3 w-3" />
-                              Failed
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="gap-1">
-                              <AlertTriangle className="h-3 w-3" />
-                              {log.status}
-                            </Badge>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+                          </TableCell>
+                          <TableCell>
+                            {log.status === "success" ? (
+                              <Badge
+                                variant="outline"
+                                className="bg-primary/10 text-primary border-primary/20 gap-1"
+                              >
+                                <CheckCircle className="h-3 w-3" />
+                                Success
+                              </Badge>
+                            ) : log.status === "failed" ? (
+                              <Badge
+                                variant="outline"
+                                className="bg-destructive/10 text-destructive border-destructive/20 gap-1"
+                              >
+                                <XCircle className="h-3 w-3" />
+                                Failed
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="gap-1">
+                                <AlertTriangle className="h-3 w-3" />
+                                {log.status}
+                              </Badge>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
               </div>
               {paginatedLogs.length === 0 && (
                 <div className="text-center py-12 text-muted-foreground">
@@ -500,7 +571,7 @@ const AdminAuditLogs = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
                   >
                     <ChevronLeft className="h-4 w-4" />
@@ -508,7 +579,7 @@ const AdminAuditLogs = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
                   >
                     <ChevronRight className="h-4 w-4" />

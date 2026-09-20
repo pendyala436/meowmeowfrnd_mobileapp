@@ -12,7 +12,12 @@ import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -142,7 +147,9 @@ export default function AdminUserAccessPanel() {
     const action = enable ? "enabled" : "disabled";
 
     try {
-      const { data: { user: admin } } = await supabase.auth.getUser();
+      const {
+        data: { user: admin },
+      } = await supabase.auth.getUser();
       if (!admin) throw new Error("Not authenticated");
 
       const { error } = await supabase
@@ -184,7 +191,7 @@ export default function AdminUserAccessPanel() {
 
       toast.success(`User ${action}`);
       setUsers((prev) =>
-        prev.map((u) => (u.id === user.id ? { ...u, account_status: nextStatus } : u))
+        prev.map((u) => (u.id === user.id ? { ...u, account_status: nextStatus } : u)),
       );
       void loadHistory();
     } catch (err: any) {
@@ -365,9 +372,13 @@ export default function AdminUserAccessPanel() {
                             </TableCell>
                             <TableCell>
                               {row.action === "enabled" ? (
-                                <Badge className="bg-green-600/20 text-green-700 border-0">Enabled</Badge>
+                                <Badge className="bg-green-600/20 text-green-700 border-0">
+                                  Enabled
+                                </Badge>
                               ) : (
-                                <Badge className="bg-destructive/15 text-destructive border-0">Disabled</Badge>
+                                <Badge className="bg-destructive/15 text-destructive border-0">
+                                  Disabled
+                                </Badge>
                               )}
                             </TableCell>
                             <TableCell className="text-xs text-muted-foreground">

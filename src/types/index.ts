@@ -1,9 +1,9 @@
 /**
  * Shared Frontend Types
- * 
+ *
  * This file contains all shared TypeScript interfaces and types
  * used across the frontend application.
- * 
+ *
  * Note: Database types are auto-generated in src/integrations/supabase/types.ts
  * This file is for frontend-specific types and transformed data structures.
  */
@@ -14,7 +14,7 @@ export interface User {
   id: string;
   email: string | null;
   fullName: string | null;
-  gender: 'male' | 'female' | null;
+  gender: "male" | "female" | null;
   age: number | null;
   photoUrl: string | null;
   country: string | null;
@@ -33,8 +33,8 @@ export interface UserProfile extends User {
   heightCm: number | null;
   bodyType: string | null;
   languages: string[];
-  accountStatus: 'active' | 'suspended' | 'banned';
-  approvalStatus: 'pending' | 'approved' | 'rejected';
+  accountStatus: "active" | "suspended" | "banned";
+  approvalStatus: "pending" | "approved" | "rejected";
   createdAt: Date;
 }
 
@@ -57,7 +57,7 @@ export interface ChatSession {
   partnerId: string;
   partnerName: string;
   partnerPhotoUrl: string | null;
-  status: 'active' | 'ended';
+  status: "active" | "ended";
   lastMessage: string | null;
   lastMessageAt: Date | null;
   unreadCount: number;
@@ -73,10 +73,10 @@ export interface WalletBalance {
 
 export interface Transaction {
   id: string;
-  type: 'credit' | 'debit';
+  type: "credit" | "debit";
   amount: number;
   description: string | null;
-  status: 'pending' | 'completed' | 'failed';
+  status: "pending" | "completed" | "failed";
   createdAt: Date;
 }
 
@@ -87,7 +87,7 @@ export interface Match {
   userId: string;
   matchedUserId: string;
   matchScore: number;
-  status: 'pending' | 'accepted' | 'rejected';
+  status: "pending" | "accepted" | "rejected";
   createdAt: Date;
 }
 
@@ -113,7 +113,7 @@ export interface AdminMetrics {
 // ============= Settings Types =============
 
 export interface UserSettings {
-  theme: 'light' | 'dark' | 'system';
+  theme: "light" | "dark" | "system";
   language: string;
   autoTranslate: boolean;
   notificationSound: boolean;
@@ -124,7 +124,7 @@ export interface UserSettings {
 
 // ============= Platform Types =============
 
-export type Platform = 'web' | 'ios' | 'android' | 'desktop';
+export type Platform = "web" | "ios" | "android" | "desktop";
 
 export interface DeviceInfo {
   platform: Platform;
@@ -154,7 +154,7 @@ export interface VideoCallSession {
   callId: string;
   partnerId: string;
   partnerName: string;
-  status: 'ringing' | 'active' | 'ended';
+  status: "ringing" | "active" | "ended";
   startedAt: Date | null;
   endedAt: Date | null;
   totalMinutes: number;
@@ -164,7 +164,7 @@ export interface VideoCallSession {
 
 export interface Notification {
   id: string;
-  type: 'message' | 'match' | 'gift' | 'system';
+  type: "message" | "match" | "gift" | "system";
   title: string;
   message: string;
   isRead: boolean;

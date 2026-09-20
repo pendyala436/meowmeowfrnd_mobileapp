@@ -7,7 +7,11 @@ import { useFaceVerification, GENDER_SUCCESS_MIN } from "@/hooks/useFaceVerifica
 import { supabase } from "@/integrations/supabase/client";
 import { Camera, Check, X, Loader2, Sparkles, ScanFace, Sun, ImageIcon } from "lucide-react";
 import MeowLogo from "@/components/MeowLogo";
-import { markGenderVerified, clearRoleCache, LOGIN_GENDER_VERIFY_ENABLED } from "@/components/ProtectedRoute";
+import {
+  markGenderVerified,
+  clearRoleCache,
+  LOGIN_GENDER_VERIFY_ENABLED,
+} from "@/components/ProtectedRoute";
 
 const AuroraBackground = lazy(() => import("@/components/AuroraBackground"));
 
@@ -68,7 +72,9 @@ const GenderVerifyScreen = () => {
       const g = profile?.gender?.toLowerCase();
       if (g === "male" || g === "female") setDeclared(g);
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [navigate]);
 
   useEffect(() => {
@@ -78,7 +84,9 @@ const GenderVerifyScreen = () => {
   }, [stream, showCamera]);
 
   useEffect(() => {
-    return () => { stream?.getTracks().forEach((t) => t.stop()); };
+    return () => {
+      stream?.getTracks().forEach((t) => t.stop());
+    };
   }, [stream]);
 
   const startCamera = async () => {
@@ -112,18 +120,22 @@ const GenderVerifyScreen = () => {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     ctx.drawImage(video, 0, 0);
-    canvas.toBlob((blob) => {
-      if (!blob) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        setPreview(reader.result as string);
-        setState("idle");
-        setDetected(null);
-        setReason(null);
-        stopCamera();
-      };
-      reader.readAsDataURL(blob);
-    }, "image/jpeg", 0.9);
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          setPreview(reader.result as string);
+          setState("idle");
+          setDetected(null);
+          setReason(null);
+          stopCamera();
+        };
+        reader.readAsDataURL(blob);
+      },
+      "image/jpeg",
+      0.9,
+    );
   };
 
   const runVerify = async () => {
@@ -138,21 +150,27 @@ const GenderVerifyScreen = () => {
     }
     if (result.detectedGender !== "male" && result.detectedGender !== "female") {
       setState("failed");
-      setReason("Could not read gender from this photo. Try again with more light, facing the camera.");
+      setReason(
+        "Could not read gender from this photo. Try again with more light, facing the camera.",
+      );
       return;
     }
     if (declared === "female" && result.detectedGender === "male") {
       setState("failed");
       setDetected(result.detectedGender);
       setConfidence(result.confidence);
-      setReason("Photo read as male — please retake with good lighting, facing the camera. Your Women dashboard is unchanged.");
+      setReason(
+        "Photo read as male — please retake with good lighting, facing the camera. Your Women dashboard is unchanged.",
+      );
       return;
     }
     if (result.confidence < MIN_CONFIDENCE) {
       setState("failed");
       setDetected(result.detectedGender);
       setConfidence(result.confidence);
-      setReason(`Low confidence (${Math.round(result.confidence * 100)}%). Retake the photo — we will not change your dashboard on a weak match.`);
+      setReason(
+        `Low confidence (${Math.round(result.confidence * 100)}%). Retake the photo — we will not change your dashboard on a weak match.`,
+      );
       return;
     }
     setDetected(result.detectedGender);
@@ -162,11 +180,20 @@ const GenderVerifyScreen = () => {
   };
 
   const continueAfterVerify = async () => {
-    if (!userId || !detected || (detected !== "male" && detected !== "female") || state !== "verified") return;
+    if (
+      !userId ||
+      !detected ||
+      (detected !== "male" && detected !== "female") ||
+      state !== "verified"
+    )
+      return;
     setSaving(true);
     try {
       if (declared !== detected) {
-        const { error } = await supabase.from("profiles").update({ gender: detected }).eq("user_id", userId);
+        const { error } = await supabase
+          .from("profiles")
+          .update({ gender: detected })
+          .eq("user_id", userId);
         if (error) throw error;
         sessionStorage.setItem("userGender", detected);
         const dest = detected === "female" ? "/women-dashboard" : "/dashboard";
@@ -176,7 +203,10 @@ const GenderVerifyScreen = () => {
           description: `Detected ${detected}. You will open the ${detected === "female" ? "Women" : "Men"}'s dashboard.`,
         });
       } else if (!sessionStorage.getItem("postCaptchaRedirect")) {
-        sessionStorage.setItem("postCaptchaRedirect", detected === "female" ? "/women-dashboard" : "/dashboard");
+        sessionStorage.setItem(
+          "postCaptchaRedirect",
+          detected === "female" ? "/women-dashboard" : "/dashboard",
+        );
       }
       markGenderVerified(userId);
       clearRoleCache();
@@ -194,23 +224,43 @@ const GenderVerifyScreen = () => {
 
   return (
     <div className="min-h-screen flex flex-col relative bg-background text-foreground w-full max-w-full overflow-x-hidden">
-      <Suspense fallback={<div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background to-secondary/30" />}>
+      <Suspense
+        fallback={
+          <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background to-secondary/30" />
+        }
+      >
         <AuroraBackground />
       </Suspense>
 
-      <header data-app-header className="px-4 pt-3 pb-2 sm:px-6 sm:pt-6 sm:pb-3 relative z-10 shrink-0">
+      <header
+        data-app-header
+        className="px-4 pt-3 pb-2 sm:px-6 sm:pt-6 sm:pb-3 relative z-10 shrink-0"
+      >
         <div className="text-center">
           <MeowLogo size="sm" className="mx-auto mb-1 sm:mb-2 sm:hidden" />
           <MeowLogo size="md" className="mx-auto mb-2 hidden sm:block" />
-          <h1 className="font-display text-xl sm:text-3xl font-bold text-primary mb-0.5">Gender check</h1>
-          <p className="text-primary/80 text-xs sm:text-sm">A live photo decides Men or Women dashboard</p>
+          <h1 className="font-display text-xl sm:text-3xl font-bold text-primary mb-0.5">
+            Gender check
+          </h1>
+          <p className="text-primary/80 text-xs sm:text-sm">
+            A live photo decides Men or Women dashboard
+          </p>
         </div>
       </header>
 
-      <main data-app-body className="flex-1 flex flex-col items-center px-4 pb-6 relative z-10 w-full min-h-0 overflow-y-auto overscroll-contain">
+      <main
+        data-app-body
+        className="flex-1 flex flex-col items-center px-4 pb-6 relative z-10 w-full min-h-0 overflow-y-auto overscroll-contain"
+      >
         {showCamera && (
           <div className="fixed inset-0 z-50 bg-background/95 flex flex-col items-center justify-center p-4 overflow-y-auto">
-            <video ref={videoRef} autoPlay playsInline muted className="max-w-full max-h-[45vh] rounded-2xl border-2 border-primary/20" />
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className="max-w-full max-h-[45vh] rounded-2xl border-2 border-primary/20"
+            />
             <ul className="mt-3 space-y-1.5 text-sm text-white/90 max-w-sm w-full list-none">
               <li className="flex items-start gap-2">
                 <Sun className="h-4 w-4 shrink-0 mt-0.5 text-white" />
@@ -226,8 +276,13 @@ const GenderVerifyScreen = () => {
               </li>
             </ul>
             <div className="flex gap-4 mt-4 shrink-0">
-              <Button variant="outline" onClick={stopCamera}>Cancel</Button>
-              <Button onClick={capturePhoto} className="gap-2"><Camera className="h-4 w-4" />Take photo</Button>
+              <Button variant="outline" onClick={stopCamera}>
+                Cancel
+              </Button>
+              <Button onClick={capturePhoto} className="gap-2">
+                <Camera className="h-4 w-4" />
+                Take photo
+              </Button>
             </div>
           </div>
         )}
@@ -239,9 +294,13 @@ const GenderVerifyScreen = () => {
               <ScanFace className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
             </div>
             <p className="text-sm text-muted-foreground">
-              {declared ? `Profile says ${declared}. The photo result wins if it is confident.` : "Take a selfie so we can route you to the right dashboard."}
+              {declared
+                ? `Profile says ${declared}. The photo result wins if it is confident.`
+                : "Take a selfie so we can route you to the right dashboard."}
             </p>
-            {isLoadingModel && <p className="text-xs text-muted-foreground mt-1">Loading face model…</p>}
+            {isLoadingModel && (
+              <p className="text-xs text-muted-foreground mt-1">Loading face model…</p>
+            )}
           </div>
 
           {/* Tips only before capture — keeps Retake / Verify visible after photo */}
@@ -251,25 +310,40 @@ const GenderVerifyScreen = () => {
               <ul className="space-y-1.5 text-xs text-white/85">
                 <li className="flex items-start gap-2">
                   <Sun className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                  <span><span className="font-medium text-white">Lighting:</span> Face a window or lamp so light is even on both sides of your face. Avoid dark rooms and strong backlight.</span>
+                  <span>
+                    <span className="font-medium text-white">Lighting:</span> Face a window or lamp
+                    so light is even on both sides of your face. Avoid dark rooms and strong
+                    backlight.
+                  </span>
                 </li>
                 <li className="flex items-start gap-2">
                   <ImageIcon className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                  <span><span className="font-medium text-white">Background:</span> Use a plain wall or simple background — no busy patterns, posters, or other people behind you.</span>
+                  <span>
+                    <span className="font-medium text-white">Background:</span> Use a plain wall or
+                    simple background — no busy patterns, posters, or other people behind you.
+                  </span>
                 </li>
               </ul>
             </div>
           )}
 
           {!preview ? (
-            <Button variant="outline" className="w-full h-28 sm:h-32 border-dashed border-2 flex-col gap-2" onClick={startCamera}>
+            <Button
+              variant="outline"
+              className="w-full h-28 sm:h-32 border-dashed border-2 flex-col gap-2"
+              onClick={startCamera}
+            >
               <Camera className="h-8 w-8 text-primary" />
               <span>Open camera</span>
             </Button>
           ) : (
             <div className="space-y-3">
               <div className="relative rounded-xl overflow-hidden mx-auto w-40 h-40 sm:w-44 sm:h-44 bg-muted">
-                <img src={preview} alt="Gender verification selfie" className="w-full h-full object-cover" />
+                <img
+                  src={preview}
+                  alt="Gender verification selfie"
+                  className="w-full h-full object-cover"
+                />
                 {state === "verifying" && (
                   <div className="absolute inset-0 bg-background/80 flex flex-col items-center justify-center gap-2">
                     <Loader2 className="h-8 w-8 text-primary animate-spin" />
@@ -278,10 +352,14 @@ const GenderVerifyScreen = () => {
                   </div>
                 )}
                 {state === "verified" && (
-                  <div className="absolute top-2 right-2 bg-green-500 text-white rounded-full p-1.5"><Check className="h-4 w-4" /></div>
+                  <div className="absolute top-2 right-2 bg-green-500 text-white rounded-full p-1.5">
+                    <Check className="h-4 w-4" />
+                  </div>
                 )}
                 {state === "failed" && (
-                  <div className="absolute top-2 right-2 bg-destructive text-white rounded-full p-1.5"><X className="h-4 w-4" /></div>
+                  <div className="absolute top-2 right-2 bg-destructive text-white rounded-full p-1.5">
+                    <X className="h-4 w-4" />
+                  </div>
                 )}
               </div>
               {detected && (
@@ -292,15 +370,36 @@ const GenderVerifyScreen = () => {
               )}
               {reason && <p className="text-xs text-center text-muted-foreground">{reason}</p>}
               <div className="sticky bottom-0 z-10 flex gap-2 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] bg-card/95 backdrop-blur-sm">
-                <Button variant="outline" className="flex-1" onClick={() => { setPreview(null); setState("idle"); setDetected(null); setReason(null); }}>
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => {
+                    setPreview(null);
+                    setState("idle");
+                    setDetected(null);
+                    setReason(null);
+                  }}
+                >
                   Retake
                 </Button>
                 {state !== "verified" ? (
-                  <Button className="flex-1" onClick={() => void runVerify()} disabled={state === "verifying" || isLoadingModel}>
-                    {state === "verifying" ? <Loader2 className="w-4 h-4 animate-spin" /> : "Verify photo"}
+                  <Button
+                    className="flex-1"
+                    onClick={() => void runVerify()}
+                    disabled={state === "verifying" || isLoadingModel}
+                  >
+                    {state === "verifying" ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      "Verify photo"
+                    )}
                   </Button>
                 ) : (
-                  <Button className="flex-1" onClick={() => void continueAfterVerify()} disabled={saving}>
+                  <Button
+                    className="flex-1"
+                    onClick={() => void continueAfterVerify()}
+                    disabled={saving}
+                  >
                     {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Continue"}
                   </Button>
                 )}

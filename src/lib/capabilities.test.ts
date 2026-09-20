@@ -1,9 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import {
-  supportsWebRTC,
-  supportsBackdropFilter,
-  isSecureContext,
-} from "./capabilities";
+import { supportsWebRTC, supportsBackdropFilter, isSecureContext } from "./capabilities";
 
 describe("supportsWebRTC", () => {
   afterEach(() => {

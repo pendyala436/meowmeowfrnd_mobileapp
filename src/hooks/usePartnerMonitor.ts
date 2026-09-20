@@ -52,7 +52,11 @@ export const usePartnerMonitor = ({
             }
 
             let message = "Chat session ended";
-            if (session.end_reason === "user_closed" || session.end_reason === "man_closed" || session.end_reason === "woman_closed") {
+            if (
+              session.end_reason === "user_closed" ||
+              session.end_reason === "man_closed" ||
+              session.end_reason === "woman_closed"
+            ) {
               message = `${partnerName} ended the chat`;
             } else if (session.end_reason === "inactivity_timeout") {
               message = "Chat ended due to inactivity";
@@ -71,7 +75,7 @@ export const usePartnerMonitor = ({
 
             onClose();
           }
-        }
+        },
       )
       .subscribe();
 

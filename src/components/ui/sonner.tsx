@@ -4,7 +4,10 @@ type ToasterProps = React.ComponentProps<typeof Sonner>;
 
 const Toaster = ({ ...props }: ToasterProps) => {
   // Detect system theme preference
-  const theme = typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  const theme =
+    typeof window !== "undefined" && window.matchMedia?.("(prefers-color-scheme: dark)").matches
+      ? "dark"
+      : "light";
 
   return (
     <Sonner

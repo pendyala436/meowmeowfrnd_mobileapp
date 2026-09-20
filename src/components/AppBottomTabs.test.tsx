@@ -1,10 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import {
-  AppBottomTabs,
-  getMenTabs,
-  getWomenTabs,
-} from "./AppBottomTabs";
+import { AppBottomTabs, getMenTabs, getWomenTabs } from "./AppBottomTabs";
 
 describe("getMenTabs", () => {
   it("returns expected tab ids with defaults", () => {
@@ -47,9 +43,7 @@ describe("getWomenTabs", () => {
 describe("AppBottomTabs", () => {
   it("renders all tab labels", () => {
     const tabs = getMenTabs();
-    render(
-      <AppBottomTabs tabs={tabs} activeTab="online" onTabChange={vi.fn()} />,
-    );
+    render(<AppBottomTabs tabs={tabs} activeTab="online" onTabChange={vi.fn()} />);
     expect(screen.getByText("Online")).toBeInTheDocument();
     expect(screen.getByText("Wallet")).toBeInTheDocument();
   });
@@ -57,26 +51,20 @@ describe("AppBottomTabs", () => {
   it("calls onTabChange when a tab is clicked", () => {
     const onTabChange = vi.fn();
     const tabs = getMenTabs();
-    render(
-      <AppBottomTabs tabs={tabs} activeTab="online" onTabChange={onTabChange} />,
-    );
+    render(<AppBottomTabs tabs={tabs} activeTab="online" onTabChange={onTabChange} />);
     fireEvent.click(screen.getByText("Wallet"));
     expect(onTabChange).toHaveBeenCalledWith("wallet");
   });
 
   it("shows badge overflow as 99+", () => {
     const tabs = [{ id: "online", label: "Online", icon: <span>icon</span>, badge: 120 }];
-    render(
-      <AppBottomTabs tabs={tabs} activeTab="online" onTabChange={vi.fn()} />,
-    );
+    render(<AppBottomTabs tabs={tabs} activeTab="online" onTabChange={vi.fn()} />);
     expect(screen.getByText("99+")).toBeInTheDocument();
   });
 
   it("shows exact badge count under 100", () => {
     const tabs = [{ id: "online", label: "Online", icon: <span>icon</span>, badge: 7 }];
-    render(
-      <AppBottomTabs tabs={tabs} activeTab="other" onTabChange={vi.fn()} />,
-    );
+    render(<AppBottomTabs tabs={tabs} activeTab="other" onTabChange={vi.fn()} />);
     expect(screen.getByText("7")).toBeInTheDocument();
   });
 
@@ -85,9 +73,7 @@ describe("AppBottomTabs", () => {
       { id: "a", label: "A", icon: <span>i</span>, badge: 0 },
       { id: "b", label: "B", icon: <span>i</span> },
     ];
-    const { container } = render(
-      <AppBottomTabs tabs={tabs} activeTab="a" onTabChange={vi.fn()} />,
-    );
+    const { container } = render(<AppBottomTabs tabs={tabs} activeTab="a" onTabChange={vi.fn()} />);
     expect(container.querySelector(".bg-primary.text-primary-foreground")).toBeNull();
   });
 });

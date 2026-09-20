@@ -1,9 +1,9 @@
 /**
  * use-mobile.tsx
- * 
+ *
  * PURPOSE: Detect mobile viewport using dynamic breakpoint from settings.
  * Loads breakpoint from app_settings table for configurability.
- * 
+ *
  * DYNAMIC CONFIGURATION:
  * - Breakpoint loaded from database on mount
  * - Falls back to default if database unavailable
@@ -29,7 +29,7 @@ export function useIsMobile() {
           .select("setting_value")
           .eq("setting_key", "mobile_breakpoint")
           .maybeSingle();
-        
+
         if (data?.setting_value) {
           const value = parseInt(String(data.setting_value));
           if (!isNaN(value) && value > 0) {
@@ -40,7 +40,7 @@ export function useIsMobile() {
         console.warn("Failed to fetch mobile breakpoint, using default:", error);
       }
     };
-    
+
     fetchBreakpoint();
   }, []);
 
@@ -56,10 +56,10 @@ export function useIsMobile() {
     // Listen for resize
     const mql = window.matchMedia(`(max-width: ${mobileBreakpoint - 1}px)`);
     const onChange = () => checkMobile();
-    
+
     mql.addEventListener("change", onChange);
     window.addEventListener("resize", checkMobile);
-    
+
     return () => {
       mql.removeEventListener("change", onChange);
       window.removeEventListener("resize", checkMobile);

@@ -1,6 +1,6 @@
 /**
  * Centralized Input Validation Library
- * 
+ *
  * Provides consistent validation rules across all forms in the app.
  * Uses zod schemas where applicable and plain validators for lightweight checks.
  */
@@ -36,7 +36,7 @@ export const emailSchema = z
   .min(1, "Email is required")
   .max(LIMITS.EMAIL_MAX, `Email must be less than ${LIMITS.EMAIL_MAX} characters`)
   .email("Please enter a valid email address")
-  .transform(v => v.toLowerCase());
+  .transform((v) => v.toLowerCase());
 
 export const passwordSchema = z
   .string()
@@ -51,15 +51,18 @@ export const phoneSchema = z
   .string()
   .trim()
   .min(1, "Phone number is required")
-  .transform(v => v.replace(/[\s\-()]/g, ""))
-  .refine(v => /^\+?[1-9]\d{6,14}$/.test(v), "Please enter a valid phone number");
+  .transform((v) => v.replace(/[\s\-()]/g, ""))
+  .refine((v) => /^\+?[1-9]\d{6,14}$/.test(v), "Please enter a valid phone number");
 
 export const nameSchema = z
   .string()
   .trim()
   .min(LIMITS.NAME_MIN, `Name must be at least ${LIMITS.NAME_MIN} characters`)
   .max(LIMITS.NAME_MAX, `Name must be less than ${LIMITS.NAME_MAX} characters`)
-  .regex(/^[a-zA-Z\s'.À-ÿ\u0900-\u097F\u0980-\u09FF\u0A00-\u0A7F\u0B00-\u0B7F\u0C00-\u0C7F\u0D00-\u0D7F\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\uAC00-\uD7AF\u0600-\u06FF-]+$/, "Name contains invalid characters");
+  .regex(
+    /^[a-zA-Z\s'.À-ÿ\u0900-\u097F\u0980-\u09FF\u0A00-\u0A7F\u0B00-\u0B7F\u0C00-\u0C7F\u0D00-\u0D7F\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\uAC00-\uD7AF\u0600-\u06FF-]+$/,
+    "Name contains invalid characters",
+  );
 
 export const bioSchema = z
   .string()
@@ -140,7 +143,7 @@ export function validateFileUpload(
     maxSizeMB?: number;
     allowedTypes?: string[];
     allowedExtensions?: string[];
-  } = {}
+  } = {},
 ): { valid: boolean; error?: string } {
   const { maxSizeMB = 10, allowedTypes, allowedExtensions } = options;
 
@@ -150,7 +153,7 @@ export function validateFileUpload(
   }
 
   // Check MIME type
-  if (allowedTypes && !allowedTypes.some(t => file.type.startsWith(t))) {
+  if (allowedTypes && !allowedTypes.some((t) => file.type.startsWith(t))) {
     return { valid: false, error: `File type "${file.type}" is not allowed` };
   }
 
@@ -163,7 +166,18 @@ export function validateFileUpload(
   }
 
   // Block dangerous file types
-  const dangerousExtensions = ["exe", "bat", "cmd", "sh", "ps1", "vbs", "js", "msi", "vcf", "vcard"];
+  const dangerousExtensions = [
+    "exe",
+    "bat",
+    "cmd",
+    "sh",
+    "ps1",
+    "vbs",
+    "js",
+    "msi",
+    "vcf",
+    "vcard",
+  ];
   const ext = file.name.split(".").pop()?.toLowerCase();
   if (ext && dangerousExtensions.includes(ext)) {
     return { valid: false, error: "This file type is not allowed for security reasons" };
@@ -188,15 +202,15 @@ export function validateImageUpload(file: File, maxSizeMB = 10) {
  */
 export class ClientRateLimiter {
   private attempts: number[] = [];
-  
+
   constructor(
     private maxAttempts: number,
-    private windowMs: number
+    private windowMs: number,
   ) {}
 
   canProceed(): boolean {
     const now = Date.now();
-    this.attempts = this.attempts.filter(t => now - t < this.windowMs);
+    this.attempts = this.attempts.filter((t) => now - t < this.windowMs);
     if (this.attempts.length >= this.maxAttempts) return false;
     this.attempts.push(now);
     return true;

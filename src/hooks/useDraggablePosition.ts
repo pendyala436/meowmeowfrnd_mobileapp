@@ -28,7 +28,12 @@ export const useDraggablePosition = ({
     return initialPosition;
   });
   const [isDragging, setIsDragging] = useState(false);
-  const dragRef = useRef<{ startX: number; startY: number; startPosX: number; startPosY: number } | null>(null);
+  const dragRef = useRef<{
+    startX: number;
+    startY: number;
+    startPosX: number;
+    startPosY: number;
+  } | null>(null);
 
   const handleDragStart = useCallback(
     (e: React.MouseEvent | React.TouchEvent) => {
@@ -36,7 +41,7 @@ export const useDraggablePosition = ({
 
       const target = e.target as HTMLElement | null;
       const interactive = target?.closest?.(
-        'button, a, input, textarea, select, [role="button"], [data-no-drag]'
+        'button, a, input, textarea, select, [role="button"], [data-no-drag]',
       );
       if (interactive) return;
 
@@ -54,7 +59,7 @@ export const useDraggablePosition = ({
       };
       onFocus?.();
     },
-    [position, isMaximized, onFocus]
+    [position, isMaximized, onFocus],
   );
 
   // Effect: attach global move/end listeners while dragging

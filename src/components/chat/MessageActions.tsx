@@ -2,9 +2,9 @@
  * MessageActions.tsx - WhatsApp-style message action menu
  * Provides: React, Reply, Forward, Edit, Delete, Pin
  */
-import { useState, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { useState, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -14,18 +14,10 @@ import {
   ContextMenuSub,
   ContextMenuSubContent,
   ContextMenuSubTrigger,
-} from '@/components/ui/context-menu';
-import {
-  Reply,
-  Forward,
-  Pencil,
-  Trash2,
-  Pin,
-  PinOff,
-  SmilePlus,
-} from 'lucide-react';
+} from "@/components/ui/context-menu";
+import { Reply, Forward, Pencil, Trash2, Pin, PinOff, SmilePlus } from "lucide-react";
 
-const QUICK_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
+const QUICK_EMOJIS = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
 const EDIT_TIME_LIMIT_MS = 15 * 60 * 1000; // 15 minutes
 
 interface MessageActionsProps {
@@ -40,7 +32,7 @@ interface MessageActionsProps {
   onReply: (messageId: string, text: string, senderName: string) => void;
   onForward: (messageId: string, text: string) => void;
   onEdit: (messageId: string, currentText: string) => void;
-  onDelete: (messageId: string, deleteType: 'for_me' | 'for_everyone') => void;
+  onDelete: (messageId: string, deleteType: "for_me" | "for_everyone") => void;
   onReaction: (messageId: string, emoji: string) => void;
   onPinToggle: (messageId: string, isPinned: boolean) => void;
   senderName: string;
@@ -64,7 +56,7 @@ export const MessageActions = ({
   senderName,
 }: MessageActionsProps) => {
   const isOwn = senderId === currentUserId;
-  const canEdit = isOwn && (Date.now() - new Date(createdAt).getTime()) < EDIT_TIME_LIMIT_MS;
+  const canEdit = isOwn && Date.now() - new Date(createdAt).getTime() < EDIT_TIME_LIMIT_MS;
 
   // Long-press for mobile
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -84,39 +76,75 @@ export const MessageActions = ({
     <>
       {/* Quick emoji reactions */}
       <div className="flex items-center gap-1 px-2 py-1.5">
-        {QUICK_EMOJIS.map(emoji => (
+        {QUICK_EMOJIS.map((emoji) => (
           <button
             key={emoji}
             className="text-lg hover:scale-125 transition-transform p-1"
-            onClick={() => { onReaction(messageId, emoji); close(); }}
+            onClick={() => {
+              onReaction(messageId, emoji);
+              close();
+            }}
           >
             {emoji}
           </button>
         ))}
       </div>
       <ContextMenuSeparator />
-      <ContextMenuItem onClick={() => { onReply(messageId, messageText, senderName); close(); }} className="gap-2">
+      <ContextMenuItem
+        onClick={() => {
+          onReply(messageId, messageText, senderName);
+          close();
+        }}
+        className="gap-2"
+      >
         <Reply className="h-4 w-4" /> Reply
       </ContextMenuItem>
-      <ContextMenuItem onClick={() => { onForward(messageId, messageText); close(); }} className="gap-2">
+      <ContextMenuItem
+        onClick={() => {
+          onForward(messageId, messageText);
+          close();
+        }}
+        className="gap-2"
+      >
         <Forward className="h-4 w-4" /> Forward
       </ContextMenuItem>
       {canEdit && (
-        <ContextMenuItem onClick={() => { onEdit(messageId, messageText); close(); }} className="gap-2">
+        <ContextMenuItem
+          onClick={() => {
+            onEdit(messageId, messageText);
+            close();
+          }}
+          className="gap-2"
+        >
           <Pencil className="h-4 w-4" /> Edit
         </ContextMenuItem>
       )}
-      <ContextMenuItem onClick={() => { onPinToggle(messageId, isPinned); close(); }} className="gap-2">
+      <ContextMenuItem
+        onClick={() => {
+          onPinToggle(messageId, isPinned);
+          close();
+        }}
+        className="gap-2"
+      >
         {isPinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
-        {isPinned ? 'Unpin' : 'Pin'}
+        {isPinned ? "Unpin" : "Pin"}
       </ContextMenuItem>
       <ContextMenuSeparator />
-      <ContextMenuItem onClick={() => { onDelete(messageId, 'for_me'); close(); }} className="gap-2">
+      <ContextMenuItem
+        onClick={() => {
+          onDelete(messageId, "for_me");
+          close();
+        }}
+        className="gap-2"
+      >
         <Trash2 className="h-4 w-4" /> Delete for me
       </ContextMenuItem>
       {isOwn && (
         <ContextMenuItem
-          onClick={() => { onDelete(messageId, 'for_everyone'); close(); }}
+          onClick={() => {
+            onDelete(messageId, "for_everyone");
+            close();
+          }}
           className="gap-2 text-destructive focus:text-destructive"
         >
           <Trash2 className="h-4 w-4" /> Delete for everyone
@@ -137,9 +165,7 @@ export const MessageActions = ({
             {children}
           </div>
         </ContextMenuTrigger>
-        <ContextMenuContent className="w-56">
-          {menuItems(() => {})}
-        </ContextMenuContent>
+        <ContextMenuContent className="w-56">{menuItems(() => {})}</ContextMenuContent>
       </ContextMenu>
 
       {/* Mobile long-press menu */}
@@ -150,15 +176,18 @@ export const MessageActions = ({
         >
           <div
             className="bg-popover border border-border rounded-xl shadow-2xl p-2 min-w-[240px] max-w-[300px]"
-            onClick={e => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
           >
             {/* Quick emoji reactions */}
             <div className="flex items-center justify-center gap-2 py-2">
-              {QUICK_EMOJIS.map(emoji => (
+              {QUICK_EMOJIS.map((emoji) => (
                 <button
                   key={emoji}
                   className="text-2xl hover:scale-125 transition-transform p-1"
-                  onClick={() => { onReaction(messageId, emoji); setShowMobileMenu(false); }}
+                  onClick={() => {
+                    onReaction(messageId, emoji);
+                    setShowMobileMenu(false);
+                  }}
                 >
                   {emoji}
                 </button>
@@ -167,42 +196,64 @@ export const MessageActions = ({
             <div className="border-t border-border my-1" />
             <button
               className="w-full flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-muted rounded-lg transition-colors"
-              onClick={() => { onReply(messageId, messageText, senderName); setShowMobileMenu(false); }}
+              onClick={() => {
+                onReply(messageId, messageText, senderName);
+                setShowMobileMenu(false);
+              }}
             >
               <Reply className="h-4 w-4 text-muted-foreground" /> Reply
             </button>
             <button
               className="w-full flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-muted rounded-lg transition-colors"
-              onClick={() => { onForward(messageId, messageText); setShowMobileMenu(false); }}
+              onClick={() => {
+                onForward(messageId, messageText);
+                setShowMobileMenu(false);
+              }}
             >
               <Forward className="h-4 w-4 text-muted-foreground" /> Forward
             </button>
             {canEdit && (
               <button
                 className="w-full flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-muted rounded-lg transition-colors"
-                onClick={() => { onEdit(messageId, messageText); setShowMobileMenu(false); }}
+                onClick={() => {
+                  onEdit(messageId, messageText);
+                  setShowMobileMenu(false);
+                }}
               >
                 <Pencil className="h-4 w-4 text-muted-foreground" /> Edit
               </button>
             )}
             <button
               className="w-full flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-muted rounded-lg transition-colors"
-              onClick={() => { onPinToggle(messageId, isPinned); setShowMobileMenu(false); }}
+              onClick={() => {
+                onPinToggle(messageId, isPinned);
+                setShowMobileMenu(false);
+              }}
             >
-              {isPinned ? <PinOff className="h-4 w-4 text-muted-foreground" /> : <Pin className="h-4 w-4 text-muted-foreground" />}
-              {isPinned ? 'Unpin' : 'Pin'}
+              {isPinned ? (
+                <PinOff className="h-4 w-4 text-muted-foreground" />
+              ) : (
+                <Pin className="h-4 w-4 text-muted-foreground" />
+              )}
+              {isPinned ? "Unpin" : "Pin"}
             </button>
             <div className="border-t border-border my-1" />
             <button
               className="w-full flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-muted rounded-lg transition-colors"
-              onClick={() => { onDelete(messageId, 'for_me'); setShowMobileMenu(false); }}
+              onClick={() => {
+                onDelete(messageId, "for_me");
+                setShowMobileMenu(false);
+              }}
             >
               <Trash2 className="h-4 w-4 text-muted-foreground" /> Delete for me
             </button>
             {isOwn && (
               <button
                 className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
-                onClick={() => { onDelete(messageId, 'for_everyone'); setShowMobileMenu(false); }}
+                onClick={() => {
+                  onDelete(messageId, "for_everyone");
+                  setShowMobileMenu(false);
+                }}
               >
                 <Trash2 className="h-4 w-4" /> Delete for everyone
               </button>

@@ -13,7 +13,7 @@ export const useBlockCheck = (currentUserId: string | null, targetUserId: string
     isBlockedByMe: false,
     isBlockedByThem: false,
     isBlocked: false,
-    isLoading: true
+    isLoading: true,
   });
 
   const checkBlockStatus = useCallback(async () => {
@@ -22,7 +22,7 @@ export const useBlockCheck = (currentUserId: string | null, targetUserId: string
         isBlockedByMe: false,
         isBlockedByThem: false,
         isBlocked: false,
-        isLoading: false
+        isLoading: false,
       });
       return;
     }
@@ -51,12 +51,12 @@ export const useBlockCheck = (currentUserId: string | null, targetUserId: string
         isBlockedByMe,
         isBlockedByThem,
         isBlocked: isBlockedByMe || isBlockedByThem,
-        isLoading: false
+        isLoading: false,
       });
     } catch (error) {
       console.error("Error checking block status:", error);
       // Non-critical background check - don't toast
-      setBlockStatus(prev => ({ ...prev, isLoading: false }));
+      setBlockStatus((prev) => ({ ...prev, isLoading: false }));
     }
   }, [currentUserId, targetUserId]);
 
@@ -71,24 +71,28 @@ export const useBlockCheck = (currentUserId: string | null, targetUserId: string
     const channel = supabase
       .channel(`block-check-${currentUserId}-${targetUserId}`)
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*',
-          schema: 'public',
-          table: 'user_blocks',
-          filter: `blocked_by=eq.${currentUserId}`
+          event: "*",
+          schema: "public",
+          table: "user_blocks",
+          filter: `blocked_by=eq.${currentUserId}`,
         },
-        () => { checkBlockStatus(); }
+        () => {
+          checkBlockStatus();
+        },
       )
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*',
-          schema: 'public',
-          table: 'user_blocks',
-          filter: `blocked_by=eq.${targetUserId}`
+          event: "*",
+          schema: "public",
+          table: "user_blocks",
+          filter: `blocked_by=eq.${targetUserId}`,
         },
-        () => { checkBlockStatus(); }
+        () => {
+          checkBlockStatus();
+        },
       )
       .subscribe();
 
@@ -99,7 +103,7 @@ export const useBlockCheck = (currentUserId: string | null, targetUserId: string
 
   return {
     ...blockStatus,
-    refresh: checkBlockStatus
+    refresh: checkBlockStatus,
   };
 };
 

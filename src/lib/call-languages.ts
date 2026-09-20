@@ -2,18 +2,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { INDIAN_OFFICIAL_LANGUAGES } from "@/data/indianOfficialLanguages";
 
 /** 1:1 audio/video calls are only for these profile languages. */
-export const INDIAN_CALL_LANGUAGES = [
-  "Hindi",
-  "Bengali",
-  "Marathi",
-  "Telugu",
-  "Tamil",
-] as const;
+export const INDIAN_CALL_LANGUAGES = ["Hindi", "Bengali", "Marathi", "Telugu", "Tamil"] as const;
 
 /** Group calls: all 22 scheduled Indian languages (not English). */
-export const GROUP_CALL_LANGUAGES = INDIAN_OFFICIAL_LANGUAGES
-  .filter((l) => l.code !== "en")
-  .map((l) => l.name);
+export const GROUP_CALL_LANGUAGES = INDIAN_OFFICIAL_LANGUAGES.filter((l) => l.code !== "en").map(
+  (l) => l.name,
+);
 
 export const MAX_ACTIVE_CALL_USERS_PER_LANGUAGE = 15;
 export const MAX_GROUP_CALL_PARTICIPANTS = 15;
@@ -22,28 +16,28 @@ const EXTRA_ALIASES: Record<string, string> = {
   bangla: "bengali",
   bn: "bengali",
   "bn-in": "bengali",
-  "bn_in": "bengali",
+  bn_in: "bengali",
   বাংলা: "bengali",
   "bengali (india)": "bengali",
   hi: "hindi",
   "hi-in": "hindi",
-  "hi_in": "hindi",
+  hi_in: "hindi",
   हिन्दी: "hindi",
   हिंदी: "hindi",
   mr: "marathi",
   "mr-in": "marathi",
-  "mr_in": "marathi",
+  mr_in: "marathi",
   मराठी: "marathi",
   te: "telugu",
   "te-in": "telugu",
-  "te_in": "telugu",
+  te_in: "telugu",
   telegu: "telugu",
   telgu: "telugu",
   "telugu (india)": "telugu",
   తెలుగు: "telugu",
   ta: "tamil",
   "ta-in": "tamil",
-  "ta_in": "tamil",
+  ta_in: "tamil",
   தமிழ்: "tamil",
   oriya: "odia",
   or: "odia",
@@ -90,11 +84,13 @@ export function pickCallLanguage(...candidates: Array<string | null | undefined>
   return eligible || names[0] || "";
 }
 
-export function resolveProfileLanguage(profile?: {
-  preferred_language?: string | null;
-  primary_language?: string | null;
-  language?: string | null;
-} | null): string {
+export function resolveProfileLanguage(
+  profile?: {
+    preferred_language?: string | null;
+    primary_language?: string | null;
+    language?: string | null;
+  } | null,
+): string {
   return pickCallLanguage(
     profile?.primary_language,
     profile?.language,
@@ -126,8 +122,9 @@ export async function fetchCallLanguage(userId: string): Promise<string> {
       .maybeSingle(),
   ]);
 
-  const newestLangs = ((langs || []) as { language_name?: string | null }[])
-    .map((l) => l.language_name);
+  const newestLangs = ((langs || []) as { language_name?: string | null }[]).map(
+    (l) => l.language_name,
+  );
 
   return pickCallLanguage(
     profile?.primary_language,

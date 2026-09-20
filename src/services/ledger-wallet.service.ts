@@ -10,10 +10,10 @@
  * Group call: men ₹4/min each, women earn ₹1/min per active man (no men = no earning).
  */
 
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from "@/integrations/supabase/client";
 
 // SessionType is re-exported from billing.service to keep a single canonical type.
-export type { SessionType } from '@/services/billing.service';
+export type { SessionType } from "@/services/billing.service";
 
 // ──────────── Types ────────────
 export interface BillingResult {
@@ -60,19 +60,20 @@ export interface StatementRow {
 // the non-canonical `ledger_bill_*` RPCs and double-wrote `women_earnings`)
 // have been removed to enforce the SoT contract.
 
-
 // ──────────── Wallet Operations ────────────
 
 /** Get men's wallet balance */
 export async function getMenBalance(userId: string): Promise<number> {
-  const { data } = await supabase.rpc('get_men_wallet_balance', { p_user_id: userId });
+  const { data } = await supabase.rpc("get_men_wallet_balance", { p_user_id: userId });
   if (!data) return 0;
   return Number((data as Record<string, number>).balance) || 0;
 }
 
 /** Get women's wallet balance + today earnings */
-export async function getWomenBalance(userId: string): Promise<{ balance: number; todayEarnings: number }> {
-  const { data } = await supabase.rpc('get_women_wallet_balance', { p_user_id: userId });
+export async function getWomenBalance(
+  userId: string,
+): Promise<{ balance: number; todayEarnings: number }> {
+  const { data } = await supabase.rpc("get_women_wallet_balance", { p_user_id: userId });
   if (!data) return { balance: 0, todayEarnings: 0 };
   const d = data as Record<string, number>;
   return {
@@ -82,37 +83,51 @@ export async function getWomenBalance(userId: string): Promise<{ balance: number
 }
 
 /** Recharge a man's wallet */
-export async function rechargeWallet(userId: string, amount: number, referenceId: string, gateway: string): Promise<BillingResult> {
-  const { data, error } = await supabase.rpc('ledger_recharge', {
+export async function rechargeWallet(
+  userId: string,
+  amount: number,
+  referenceId: string,
+  gateway: string,
+): Promise<BillingResult> {
+  const { data, error } = await supabase.rpc("ledger_recharge", {
     p_user_id: userId,
     p_amount: amount,
     p_reference_id: referenceId,
     p_gateway: gateway,
   });
   if (error) return { success: false, error: error.message };
-  return (data as BillingResult) ?? { success: false, error: 'No response' };
+  return (data as BillingResult) ?? { success: false, error: "No response" };
 }
 
 // ──────────── Statements ────────────
 
 /** Get ledger statement for a user (date range) */
-export async function getStatement(userId: string, fromDate?: string, toDate?: string): Promise<StatementRow[]> {
-  const { data, error } = await supabase.rpc('get_ledger_statement', {
+export async function getStatement(
+  userId: string,
+  fromDate?: string,
+  toDate?: string,
+): Promise<StatementRow[]> {
+  const { data, error } = await supabase.rpc("get_ledger_statement", {
     p_user_id: userId,
     p_from_date: fromDate || null,
     p_to_date: toDate || null,
   });
   if (error) throw error;
   if (!data) return [];
-  return (data as unknown as StatementRow[]);
+  return data as unknown as StatementRow[];
 }
 
 // ──────────── Payout ────────────
 
 /** Trigger an on-demand payout snapshot (admin only) — captures all women's
  *  current wallet balance + Bank KYC details at the moment of click. */
-export async function generatePayoutSnapshot(): Promise<{ success: boolean; count?: number; skipped?: number; error?: string }> {
-  const { data, error } = await supabase.rpc('generate_payout_snapshot_now');
+export async function generatePayoutSnapshot(): Promise<{
+  success: boolean;
+  count?: number;
+  skipped?: number;
+  error?: string;
+}> {
+  const { data, error } = await supabase.rpc("generate_payout_snapshot_now");
   if (error) return { success: false, error: error.message };
   const result = data as Record<string, unknown>;
   return {
@@ -125,15 +140,15 @@ export async function generatePayoutSnapshot(): Promise<{ success: boolean; coun
 /** Get payout snapshots */
 export async function getPayoutSnapshots(month?: string) {
   let query = supabase
-    .from('women_payout_snapshots')
-    .select('*')
-    .order('created_at', { ascending: false });
+    .from("women_payout_snapshots")
+    .select("*")
+    .order("created_at", { ascending: false });
   if (month) {
-    query = query.eq('ist_month', month);
+    query = query.eq("ist_month", month);
   }
   const { data, error } = await query.limit(500);
   if (error) {
-    console.error('[ledger] getPayoutSnapshots failed:', error);
+    console.error("[ledger] getPayoutSnapshots failed:", error);
     throw error;
   }
   return data || [];
@@ -157,20 +172,26 @@ export interface ChatPricingData {
 
 export async function fetchChatPricing(): Promise<ChatPricingData> {
   const { data } = await supabase
-    .from('chat_pricing')
-    .select('*')
-    .eq('is_active', true)
+    .from("chat_pricing")
+    .select("*")
+    .eq("is_active", true)
     .limit(1)
     .single();
 
   if (!data) {
     // Fallback to spec defaults
     return {
-      ratePerMinute: 4, womenEarningRate: 2,
-      audioRatePerMinute: 6, audioWomenEarningRate: 3,
-      videoRatePerMinute: 8, videoWomenEarningRate: 4,
-      groupCallRatePerMinute: 4, groupCallWomenEarningRate: 1,
-      giftWomenPercent: 50, withdrawalFeePercent: 5, minWithdrawalBalance: 5000,
+      ratePerMinute: 4,
+      womenEarningRate: 2,
+      audioRatePerMinute: 6,
+      audioWomenEarningRate: 3,
+      videoRatePerMinute: 8,
+      videoWomenEarningRate: 4,
+      groupCallRatePerMinute: 4,
+      groupCallWomenEarningRate: 1,
+      giftWomenPercent: 50,
+      withdrawalFeePercent: 5,
+      minWithdrawalBalance: 5000,
     };
   }
 

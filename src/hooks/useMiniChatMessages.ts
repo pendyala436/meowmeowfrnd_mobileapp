@@ -24,11 +24,7 @@ interface UseMiniChatMessagesOptions {
 }
 
 // CHT-H-01: markMessagesAsRead with retry logic
-const markMessagesAsReadWithRetry = async (
-  chatId: string,
-  receiverId: string,
-  maxRetries = 3
-) => {
+const markMessagesAsReadWithRetry = async (chatId: string, receiverId: string, maxRetries = 3) => {
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       const { error } = await supabase
@@ -37,14 +33,14 @@ const markMessagesAsReadWithRetry = async (
         .eq("chat_id", chatId)
         .eq("receiver_id", receiverId)
         .eq("is_read", false);
-      
+
       if (!error) return;
       console.warn(`[markMessagesAsRead] Attempt ${attempt + 1} failed:`, error.message);
     } catch (err) {
       console.warn(`[markMessagesAsRead] Attempt ${attempt + 1} exception:`, err);
     }
     if (attempt < maxRetries - 1) {
-      await new Promise(r => setTimeout(r, 500 * Math.pow(2, attempt)));
+      await new Promise((r) => setTimeout(r, 500 * Math.pow(2, attempt)));
     }
   }
   console.error("[markMessagesAsRead] All retries exhausted for chat:", chatId);
@@ -84,30 +80,35 @@ export const useMiniChatMessages = ({
       const lang = data?.preferred_language || data?.primary_language;
       if (!cancelled && lang) viewerLangRef.current = lang;
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [currentUserId]);
 
-  const applyTranslation = useCallback((messageId: string, text: string, senderId: string) => {
-    if (senderId === currentUserId) return;
-    if (!isTranslatableChatText(text)) return;
-    const viewerLang = viewerLangRef.current || "English";
-    const senderLang = partnerLangRef.current;
-    if (languagesMatch(viewerLang, senderLang)) return;
-    void translateForViewer(text, viewerLang, senderLang)
-      .then((result) => {
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === messageId
-              ? {
-                  ...m,
-                  translatedMessage: result.nativeText,
-                }
-              : m
-          )
-        );
-      })
-      .catch(() => {});
-  }, [currentUserId]);
+  const applyTranslation = useCallback(
+    (messageId: string, text: string, senderId: string) => {
+      if (senderId === currentUserId) return;
+      if (!isTranslatableChatText(text)) return;
+      const viewerLang = viewerLangRef.current || "English";
+      const senderLang = partnerLangRef.current;
+      if (languagesMatch(viewerLang, senderLang)) return;
+      void translateForViewer(text, viewerLang, senderLang)
+        .then((result) => {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === messageId
+                ? {
+                    ...m,
+                    translatedMessage: result.nativeText,
+                  }
+                : m,
+            ),
+          );
+        })
+        .catch(() => {});
+    },
+    [currentUserId],
+  );
 
   // Effect 1: Load messages & subscribe to realtime inserts
   useEffect(() => {
@@ -162,7 +163,12 @@ export const useMiniChatMessages = ({
       .channel(`draggable-chat-${chatId}-${currentUserId}`)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "chat_messages", filter: `chat_id=eq.${chatId}` },
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "chat_messages",
+          filter: `chat_id=eq.${chatId}`,
+        },
         async (payload) => {
           const m = payload.new as any;
 
@@ -178,7 +184,7 @@ export const useMiniChatMessages = ({
 
           setMessages((prev) => {
             const filtered = prev.filter(
-              (msg) => !(msg.id.startsWith("temp-") && msg.ownerId === m.sender_id)
+              (msg) => !(msg.id.startsWith("temp-") && msg.ownerId === m.sender_id),
             );
             return [...filtered, newMsg];
           });
@@ -191,28 +197,37 @@ export const useMiniChatMessages = ({
               markMessagesAsReadWithRetry(chatId, currentUserId);
             }
           }
-        }
+        },
       )
       .on(
         "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "chat_messages", filter: `chat_id=eq.${chatId}` },
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "chat_messages",
+          filter: `chat_id=eq.${chatId}`,
+        },
         (payload) => {
           const m = payload.new as any;
           if (m.deleted_for_everyone) {
-            setMessages(prev => prev.map(msg =>
-              msg.id === m.id ? { ...msg, message: 'This message was deleted', deletedForEveryone: true } : msg
-            ));
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === m.id
+                  ? { ...msg, message: "This message was deleted", deletedForEveryone: true }
+                  : msg,
+              ),
+            );
             return;
           }
           if (m.sender_id === currentUserId && m.deleted_for_sender) {
-            setMessages(prev => prev.filter(msg => msg.id !== m.id));
+            setMessages((prev) => prev.filter((msg) => msg.id !== m.id));
             return;
           }
           if (m.receiver_id === currentUserId && m.deleted_for_receiver) {
-            setMessages(prev => prev.filter(msg => msg.id !== m.id));
+            setMessages((prev) => prev.filter((msg) => msg.id !== m.id));
             return;
           }
-        }
+        },
       )
       .subscribe();
 
@@ -236,12 +251,14 @@ export const useMiniChatMessages = ({
         .limit(50);
 
       if (data) {
-        const olderMsgs: Message[] = data.map((m: any) => ({
-          id: m.id,
-          ownerId: m.sender_id,
-          message: m.message,
-          createdAt: m.created_at,
-        })).reverse();
+        const olderMsgs: Message[] = data
+          .map((m: any) => ({
+            id: m.id,
+            ownerId: m.sender_id,
+            message: m.message,
+            createdAt: m.created_at,
+          }))
+          .reverse();
         setMessages((prev) => [...olderMsgs, ...prev]);
         setHasOlderMessages(data.length >= 50);
       }
@@ -252,5 +269,15 @@ export const useMiniChatMessages = ({
     }
   }, [chatId, messages, isLoadingOlder]);
 
-  return { messages, setMessages, unreadCount, setUnreadCount, messagesEndRef, hasOlderMessages, isLoadingOlder, loadOlderMessages, addSeenId: (id: string) => seenIdsRef.current.add(id) };
+  return {
+    messages,
+    setMessages,
+    unreadCount,
+    setUnreadCount,
+    messagesEndRef,
+    hasOlderMessages,
+    isLoadingOlder,
+    loadOlderMessages,
+    addSeenId: (id: string) => seenIdsRef.current.add(id),
+  };
 };

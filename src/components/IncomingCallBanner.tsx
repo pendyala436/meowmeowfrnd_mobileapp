@@ -1,33 +1,37 @@
-import { useEffect, useRef } from 'react';
-import { Phone, PhoneOff } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useEffect, useRef } from "react";
+import { Phone, PhoneOff } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface IncomingCallBannerProps {
   callerName: string;
   callerPhoto: string | null;
-  callType: 'audio' | 'video';
+  callType: "audio" | "video";
   onAccept: () => void;
   onDecline: () => void;
 }
 
 export const IncomingCallBanner = ({
-  callerName, callerPhoto, callType, onAccept, onDecline,
+  callerName,
+  callerPhoto,
+  callType,
+  onAccept,
+  onDecline,
 }: IncomingCallBannerProps) => {
   const ringRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const ctxRef = useRef<AudioContext | null>(null);
 
   const playRing = () => {
     try {
-      if (!ctxRef.current || ctxRef.current.state === 'closed') {
+      if (!ctxRef.current || ctxRef.current.state === "closed") {
         ctxRef.current = new AudioContext();
       }
       const ctx = ctxRef.current;
       const t = ctx.currentTime;
 
-      [0, 0.45].forEach(offset => {
+      [0, 0.45].forEach((offset) => {
         const osc1 = ctx.createOscillator();
         const g1 = ctx.createGain();
-        osc1.type = 'square';
+        osc1.type = "square";
         osc1.frequency.setValueAtTime(2000, t + offset);
         g1.gain.setValueAtTime(0.8, t + offset);
         g1.gain.exponentialRampToValueAtTime(0.01, t + offset + 0.35);
@@ -37,7 +41,7 @@ export const IncomingCallBanner = ({
 
         const osc2 = ctx.createOscillator();
         const g2 = ctx.createGain();
-        osc2.type = 'square';
+        osc2.type = "square";
         osc2.frequency.setValueAtTime(2500, t + offset);
         g2.gain.setValueAtTime(0.6, t + offset);
         g2.gain.exponentialRampToValueAtTime(0.01, t + offset + 0.3);
@@ -47,7 +51,7 @@ export const IncomingCallBanner = ({
 
         const osc3 = ctx.createOscillator();
         const g3 = ctx.createGain();
-        osc3.type = 'triangle';
+        osc3.type = "triangle";
         osc3.frequency.setValueAtTime(440, t + offset);
         g3.gain.setValueAtTime(0.5, t + offset);
         g3.gain.exponentialRampToValueAtTime(0.01, t + offset + 0.3);

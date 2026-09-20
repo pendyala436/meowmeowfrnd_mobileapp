@@ -10,13 +10,13 @@
  *  - Report calibrated female confidence in the 80–100% range on success
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react';
-import * as faceapi from 'face-api.js';
+import { useState, useCallback, useRef, useEffect } from "react";
+import * as faceapi from "face-api.js";
 
 export interface FaceVerificationResult {
   verified: boolean;
   hasFace: boolean;
-  detectedGender: 'male' | 'female' | 'unknown';
+  detectedGender: "male" | "female" | "unknown";
   confidence: number;
   reason: string;
   genderMatches?: boolean;
@@ -28,7 +28,10 @@ export interface UseFaceVerificationReturn {
   isVerifying: boolean;
   isLoadingModel: boolean;
   modelLoadProgress: number;
-  verifyFace: (imageBase64: string, expectedGender?: 'male' | 'female') => Promise<FaceVerificationResult>;
+  verifyFace: (
+    imageBase64: string,
+    expectedGender?: "male" | "female",
+  ) => Promise<FaceVerificationResult>;
 }
 
 /** Minimum model confidence to accept verification (50%). */
@@ -55,8 +58,8 @@ let modelLoadError: string | null = null;
 
 // Primary and fallback CDN URLs for face-api.js models (version-locked)
 const MODEL_URLS = [
-  'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model',
-  'https://unpkg.com/@vladmandic/face-api@1.7.12/model',
+  "https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model",
+  "https://unpkg.com/@vladmandic/face-api@1.7.12/model",
 ];
 
 const MAX_LOAD_RETRIES = 2;
@@ -103,12 +106,12 @@ export const useFaceVerification = (): UseFaceVerificationReturn => {
                 faceapi.nets.ageGenderNet.loadFromUri(modelUrl),
                 faceapi.nets.faceLandmark68Net.loadFromUri(modelUrl),
               ]);
-              console.log('[FaceAPI] All models loaded in parallel');
+              console.log("[FaceAPI] All models loaded in parallel");
               setModelLoadProgress(100);
 
               modelsLoaded = true;
               modelLoadError = null;
-              console.log('[FaceAPI] All models loaded successfully');
+              console.log("[FaceAPI] All models loaded successfully");
               return; // Success — exit both loops
             } catch (error) {
               lastError = error;
@@ -118,8 +121,8 @@ export const useFaceVerification = (): UseFaceVerificationReturn => {
         }
 
         // All CDNs and retries exhausted
-        modelLoadError = lastError instanceof Error ? lastError.message : 'All CDN sources failed';
-        console.error('[FaceAPI] All model load attempts failed:', modelLoadError);
+        modelLoadError = lastError instanceof Error ? lastError.message : "All CDN sources failed";
+        console.error("[FaceAPI] All model load attempts failed:", modelLoadError);
         modelsLoading = false;
         loadAttempted.current = false;
         throw new Error(modelLoadError);
@@ -128,7 +131,7 @@ export const useFaceVerification = (): UseFaceVerificationReturn => {
       try {
         await modelLoadPromise;
       } catch (error) {
-        console.error('[FaceAPI] Model loading failed:', error);
+        console.error("[FaceAPI] Model loading failed:", error);
       }
 
       setIsLoadingModel(false);
@@ -137,130 +140,151 @@ export const useFaceVerification = (): UseFaceVerificationReturn => {
     loadModels();
   }, []);
 
-  const verifyFace = useCallback(async (
-    imageBase64: string,
-    expectedGender?: 'male' | 'female'
-  ): Promise<FaceVerificationResult> => {
-    setIsVerifying(true);
+  const verifyFace = useCallback(
+    async (
+      imageBase64: string,
+      expectedGender?: "male" | "female",
+    ): Promise<FaceVerificationResult> => {
+      setIsVerifying(true);
 
-    try {
-      // Wait for models if still loading
-      if (!modelsLoaded && modelLoadPromise) {
-        console.log('[FaceAPI] Waiting for models to load...');
-        await modelLoadPromise;
-      }
+      try {
+        // Wait for models if still loading
+        if (!modelsLoaded && modelLoadPromise) {
+          console.log("[FaceAPI] Waiting for models to load...");
+          await modelLoadPromise;
+        }
 
-      if (!modelsLoaded) {
-        console.warn('[FaceAPI] Models not loaded — rejecting verification');
+        if (!modelsLoaded) {
+          console.warn("[FaceAPI] Models not loaded — rejecting verification");
+          return {
+            verified: false,
+            hasFace: false,
+            detectedGender: "unknown",
+            confidence: 0,
+            reason:
+              "Face verification models failed to load. Please check your internet connection and try again.",
+            genderMatches: false,
+            modelLoadFailed: true,
+          };
+        }
+
+        // Create image element from base64
+        const img = await createImageFromBase64(imageBase64);
+        console.log("[FaceAPI] Image loaded, detecting faces...");
+
+        // Detect faces with age and gender
+        const detections = await faceapi
+          .detectAllFaces(
+            img,
+            new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.5 }),
+          )
+          .withFaceLandmarks()
+          .withAgeAndGender();
+
+        console.log("[FaceAPI] Detections:", detections.length);
+
+        if (detections.length === 0) {
+          return {
+            verified: false,
+            hasFace: false,
+            detectedGender: "unknown",
+            confidence: 0,
+            reason: "No face detected in the image",
+            genderMatches: false,
+          };
+        }
+
+        // Use the first (or largest) face
+        const detection = detections.reduce((prev, curr) =>
+          curr.detection.box.area > prev.detection.box.area ? curr : prev,
+        );
+
+        const detectedGender = detection.gender as "male" | "female";
+        const genderProbability = detection.genderProbability;
+
+        console.log(
+          "[FaceAPI] Detected gender:",
+          detectedGender,
+          "probability:",
+          genderProbability,
+        );
+
+        // Female account: override weak male-biased reads
+        if (
+          expectedGender === "female" &&
+          detectedGender === "male" &&
+          genderProbability < MALE_OVERRIDE_MIN
+        ) {
+          const femaleLikelihood = 1 - genderProbability;
+          return {
+            verified: true,
+            hasFace: true,
+            detectedGender: "female",
+            confidence: calibrateFemaleConfidence(Math.max(femaleLikelihood, GENDER_SUCCESS_MIN)),
+            reason: "Face verified as female",
+            genderMatches: true,
+            autoAccepted: true,
+          };
+        }
+
+        // Female account: accept female detection from 50% upward
+        if (
+          expectedGender === "female" &&
+          detectedGender === "female" &&
+          genderProbability >= GENDER_SUCCESS_MIN
+        ) {
+          return {
+            verified: true,
+            hasFace: true,
+            detectedGender: "female",
+            confidence: calibrateFemaleConfidence(genderProbability),
+            reason: "Face verified as female",
+            genderMatches: true,
+          };
+        }
+
+        // Female account but strong male read — do not verify as female
+        if (expectedGender === "female" && detectedGender === "male") {
+          return {
+            verified: false,
+            hasFace: true,
+            detectedGender: "male",
+            confidence: genderProbability,
+            reason:
+              "Photo read as male with high confidence. Please retake with good lighting, facing the camera.",
+            genderMatches: false,
+          };
+        }
+
+        const genderMatches = !expectedGender || detectedGender === expectedGender;
+
         return {
-          verified: false,
-          hasFace: false,
-          detectedGender: 'unknown',
-          confidence: 0,
-          reason: 'Face verification models failed to load. Please check your internet connection and try again.',
-          genderMatches: false,
-          modelLoadFailed: true
-        };
-      }
-
-      // Create image element from base64
-      const img = await createImageFromBase64(imageBase64);
-      console.log('[FaceAPI] Image loaded, detecting faces...');
-
-      // Detect faces with age and gender
-      const detections = await faceapi
-        .detectAllFaces(img, new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.5 }))
-        .withFaceLandmarks()
-        .withAgeAndGender();
-
-      console.log('[FaceAPI] Detections:', detections.length);
-
-      if (detections.length === 0) {
-        return {
-          verified: false,
-          hasFace: false,
-          detectedGender: 'unknown',
-          confidence: 0,
-          reason: 'No face detected in the image',
-          genderMatches: false
-        };
-      }
-
-      // Use the first (or largest) face
-      const detection = detections.reduce((prev, curr) =>
-        curr.detection.box.area > prev.detection.box.area ? curr : prev
-      );
-
-      const detectedGender = detection.gender as 'male' | 'female';
-      const genderProbability = detection.genderProbability;
-
-      console.log('[FaceAPI] Detected gender:', detectedGender, 'probability:', genderProbability);
-
-      // Female account: override weak male-biased reads
-      if (expectedGender === 'female' && detectedGender === 'male' && genderProbability < MALE_OVERRIDE_MIN) {
-        const femaleLikelihood = 1 - genderProbability;
-        return {
-          verified: true,
+          verified: genderProbability >= GENDER_SUCCESS_MIN,
           hasFace: true,
-          detectedGender: 'female',
-          confidence: calibrateFemaleConfidence(Math.max(femaleLikelihood, GENDER_SUCCESS_MIN)),
-          reason: 'Face verified as female',
-          genderMatches: true,
-          autoAccepted: true,
-        };
-      }
-
-      // Female account: accept female detection from 50% upward
-      if (expectedGender === 'female' && detectedGender === 'female' && genderProbability >= GENDER_SUCCESS_MIN) {
-        return {
-          verified: true,
-          hasFace: true,
-          detectedGender: 'female',
-          confidence: calibrateFemaleConfidence(genderProbability),
-          reason: 'Face verified as female',
-          genderMatches: true,
-        };
-      }
-
-      // Female account but strong male read — do not verify as female
-      if (expectedGender === 'female' && detectedGender === 'male') {
-        return {
-          verified: false,
-          hasFace: true,
-          detectedGender: 'male',
+          detectedGender,
           confidence: genderProbability,
-          reason: 'Photo read as male with high confidence. Please retake with good lighting, facing the camera.',
+          reason: genderMatches
+            ? `Face verified as ${detectedGender}`
+            : `Detected ${detectedGender}, updating gender`,
+          genderMatches,
+        };
+      } catch (error) {
+        console.error("[FaceAPI] Verification error:", error);
+        // On error, reject — do not silently auto-accept
+        return {
+          verified: false,
+          hasFace: false,
+          detectedGender: "unknown",
+          confidence: 0,
+          reason: "Face verification failed due to an error. Please try again.",
           genderMatches: false,
         };
+      } finally {
+        setIsVerifying(false);
       }
-
-      const genderMatches = !expectedGender || detectedGender === expectedGender;
-
-      return {
-        verified: genderProbability >= GENDER_SUCCESS_MIN,
-        hasFace: true,
-        detectedGender,
-        confidence: genderProbability,
-        reason: genderMatches
-          ? `Face verified as ${detectedGender}`
-          : `Detected ${detectedGender}, updating gender`,
-        genderMatches
-      };
-    } catch (error) {
-      console.error('[FaceAPI] Verification error:', error);
-      // On error, reject — do not silently auto-accept
-      return {
-        verified: false,
-        hasFace: false,
-        detectedGender: 'unknown',
-        confidence: 0,
-        reason: 'Face verification failed due to an error. Please try again.',
-        genderMatches: false
-      };
-    } finally {
-      setIsVerifying(false);
-    }
-  }, []);
+    },
+    [],
+  );
 
   return {
     isVerifying,
@@ -274,13 +298,13 @@ export const useFaceVerification = (): UseFaceVerificationReturn => {
 async function createImageFromBase64(base64: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.crossOrigin = 'anonymous';
+    img.crossOrigin = "anonymous";
 
     img.onload = () => resolve(img);
     img.onerror = (error) => reject(error);
 
     // Handle both with and without data URI prefix
-    if (base64.startsWith('data:')) {
+    if (base64.startsWith("data:")) {
       img.src = base64;
     } else {
       img.src = `data:image/jpeg;base64,${base64}`;

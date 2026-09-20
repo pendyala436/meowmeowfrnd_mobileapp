@@ -1,24 +1,31 @@
 import { classifyError } from "@/lib/errors";
-import { useState, useEffect, useRef, useMemo } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { toast } from 'sonner';
-import { Users, Video, Radio, Loader2, RefreshCw, Globe } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { getFlowerImage } from '@/assets/flowers';
-import { PrivateGroupCallWindow } from './PrivateGroupCallWindow';
-import {
-  MAX_GROUP_CALL_PARTICIPANTS,
-  normalizeCallLanguage,
-} from '@/lib/call-languages';
-import { useAppSettings } from '@/hooks/useAppSettings';
+import { useState, useEffect, useRef, useMemo } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+import { Users, Video, Radio, Loader2, RefreshCw, Globe } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { getFlowerImage } from "@/assets/flowers";
+import { PrivateGroupCallWindow } from "./PrivateGroupCallWindow";
+import { MAX_GROUP_CALL_PARTICIPANTS, normalizeCallLanguage } from "@/lib/call-languages";
+import { useAppSettings } from "@/hooks/useAppSettings";
 
 interface PrivateGroup {
-  id: string; owner_id: string; name: string; description: string | null;
-  min_gift_amount: number; access_type: string; is_active: boolean; is_live: boolean;
-  stream_id: string | null; participant_count: number; current_host_id: string | null;
-  current_host_name: string | null; owner_language: string | null; updated_at: string;
+  id: string;
+  owner_id: string;
+  name: string;
+  description: string | null;
+  min_gift_amount: number;
+  access_type: string;
+  is_active: boolean;
+  is_live: boolean;
+  stream_id: string | null;
+  participant_count: number;
+  current_host_id: string | null;
+  current_host_name: string | null;
+  owner_language: string | null;
+  updated_at: string;
   created_at: string;
 }
 
@@ -33,14 +40,21 @@ interface LiveHostRow {
 }
 
 interface AvailableGroupsSectionProps {
-  currentUserId: string; userName: string; userPhoto: string | null;
+  currentUserId: string;
+  userName: string;
+  userPhoto: string | null;
   userLanguage?: string | null;
 }
 
 const MIN_BALANCE_MINUTES = 5;
 const RATE_PER_MINUTE = 4;
 
-export function AvailableGroupsSection({ currentUserId, userName, userPhoto, userLanguage }: AvailableGroupsSectionProps) {
+export function AvailableGroupsSection({
+  currentUserId,
+  userName,
+  userPhoto,
+  userLanguage,
+}: AvailableGroupsSectionProps) {
   const { settings } = useAppSettings();
   const groupsEnabled = settings.privateGroupsEnabledMen !== false;
   const [rows, setRows] = useState<LiveHostRow[]>([]);
@@ -61,19 +75,25 @@ export function AvailableGroupsSection({ currentUserId, userName, userPhoto, use
     if (message) toast.info(message);
     const stream = activeGroupStreamRef.current;
     if (stream) {
-      stream.getTracks().forEach(t => t.stop());
+      stream.getTracks().forEach((t) => t.stop());
       setActiveGroupStream(null);
     }
     const groupId = row.group.id;
     setActiveRow(null);
     try {
-      const { error } = await supabase.rpc('leave_group_atomic', { p_group_id: groupId, p_user_id: currentUserId });
+      const { error } = await supabase.rpc("leave_group_atomic", {
+        p_group_id: groupId,
+        p_user_id: currentUserId,
+      });
       if (error) {
-        await supabase.from('group_memberships').update({ has_access: false, joined_host_id: null })
-          .eq('group_id', groupId).eq('user_id', currentUserId);
+        await supabase
+          .from("group_memberships")
+          .update({ has_access: false, joined_host_id: null })
+          .eq("group_id", groupId)
+          .eq("user_id", currentUserId);
       }
     } catch (e) {
-      console.error('[AvailableGroups] Leave group error:', e);
+      console.error("[AvailableGroups] Leave group error:", e);
     }
   };
 
@@ -81,51 +101,68 @@ export function AvailableGroupsSection({ currentUserId, userName, userPhoto, use
     fetchRows();
     fetchWalletBalance();
     const channel = supabase
-      .channel('available-groups-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'group_active_hosts' }, () => fetchRows())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'private_groups' }, () => fetchRows())
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'wallet_transactions', filter: `user_id=eq.${currentUserId}` }, () => {
-        fetchWalletBalance();
-      })
+      .channel("available-groups-changes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "group_active_hosts" }, () =>
+        fetchRows(),
+      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "private_groups" }, () =>
+        fetchRows(),
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "wallet_transactions",
+          filter: `user_id=eq.${currentUserId}`,
+        },
+        () => {
+          fetchWalletBalance();
+        },
+      )
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [currentUserId]);
 
   const fetchRows = async () => {
     try {
       const { data: hosts, error: hErr } = await supabase
-        .from('group_active_hosts')
-        .select('group_id, host_id, host_name, host_language, participant_count')
-        .eq('is_active', true);
+        .from("group_active_hosts")
+        .select("group_id, host_id, host_name, host_language, participant_count")
+        .eq("is_active", true);
       if (hErr) throw hErr;
 
       const list = (hosts as any[]) || [];
       if (list.length === 0) {
         setRows([]);
-        if (activeRowRef.current) await closeActiveCall('Host ended the live session');
+        if (activeRowRef.current) await closeActiveCall("Host ended the live session");
         return;
       }
 
-      const groupIds = Array.from(new Set(list.map(h => h.group_id)));
-      const hostIds = Array.from(new Set(list.map(h => h.host_id)));
+      const groupIds = Array.from(new Set(list.map((h) => h.group_id)));
+      const hostIds = Array.from(new Set(list.map((h) => h.host_id)));
       const [{ data: groups }, { data: hostProfiles }] = await Promise.all([
-        supabase.from('private_groups').select('*').in('id', groupIds),
-        supabase.from('profiles').select('id, host_number').in('id', hostIds),
+        supabase.from("private_groups").select("*").in("id", groupIds),
+        supabase.from("profiles").select("id, host_number").in("id", hostIds),
       ]);
 
       const groupMap = new Map<string, PrivateGroup>();
-      (groups as any[] || []).forEach(g => groupMap.set(g.id, g));
+      ((groups as any[]) || []).forEach((g) => groupMap.set(g.id, g));
       const hostNumberMap = new Map<string, number | null>();
-      (hostProfiles as any[] || []).forEach(p => hostNumberMap.set(p.id, p.host_number ?? null));
+      ((hostProfiles as any[]) || []).forEach((p) =>
+        hostNumberMap.set(p.id, p.host_number ?? null),
+      );
 
       const built: LiveHostRow[] = list
-        .map(h => {
+        .map((h) => {
           const g = groupMap.get(h.group_id);
           if (!g) return null;
           return {
             group: g,
             host_id: h.host_id,
-            host_name: h.host_name || 'Host',
+            host_name: h.host_name || "Host",
             host_number: hostNumberMap.get(h.host_id) ?? null,
             host_language: h.host_language || null,
             participant_count: h.participant_count || 0,
@@ -137,34 +174,46 @@ export function AvailableGroupsSection({ currentUserId, userName, userPhoto, use
       setRows(built);
 
       if (activeRowRef.current) {
-        const stillLive = list.some(h => h.host_id === activeRowRef.current!.host_id && h.group_id === activeRowRef.current!.group.id);
-        if (!stillLive) await closeActiveCall('Host ended the live session');
+        const stillLive = list.some(
+          (h) =>
+            h.host_id === activeRowRef.current!.host_id &&
+            h.group_id === activeRowRef.current!.group.id,
+        );
+        if (!stillLive) await closeActiveCall("Host ended the live session");
       }
     } catch (error) {
-      console.error('Error fetching live hosts:', error);
-      toast.error('Groups unavailable', { description: 'Unable to load live hosts. Please refresh.' });
-    } finally { setIsLoading(false); }
+      console.error("Error fetching live hosts:", error);
+      toast.error("Groups unavailable", {
+        description: "Unable to load live hosts. Please refresh.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const fetchWalletBalance = async () => {
     try {
       // Use canonical SoT RPC (wallet_transactions), not legacy wallets.balance column
-      const { data } = await supabase.rpc('get_men_wallet_balance', { p_user_id: currentUserId });
+      const { data } = await supabase.rpc("get_men_wallet_balance", { p_user_id: currentUserId });
       if (data) {
         const bd = data as Record<string, number>;
         setWalletBalance(Number(bd.balance) || 0);
       }
-    } catch (err) { console.error('[AvailableGroups] fetchWalletBalance error:', err); }
+    } catch (err) {
+      console.error("[AvailableGroups] fetchWalletBalance error:", err);
+    }
   };
 
   const handleJoinHost = async (row: LiveHostRow) => {
     if (!groupsEnabled) {
-      toast.error('Private group calls are temporarily unavailable.');
+      toast.error("Private group calls are temporarily unavailable.");
       return;
     }
     const minBalance = RATE_PER_MINUTE * MIN_BALANCE_MINUTES;
     if (walletBalance < minBalance) {
-      toast.error(`Insufficient balance. You need at least ₹${minBalance} (${MIN_BALANCE_MINUTES} minutes) to join.`);
+      toast.error(
+        `Insufficient balance. You need at least ₹${minBalance} (${MIN_BALANCE_MINUTES} minutes) to join.`,
+      );
       return;
     }
     if (row.participant_count >= MAX_GROUP_CALL_PARTICIPANTS) {
@@ -180,16 +229,19 @@ export function AvailableGroupsSection({ currentUserId, userName, userPhoto, use
         video: false,
         audio: { echoCancellation: true, noiseSuppression: true },
       });
-      preStream.getAudioTracks().forEach(t => { t.enabled = false; });
+      preStream.getAudioTracks().forEach((t) => {
+        t.enabled = false;
+      });
     } catch (mediaErr) {
-      console.error('[AvailableGroups] Pre-acquire audio failed:', mediaErr);
-      toast.error('Could not access microphone. Please allow access.');
-      setJoiningKey(null); return;
+      console.error("[AvailableGroups] Pre-acquire audio failed:", mediaErr);
+      toast.error("Could not access microphone. Please allow access.");
+      setJoiningKey(null);
+      return;
     }
 
     try {
       // Atomic join (existing RPC keeps participant_count consistent)
-      const { data: joinResult, error: joinError } = await supabase.rpc('join_group_atomic', {
+      const { data: joinResult, error: joinError } = await supabase.rpc("join_group_atomic", {
         p_group_id: row.group.id,
         p_user_id: currentUserId,
         p_max_participants: MAX_GROUP_CALL_PARTICIPANTS,
@@ -198,23 +250,32 @@ export function AvailableGroupsSection({ currentUserId, userName, userPhoto, use
       if (joinError) throw joinError;
       const result = joinResult as { success: boolean; error?: string; host_id?: string };
       if (!result.success) {
-        toast.error(result.error || 'Could not join group');
-        preStream.getTracks().forEach(t => t.stop());
+        toast.error(result.error || "Could not join group");
+        preStream.getTracks().forEach((t) => t.stop());
         setJoiningKey(null);
         return;
       }
       // joined_host_id is now set atomically inside join_group_atomic RPC.
       // Defensive sync in case the host changed between fetch and join.
       if (result.host_id && result.host_id !== row.host_id) {
-        console.warn('[AvailableGroups] Host changed during join:', row.host_id, '→', result.host_id);
+        console.warn(
+          "[AvailableGroups] Host changed during join:",
+          row.host_id,
+          "→",
+          result.host_id,
+        );
       }
 
       setActiveGroupStream(preStream);
       setActiveRow(row);
     } catch (error: any) {
-      preStream.getTracks().forEach(t => t.stop());
-      toast.error('Could not join host', { description: classifyError(error, 'join the host').message });
-    } finally { setJoiningKey(null); }
+      preStream.getTracks().forEach((t) => t.stop());
+      toast.error("Could not join host", {
+        description: classifyError(error, "join the host").message,
+      });
+    } finally {
+      setJoiningKey(null);
+    }
   };
 
   const handleLeaveGroup = async () => {
@@ -248,7 +309,14 @@ export function AvailableGroupsSection({ currentUserId, userName, userPhoto, use
           <Badge className="bg-primary-foreground/20 text-primary-foreground border-0 text-[10px] h-5">
             {rows.length} Live
           </Badge>
-          <button onClick={() => { setIsLoading(true); fetchRows(); fetchWalletBalance(); }} className="hover:bg-primary-foreground/10 rounded-full p-1.5 transition-colors">
+          <button
+            onClick={() => {
+              setIsLoading(true);
+              fetchRows();
+              fetchWalletBalance();
+            }}
+            className="hover:bg-primary-foreground/10 rounded-full p-1.5 transition-colors"
+          >
             <RefreshCw className="h-3.5 w-3.5" />
           </button>
         </div>
@@ -269,7 +337,9 @@ export function AvailableGroupsSection({ currentUserId, userName, userPhoto, use
             <Video className="h-7 w-7 text-muted-foreground/50" />
           </div>
           <p className="text-sm font-medium text-muted-foreground">No live hosts right now</p>
-          <p className="text-xs text-muted-foreground/70 mt-1">Hosts will appear when they go live in a group</p>
+          <p className="text-xs text-muted-foreground/70 mt-1">
+            Hosts will appear when they go live in a group
+          </p>
         </div>
       )}
 
@@ -280,8 +350,9 @@ export function AvailableGroupsSection({ currentUserId, userName, userPhoto, use
             const isFull = row.participant_count >= MAX_GROUP_CALL_PARTICIPANTS;
             const key = `${row.group.id}:${row.host_id}`;
             const isJoining = joiningKey === key;
-            const sameLanguage = !!normalizeCallLanguage(userLanguage)
-              && normalizeCallLanguage(row.host_language) === normalizeCallLanguage(userLanguage);
+            const sameLanguage =
+              !!normalizeCallLanguage(userLanguage) &&
+              normalizeCallLanguage(row.host_language) === normalizeCallLanguage(userLanguage);
 
             return (
               <div
@@ -308,7 +379,9 @@ export function AvailableGroupsSection({ currentUserId, userName, userPhoto, use
                 {/* Info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="font-semibold text-sm text-foreground truncate">{row.group.name}</span>
+                    <span className="font-semibold text-sm text-foreground truncate">
+                      {row.group.name}
+                    </span>
                     <Badge className="bg-accent text-accent-foreground text-[9px] h-4 px-1.5 border-0 shrink-0">
                       LIVE
                     </Badge>
@@ -317,7 +390,7 @@ export function AvailableGroupsSection({ currentUserId, userName, userPhoto, use
                         variant="outline"
                         className={cn(
                           "text-[9px] h-4 px-1.5 shrink-0 gap-0.5",
-                          sameLanguage && "border-accent text-accent"
+                          sameLanguage && "border-accent text-accent",
                         )}
                       >
                         <Globe className="h-2 w-2" /> {row.host_language}
@@ -325,11 +398,13 @@ export function AvailableGroupsSection({ currentUserId, userName, userPhoto, use
                     )}
                   </div>
                   <p className="text-xs text-primary font-medium truncate mt-0.5">
-                    📹 {row.host_number ? `Host #${row.host_number} · ` : ''}{row.host_name}
+                    📹 {row.host_number ? `Host #${row.host_number} · ` : ""}
+                    {row.host_name}
                   </p>
                   <div className="flex items-center gap-2 mt-0.5">
                     <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
-                      <Users className="h-2.5 w-2.5" /> {row.participant_count}/{MAX_GROUP_CALL_PARTICIPANTS}
+                      <Users className="h-2.5 w-2.5" /> {row.participant_count}/
+                      {MAX_GROUP_CALL_PARTICIPANTS}
                     </span>
                     <span className="text-[10px] text-muted-foreground">
                       💰 ₹{RATE_PER_MINUTE}/min
@@ -345,13 +420,23 @@ export function AvailableGroupsSection({ currentUserId, userName, userPhoto, use
                       "h-8 text-xs rounded-full px-4 gap-1",
                       isFull || !hasEnoughBalance
                         ? "bg-muted text-muted-foreground cursor-not-allowed"
-                        : "bg-accent hover:bg-accent/80 text-accent-foreground"
+                        : "bg-accent hover:bg-accent/80 text-accent-foreground",
                     )}
                     onClick={() => handleJoinHost(row)}
                     disabled={!hasEnoughBalance || isFull || isJoining}
                   >
-                    {isJoining ? <Loader2 className="h-3 w-3 animate-spin" /> : <Video className="h-3 w-3" />}
-                    {isFull ? 'Full' : !hasEnoughBalance ? `₹${minBalance}+` : isJoining ? '...' : 'Join'}
+                    {isJoining ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Video className="h-3 w-3" />
+                    )}
+                    {isFull
+                      ? "Full"
+                      : !hasEnoughBalance
+                        ? `₹${minBalance}+`
+                        : isJoining
+                          ? "..."
+                          : "Join"}
                   </Button>
                 </div>
               </div>

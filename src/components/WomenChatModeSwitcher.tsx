@@ -3,15 +3,15 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
-import { 
-  IndianRupee, 
-  Clock, 
-  Lock, 
+import {
+  IndianRupee,
+  Clock,
+  Lock,
   Zap,
   Timer,
   AlertTriangle,
   CheckCircle2,
-  ShieldOff
+  ShieldOff,
 } from "lucide-react";
 import { WomenChatMode } from "@/hooks/useWomenChatMode";
 import {
@@ -74,8 +74,8 @@ const WomenChatModeSwitcher = ({
   const [confirmMode, setConfirmMode] = useState<WomenChatMode | null>(null);
   const [isSwitching, setIsSwitching] = useState(false);
 
-  const isExclusiveLocked = exclusiveFreeLockedUntil && 
-    new Date(exclusiveFreeLockedUntil) > new Date();
+  const isExclusiveLocked =
+    exclusiveFreeLockedUntil && new Date(exclusiveFreeLockedUntil) > new Date();
 
   const handleSwitch = async () => {
     if (!confirmMode) return;
@@ -94,10 +94,10 @@ const WomenChatModeSwitcher = ({
     return `${hrs}h ${mins}m`;
   };
 
-  const modes: { 
-    mode: WomenChatMode; 
-    label: string; 
-    description: string; 
+  const modes: {
+    mode: WomenChatMode;
+    label: string;
+    description: string;
     icon: React.ReactNode;
     color: string;
     canSwitch: boolean;
@@ -113,7 +113,9 @@ const WomenChatModeSwitcher = ({
     {
       mode: "free",
       label: "⏱️ Free Mode",
-      description: isIndian ? `1hr/day free chat with regular men (${formatTime(freeTimeRemaining)} left)` : `Unlimited free chat with regular men`,
+      description: isIndian
+        ? `1hr/day free chat with regular men (${formatTime(freeTimeRemaining)} left)`
+        : `Unlimited free chat with regular men`,
       icon: <Clock className="h-5 w-5" />,
       color: "from-blue-500/20 to-blue-600/10 border-blue-500/30",
       canSwitch: canSwitchToFree,
@@ -155,34 +157,36 @@ const WomenChatModeSwitcher = ({
         </div>
 
         <div className={cn("grid gap-2", isIndian ? "grid-cols-3" : "grid-cols-2")}>
-          {modes.filter(m => isIndian || m.mode !== "paid").map(({ mode, label, description, color, canSwitch }) => {
-            const isActive = currentMode === mode;
-            return (
-              <button
-                key={mode}
-                onClick={() => {
-                  if (!isActive && canSwitch) setConfirmMode(mode);
-                }}
-                disabled={isActive || !canSwitch}
-                className={cn(
-                  "relative rounded-lg p-3 text-left transition-all border",
-                  isActive 
-                    ? `bg-gradient-to-br ${color} ring-2 ring-primary/50 shadow-md`
-                    : canSwitch
-                      ? "bg-card hover:bg-muted/50 border-border cursor-pointer"
-                      : "bg-muted/30 border-border/50 opacity-50 cursor-not-allowed"
-                )}
-              >
-                {isActive && (
-                  <CheckCircle2 className="absolute top-1.5 right-1.5 h-4 w-4 text-primary" />
-                )}
-                <div className="text-xs font-semibold truncate">{label}</div>
-                <div className="text-[10px] text-muted-foreground mt-1 line-clamp-2">
-                  {description}
-                </div>
-              </button>
-            );
-          })}
+          {modes
+            .filter((m) => isIndian || m.mode !== "paid")
+            .map(({ mode, label, description, color, canSwitch }) => {
+              const isActive = currentMode === mode;
+              return (
+                <button
+                  key={mode}
+                  onClick={() => {
+                    if (!isActive && canSwitch) setConfirmMode(mode);
+                  }}
+                  disabled={isActive || !canSwitch}
+                  className={cn(
+                    "relative rounded-lg p-3 text-left transition-all border",
+                    isActive
+                      ? `bg-gradient-to-br ${color} ring-2 ring-primary/50 shadow-md`
+                      : canSwitch
+                        ? "bg-card hover:bg-muted/50 border-border cursor-pointer"
+                        : "bg-muted/30 border-border/50 opacity-50 cursor-not-allowed",
+                  )}
+                >
+                  {isActive && (
+                    <CheckCircle2 className="absolute top-1.5 right-1.5 h-4 w-4 text-primary" />
+                  )}
+                  <div className="text-xs font-semibold truncate">{label}</div>
+                  <div className="text-[10px] text-muted-foreground mt-1 line-clamp-2">
+                    {description}
+                  </div>
+                </button>
+              );
+            })}
         </div>
 
         {/* Free time progress bar */}
@@ -191,10 +195,16 @@ const WomenChatModeSwitcher = ({
             <div className="flex justify-between text-[10px] text-muted-foreground">
               <span className="flex items-center gap-1">
                 <Timer className="h-3 w-3" />
-                {currentMode === "free" && isIndian ? "Free time used" : currentMode === "free" ? "Unlimited free mode" : "Exclusive free (no time limit)"}
+                {currentMode === "free" && isIndian
+                  ? "Free time used"
+                  : currentMode === "free"
+                    ? "Unlimited free mode"
+                    : "Exclusive free (no time limit)"}
               </span>
               {currentMode === "free" && isIndian && (
-                <span>{freeMinutesUsed}/{freeMinutesLimit} min</span>
+                <span>
+                  {freeMinutesUsed}/{freeMinutesLimit} min
+                </span>
               )}
             </div>
             {currentMode === "free" && isIndian && (
@@ -202,7 +212,7 @@ const WomenChatModeSwitcher = ({
                 <div
                   className={cn(
                     "h-1.5 rounded-full transition-all",
-                    freeMinutesUsed >= freeMinutesLimit ? "bg-destructive" : "bg-blue-500"
+                    freeMinutesUsed >= freeMinutesLimit ? "bg-destructive" : "bg-blue-500",
                   )}
                   style={{ width: `${Math.min(100, (freeMinutesUsed / freeMinutesLimit) * 100)}%` }}
                 />
@@ -220,10 +230,9 @@ const WomenChatModeSwitcher = ({
                 <div>
                   <div className="text-xs font-semibold text-foreground">Force Free Mode</div>
                   <div className="text-[10px] text-muted-foreground">
-                    {forceFreeExpired 
-                      ? "Daily limit reached (resets tomorrow)" 
-                      : `Men not charged • ${forceFreeMinutesLimit - forceFreeMinutesUsed}m left today`
-                    }
+                    {forceFreeExpired
+                      ? "Daily limit reached (resets tomorrow)"
+                      : `Men not charged • ${forceFreeMinutesLimit - forceFreeMinutesUsed}m left today`}
                   </div>
                 </div>
               </div>
@@ -238,9 +247,15 @@ const WomenChatModeSwitcher = ({
               <div
                 className={cn(
                   "h-1.5 rounded-full transition-all",
-                  forceFreeExpired ? "bg-destructive" : isForceFreeActive ? "bg-orange-500" : "bg-muted-foreground/30"
+                  forceFreeExpired
+                    ? "bg-destructive"
+                    : isForceFreeActive
+                      ? "bg-orange-500"
+                      : "bg-muted-foreground/30",
                 )}
-                style={{ width: `${Math.min(100, (forceFreeMinutesUsed / forceFreeMinutesLimit) * 100)}%` }}
+                style={{
+                  width: `${Math.min(100, (forceFreeMinutesUsed / forceFreeMinutesLimit) * 100)}%`,
+                }}
               />
             </div>
           </div>
@@ -257,15 +272,30 @@ const WomenChatModeSwitcher = ({
             </AlertDialogTitle>
             <AlertDialogDescription className="space-y-2">
               {confirmMode === "paid" && (
-                <p>Switching to <strong>Paid Mode</strong> will disconnect you from regular (non-recharged) men. You&apos;ll earn money chatting with premium men.</p>
+                <p>
+                  Switching to <strong>Paid Mode</strong> will disconnect you from regular
+                  (non-recharged) men. You&apos;ll earn money chatting with premium men.
+                </p>
               )}
               {confirmMode === "free" && (
-                <p>Switching to <strong>Free Mode</strong> gives you {isIndian ? `${freeMinutesLimit - freeMinutesUsed} minutes of` : "unlimited"} free chat with regular men. You won&apos;t earn money. You can switch back to Paid mode anytime.</p>
+                <p>
+                  Switching to <strong>Free Mode</strong> gives you{" "}
+                  {isIndian ? `${freeMinutesLimit - freeMinutesUsed} minutes of` : "unlimited"} free
+                  chat with regular men. You won&apos;t earn money. You can switch back to Paid mode
+                  anytime.
+                </p>
               )}
               {confirmMode === "exclusive_free" && (
-                <p>Switching to <strong>Exclusive Free Mode</strong> locks you in for 24 hours. You can chat with regular men freely but <strong>cannot switch to Paid mode until tomorrow</strong>. No earnings in this mode.</p>
+                <p>
+                  Switching to <strong>Exclusive Free Mode</strong> locks you in for 24 hours. You
+                  can chat with regular men freely but{" "}
+                  <strong>cannot switch to Paid mode until tomorrow</strong>. No earnings in this
+                  mode.
+                </p>
               )}
-              <p className="text-sm text-muted-foreground">Active chats with incompatible users will be ended.</p>
+              <p className="text-sm text-muted-foreground">
+                Active chats with incompatible users will be ended.
+              </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -13,7 +13,9 @@ const SettingsScreen = () => {
 
   useEffect(() => {
     const detectHome = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session?.user) return;
       const { data: profile } = await supabase
         .from("profiles")

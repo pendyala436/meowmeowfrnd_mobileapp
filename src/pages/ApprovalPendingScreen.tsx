@@ -51,7 +51,7 @@ const ApprovalPendingScreen = () => {
             });
             navigate("/women-dashboard");
           }
-        }
+        },
       )
       .subscribe();
 
@@ -62,7 +62,9 @@ const ApprovalPendingScreen = () => {
 
   const checkApprovalStatus = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session?.user) {
         navigate("/");
         return;
@@ -84,7 +86,7 @@ const ApprovalPendingScreen = () => {
       }
 
       setUserName(profile?.full_name || "");
-      setStatus(profile?.approval_status as ApprovalStatus || "pending");
+      setStatus((profile?.approval_status as ApprovalStatus) || "pending");
       setDisapprovalReason(profile?.ai_disapproval_reason || null);
 
       // If approved, redirect to women dashboard
@@ -112,7 +114,7 @@ const ApprovalPendingScreen = () => {
     setRefreshing(true);
     await checkApprovalStatus();
     setRefreshing(false);
-    
+
     if (status === "pending") {
       toast({
         title: "Status Updated",
@@ -123,14 +125,16 @@ const ApprovalPendingScreen = () => {
 
   const handleLogout = async () => {
     // Get current user to set offline status
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (session?.user) {
       const user = session.user;
       const now = new Date().toISOString();
       await supabase
-        .from('user_status')
+        .from("user_status")
         .update({ is_online: false, last_seen: now })
-        .eq('user_id', user.id);
+        .eq("user_id", user.id);
     }
     await supabase.auth.signOut();
     navigate("/");
@@ -139,7 +143,9 @@ const ApprovalPendingScreen = () => {
   const handleReapply = async () => {
     try {
       setLoading(true);
-      const { data: { session: s } } = await supabase.auth.getSession();
+      const {
+        data: { session: s },
+      } = await supabase.auth.getSession();
       if (!s?.user) return;
       const user = s.user;
 
@@ -150,8 +156,8 @@ const ApprovalPendingScreen = () => {
       });
 
       // Call the edge function for immediate approval
-      const { data, error } = await supabase.functions.invoke('ai-women-approval', {
-        body: { action: 'request_reapproval', user_id: user.id }
+      const { data, error } = await supabase.functions.invoke("ai-women-approval", {
+        body: { action: "request_reapproval", user_id: user.id },
       });
 
       if (error) throw error;
@@ -159,10 +165,11 @@ const ApprovalPendingScreen = () => {
       if (data?.success) {
         setStatus("approved");
         setDisapprovalReason(null);
-        
+
         toast({
           title: "✅ Approved Successfully!",
-          description: "Your account has been reactivated. You are now a Free User and can start chatting. Perform well to earn a badge!",
+          description:
+            "Your account has been reactivated. You are now a Free User and can start chatting. Perform well to earn a badge!",
         });
 
         // Navigate to dashboard after short delay
@@ -221,7 +228,7 @@ const ApprovalPendingScreen = () => {
                 </CardDescription>
               </>
             )}
-            
+
             {(status === "disapproved" || status === "inactive") && (
               <>
                 <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-destructive/20 flex items-center justify-center">
@@ -235,7 +242,7 @@ const ApprovalPendingScreen = () => {
                   {status === "inactive" ? "Account Inactive" : "Application Declined"}
                 </CardTitle>
                 <CardDescription>
-                  {status === "inactive" 
+                  {status === "inactive"
                     ? `Hi ${userName || "there"}! Your account became inactive due to inactivity. You can reactivate it below.`
                     : "We're sorry, but your application was not approved at this time."}
                 </CardDescription>

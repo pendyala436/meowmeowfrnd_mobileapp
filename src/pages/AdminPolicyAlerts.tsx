@@ -90,13 +90,13 @@ const AdminPolicyAlerts = () => {
   const [userProfiles, setUserProfiles] = useState<Record<string, UserProfile>>({});
   const [refreshing, setRefreshing] = useState(false);
   const [scanning, setScanning] = useState(false);
-  
+
   // Filters
   const [statusFilter, setStatusFilter] = useState("pending");
   const [severityFilter, setSeverityFilter] = useState("all");
   const [violationTypeFilter, setViolationTypeFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  
+
   // Dialog state
   const [selectedAlert, setSelectedAlert] = useState<PolicyAlert | null>(null);
   const [alertDialogOpen, setAlertDialogOpen] = useState(false);
@@ -120,11 +120,26 @@ const AdminPolicyAlerts = () => {
     try {
       // Use server-side count queries instead of fetching all rows
       const [pending, reviewing, resolved, critical, high] = await Promise.all([
-        supabase.from("policy_violation_alerts").select("*", { count: "exact", head: true }).eq("status", "pending"),
-        supabase.from("policy_violation_alerts").select("*", { count: "exact", head: true }).eq("status", "reviewing"),
-        supabase.from("policy_violation_alerts").select("*", { count: "exact", head: true }).eq("status", "resolved"),
-        supabase.from("policy_violation_alerts").select("*", { count: "exact", head: true }).eq("severity", "critical"),
-        supabase.from("policy_violation_alerts").select("*", { count: "exact", head: true }).eq("severity", "high"),
+        supabase
+          .from("policy_violation_alerts")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "pending"),
+        supabase
+          .from("policy_violation_alerts")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "reviewing"),
+        supabase
+          .from("policy_violation_alerts")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "resolved"),
+        supabase
+          .from("policy_violation_alerts")
+          .select("*", { count: "exact", head: true })
+          .eq("severity", "critical"),
+        supabase
+          .from("policy_violation_alerts")
+          .select("*", { count: "exact", head: true })
+          .eq("severity", "high"),
       ]);
       setStats({
         pending: pending.count || 0,
@@ -135,7 +150,9 @@ const AdminPolicyAlerts = () => {
       });
     } catch (error) {
       console.error("Error loading stats:", error);
-      toast.error("Stats unavailable", { description: "Unable to load policy alert statistics. Please refresh." });
+      toast.error("Stats unavailable", {
+        description: "Unable to load policy alert statistics. Please refresh.",
+      });
     }
   }, []);
 
@@ -164,14 +181,14 @@ const AdminPolicyAlerts = () => {
 
       // Load user profiles for alerts
       if (data && data.length > 0) {
-        const userIds = [...new Set(data.map(a => a.user_id))];
+        const userIds = [...new Set(data.map((a) => a.user_id))];
         const { data: profiles } = await supabase
           .from("profiles")
           .select("id, user_id, full_name, gender, photo_url")
           .in("user_id", userIds);
 
         const profileMap: Record<string, UserProfile> = {};
-        profiles?.forEach(p => {
+        profiles?.forEach((p) => {
           profileMap[p.user_id] = p;
         });
         setUserProfiles(profileMap);
@@ -192,7 +209,7 @@ const AdminPolicyAlerts = () => {
       loadAlerts();
       loadStats();
     },
-    enabled: isAdmin
+    enabled: isAdmin,
   });
 
   useEffect(() => {
@@ -220,7 +237,7 @@ const AdminPolicyAlerts = () => {
         return;
       }
 
-      const { data, error } = await supabase.functions.invoke('content-moderation', {
+      const { data, error } = await supabase.functions.invoke("content-moderation", {
         body: { action: "scan_recent_messages" },
         headers: { Authorization: `Bearer ${accessToken}` },
       });
@@ -228,7 +245,9 @@ const AdminPolicyAlerts = () => {
       if (error) throw error;
       if (!data) throw new Error("No response from content moderation function");
       if (data.success) {
-        toast.success(`Scan complete: ${data.flagged ?? 0} violations found in ${data.scanned ?? 0} messages`);
+        toast.success(
+          `Scan complete: ${data.flagged ?? 0} violations found in ${data.scanned ?? 0} messages`,
+        );
         loadAlerts();
         loadStats();
       } else {
@@ -259,9 +278,11 @@ const AdminPolicyAlerts = () => {
     if (!selectedAlert) return;
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       const user = session?.user;
-      
+
       const { error } = await supabase
         .from("policy_violation_alerts")
         .update({
@@ -290,7 +311,9 @@ const AdminPolicyAlerts = () => {
     if (!selectedAlert || !messageContent.trim()) return;
 
     try {
-      const { data: { session: s2 } } = await supabase.auth.getSession();
+      const {
+        data: { session: s2 },
+      } = await supabase.auth.getSession();
       const user = s2?.user;
       const trimmed = messageContent.trim();
 
@@ -330,7 +353,9 @@ const AdminPolicyAlerts = () => {
 
   const handleBlockUser = async (userId: string) => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       const adminId = session?.user?.id;
 
       // 1) Mark profile blocked
@@ -342,17 +367,15 @@ const AdminPolicyAlerts = () => {
       if (profileErr) throw profileErr;
 
       // 2) Create permanent block record so /admin/moderation reflects it consistently
-      const { error: blockErr } = await supabase
-        .from("user_blocks")
-        .insert({
-          blocked_user_id: userId,
-          blocked_by: adminId,
-          block_type: "permanent",
-          reason: selectedAlert
-            ? `Policy violation: ${selectedAlert.violation_type} (${selectedAlert.severity})`
-            : "Policy violation",
-          expires_at: null,
-        });
+      const { error: blockErr } = await supabase.from("user_blocks").insert({
+        blocked_user_id: userId,
+        blocked_by: adminId,
+        block_type: "permanent",
+        reason: selectedAlert
+          ? `Policy violation: ${selectedAlert.violation_type} (${selectedAlert.severity})`
+          : "Policy violation",
+        expires_at: null,
+      });
       if (blockErr) {
         // Non-fatal but report it
         console.warn("Block record insert failed:", blockErr);
@@ -389,11 +412,26 @@ const AdminPolicyAlerts = () => {
   const getSeverityBadge = (severity: string) => {
     switch (severity) {
       case "critical":
-        return <Badge variant="destructive" className="animate-pulse"><AlertCircle className="h-3 w-3 mr-1" />Critical</Badge>;
+        return (
+          <Badge variant="destructive" className="animate-pulse">
+            <AlertCircle className="h-3 w-3 mr-1" />
+            Critical
+          </Badge>
+        );
       case "high":
-        return <Badge variant="destructive"><AlertTriangle className="h-3 w-3 mr-1" />High</Badge>;
+        return (
+          <Badge variant="destructive">
+            <AlertTriangle className="h-3 w-3 mr-1" />
+            High
+          </Badge>
+        );
       case "medium":
-        return <Badge variant="warning"><AlertTriangle className="h-3 w-3 mr-1" />Medium</Badge>;
+        return (
+          <Badge variant="warning">
+            <AlertTriangle className="h-3 w-3 mr-1" />
+            Medium
+          </Badge>
+        );
       case "low":
         return <Badge variant="secondary">Low</Badge>;
       default:
@@ -408,9 +446,19 @@ const AdminPolicyAlerts = () => {
       case "reviewing":
         return <Badge variant="info">Reviewing</Badge>;
       case "resolved":
-        return <Badge variant="success"><CheckCircle className="h-3 w-3 mr-1" />Resolved</Badge>;
+        return (
+          <Badge variant="success">
+            <CheckCircle className="h-3 w-3 mr-1" />
+            Resolved
+          </Badge>
+        );
       case "dismissed":
-        return <Badge variant="secondary"><XCircle className="h-3 w-3 mr-1" />Dismissed</Badge>;
+        return (
+          <Badge variant="secondary">
+            <XCircle className="h-3 w-3 mr-1" />
+            Dismissed
+          </Badge>
+        );
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -421,7 +469,7 @@ const AdminPolicyAlerts = () => {
     return <Badge variant="destructive">{type.replace(/_/g, " ")}</Badge>;
   };
 
-  const filteredAlerts = alerts.filter(alert => {
+  const filteredAlerts = alerts.filter((alert) => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase().trim();
     const profile = userProfiles[alert.user_id];
@@ -599,15 +647,22 @@ const AdminPolicyAlerts = () => {
                     filteredAlerts.map((alert) => {
                       const profile = userProfiles[alert.user_id];
                       return (
-                        <TableRow key={alert.id} className={cn(
-                          alert.severity === "critical" && "bg-destructive/10",
-                          alert.severity === "high" && "bg-destructive/5"
-                        )}>
+                        <TableRow
+                          key={alert.id}
+                          className={cn(
+                            alert.severity === "critical" && "bg-destructive/10",
+                            alert.severity === "high" && "bg-destructive/5",
+                          )}
+                        >
                           <TableCell>
                             <div className="flex items-center gap-2">
                               <div className="h-8 w-8 rounded-full bg-muted overflow-hidden">
                                 {profile?.photo_url ? (
-                                  <img src={profile.photo_url} alt="" className="h-full w-full object-cover" />
+                                  <img
+                                    src={profile.photo_url}
+                                    alt=""
+                                    className="h-full w-full object-cover"
+                                  />
                                 ) : (
                                   <div className="h-full w-full flex items-center justify-center text-xs">
                                     {profile?.full_name?.[0] || "?"}
@@ -615,7 +670,9 @@ const AdminPolicyAlerts = () => {
                                 )}
                               </div>
                               <div>
-                                <p className="font-medium text-sm">{profile?.full_name || "Unknown"}</p>
+                                <p className="font-medium text-sm">
+                                  {profile?.full_name || "Unknown"}
+                                </p>
                                 <p className="text-xs text-muted-foreground">{profile?.gender}</p>
                               </div>
                             </div>
@@ -623,9 +680,14 @@ const AdminPolicyAlerts = () => {
                           <TableCell>{getViolationTypeBadge(alert.violation_type)}</TableCell>
                           <TableCell>{getSeverityBadge(alert.severity)}</TableCell>
                           <TableCell>
-                            <p className="text-sm truncate max-w-[200px]" title={alert.content || ""}>
+                            <p
+                              className="text-sm truncate max-w-[200px]"
+                              title={alert.content || ""}
+                            >
                               {alert.content
-                                ? (alert.content.length > 50 ? `${alert.content.slice(0, 50)}…` : alert.content)
+                                ? alert.content.length > 50
+                                  ? `${alert.content.slice(0, 50)}…`
+                                  : alert.content
                                 : "N/A"}
                             </p>
                           </TableCell>
@@ -635,10 +697,20 @@ const AdminPolicyAlerts = () => {
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-1">
-                              <Button variant="ghost" size="icon" onClick={() => openAlertDetails(alert)} title="View Details">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => openAlertDetails(alert)}
+                                title="View Details"
+                              >
                                 <Eye className="h-4 w-4" />
                               </Button>
-                              <Button variant="ghost" size="icon" onClick={() => openMessageDialog(alert)} title="Send Warning">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => openMessageDialog(alert)}
+                                title="Send Warning"
+                              >
                                 <MessageSquare className="h-4 w-4" />
                               </Button>
                             </div>
@@ -655,7 +727,17 @@ const AdminPolicyAlerts = () => {
       </div>
 
       {/* Alert Details Dialog */}
-      <Dialog open={alertDialogOpen} onOpenChange={(open) => { setAlertDialogOpen(open); if (!open) { setSelectedAlert(null); setAdminNotes(""); setActionTaken(""); } }}>
+      <Dialog
+        open={alertDialogOpen}
+        onOpenChange={(open) => {
+          setAlertDialogOpen(open);
+          if (!open) {
+            setSelectedAlert(null);
+            setAdminNotes("");
+            setActionTaken("");
+          }
+        }}
+      >
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -668,7 +750,9 @@ const AdminPolicyAlerts = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-muted-foreground">User</Label>
-                  <p className="font-medium">{userProfiles[selectedAlert.user_id]?.full_name || "Unknown"}</p>
+                  <p className="font-medium">
+                    {userProfiles[selectedAlert.user_id]?.full_name || "Unknown"}
+                  </p>
                 </div>
                 <div>
                   <Label className="text-muted-foreground">Violation Type</Label>
@@ -683,11 +767,13 @@ const AdminPolicyAlerts = () => {
                   <p>{selectedAlert.detected_by}</p>
                 </div>
               </div>
-              
+
               <div>
                 <Label className="text-muted-foreground">Flagged Content</Label>
                 <div className="p-3 bg-muted rounded-lg mt-1">
-                  <p className="text-sm whitespace-pre-wrap">{selectedAlert.content || "No content"}</p>
+                  <p className="text-sm whitespace-pre-wrap">
+                    {selectedAlert.content || "No content"}
+                  </p>
                 </div>
               </div>
 
@@ -720,7 +806,11 @@ const AdminPolicyAlerts = () => {
             </div>
           )}
           <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button variant="destructive" disabled={!selectedAlert} onClick={() => selectedAlert && handleBlockUser(selectedAlert.user_id)}>
+            <Button
+              variant="destructive"
+              disabled={!selectedAlert}
+              onClick={() => selectedAlert && handleBlockUser(selectedAlert.user_id)}
+            >
               <Ban className="h-4 w-4 mr-2" />
               Block User
             </Button>
@@ -739,7 +829,15 @@ const AdminPolicyAlerts = () => {
       </Dialog>
 
       {/* Send Message Dialog */}
-      <Dialog open={messageDialogOpen} onOpenChange={(open) => { setMessageDialogOpen(open); if (!open) { setMessageContent(""); } }}>
+      <Dialog
+        open={messageDialogOpen}
+        onOpenChange={(open) => {
+          setMessageDialogOpen(open);
+          if (!open) {
+            setMessageContent("");
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -747,13 +845,16 @@ const AdminPolicyAlerts = () => {
               Send Warning Message
             </DialogTitle>
             <DialogDescription>
-              Send a warning notification to {userProfiles[selectedAlert?.user_id || ""]?.full_name || "this user"}
+              Send a warning notification to{" "}
+              {userProfiles[selectedAlert?.user_id || ""]?.full_name || "this user"}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
               <Label>Violation</Label>
-              <div className="mt-1">{selectedAlert && getViolationTypeBadge(selectedAlert.violation_type)}</div>
+              <div className="mt-1">
+                {selectedAlert && getViolationTypeBadge(selectedAlert.violation_type)}
+              </div>
             </div>
             <div>
               <Label>Warning Message</Label>

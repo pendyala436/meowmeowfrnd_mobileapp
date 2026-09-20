@@ -7,8 +7,8 @@
  * AND never charged twice for the same elapsed minute when restart spans a
  * minute boundary. See audit Issue #13.
  */
-import { useEffect, useRef } from 'react';
-import { billMinute, type SessionType } from '@/services/billing.service';
+import { useEffect, useRef } from "react";
+import { billMinute, type SessionType } from "@/services/billing.service";
 
 interface HeartbeatOptions {
   sessionId: string;
@@ -25,9 +25,14 @@ const storageKey = (sessionId: string, sessionType: SessionType) =>
   `billing:hb:${sessionType}:${sessionId}`;
 
 export function useBillingHeartbeat({
-  sessionId, sessionType, manId, womanId,
-  intervalMs = 60_000, enabled = true,
-  onInsufficientBalance, onError,
+  sessionId,
+  sessionType,
+  manId,
+  womanId,
+  intervalMs = 60_000,
+  enabled = true,
+  onInsufficientBalance,
+  onError,
 }: HeartbeatOptions) {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const minuteRef = useRef<number>(0);
@@ -48,15 +53,23 @@ export function useBillingHeartbeat({
       const r = await billMinute(sessionId, sessionType, 1.0, manId, womanId, 1, idx);
       if (r.success && !r.duplicate_skipped) {
         minuteRef.current = idx + 1;
-        try { sessionStorage.setItem(storageKey(sessionId, sessionType), String(minuteRef.current)); } catch { /* ignore */ }
+        try {
+          sessionStorage.setItem(storageKey(sessionId, sessionType), String(minuteRef.current));
+        } catch {
+          /* ignore */
+        }
       } else if (r.duplicate_skipped) {
         // Duplicate — advance counter so the next tick uses the next minute.
         minuteRef.current = idx + 1;
-        try { sessionStorage.setItem(storageKey(sessionId, sessionType), String(minuteRef.current)); } catch { /* ignore */ }
-      } else if (r.error?.includes('Insufficient balance')) {
+        try {
+          sessionStorage.setItem(storageKey(sessionId, sessionType), String(minuteRef.current));
+        } catch {
+          /* ignore */
+        }
+      } else if (r.error?.includes("Insufficient balance")) {
         onInsufficientBalance?.();
       } else {
-        onError?.(r.error ?? 'Billing error');
+        onError?.(r.error ?? "Billing error");
       }
     };
     timerRef.current = setInterval(tick, intervalMs);

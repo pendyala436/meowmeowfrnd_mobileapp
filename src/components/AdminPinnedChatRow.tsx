@@ -24,9 +24,13 @@ export function AdminPinnedChatRow({ onClick, unread = 0 }: AdminPinnedChatRowPr
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between">
           <span className={cn("text-sm", unread > 0 ? "font-bold" : "font-semibold")}>Admin</span>
-          <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 font-medium">FREE</span>
+          <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 font-medium">
+            FREE
+          </span>
         </div>
-        <p className="text-xs text-muted-foreground truncate">Chat with Admin — no wallet charges</p>
+        <p className="text-xs text-muted-foreground truncate">
+          Chat with Admin — no wallet charges
+        </p>
       </div>
       {unread > 0 && (
         <span className="min-w-[18px] h-[18px] rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center px-1">

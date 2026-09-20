@@ -91,7 +91,9 @@ const ScreenCaptureGuard = memo(({ children }: { children: React.ReactNode }) =>
             user_agent: `print:${navigator.userAgent}`,
           });
         }
-      } catch { /* best-effort */ }
+      } catch {
+        /* best-effort */
+      }
     };
     window.addEventListener("beforeprint", onPrint);
     return () => window.removeEventListener("beforeprint", onPrint);
@@ -133,7 +135,9 @@ const ScreenCaptureGuard = memo(({ children }: { children: React.ReactNode }) =>
             }}
           >
             {Array.from({ length: 120 }).map((_, i) => (
-              <span key={i}>{tag} • {stamp}</span>
+              <span key={i}>
+                {tag} • {stamp}
+              </span>
             ))}
           </div>
         </div>

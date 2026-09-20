@@ -2,7 +2,12 @@ import type { Config } from "tailwindcss";
 
 export default {
   darkMode: ["class"],
-  content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
+  content: [
+    "./pages/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./app/**/*.{ts,tsx}",
+    "./src/**/*.{ts,tsx}",
+  ],
   prefix: "",
   theme: {
     container: {
@@ -28,160 +33,158 @@ export default {
       // MOBILE DEVICES
       // ========================================
       // Small phones (iPhone SE, older Android)
-      "xs": "320px",
+      xs: "320px",
       // Standard phones (iPhone 14/15, Galaxy S series)
-      "sm": "375px",
+      sm: "375px",
       // Large phones / Phablets (iPhone Pro Max, Galaxy Note)
-      "phablet": "428px",
-      
+      phablet: "428px",
+
       // ========================================
       // TABLETS
       // ========================================
       // Small tablets (iPad Mini, Kindle Fire)
-      "md": "768px",
+      md: "768px",
       // Standard tablets (iPad, Galaxy Tab)
-      "tablet": "834px",
+      tablet: "834px",
       // Large tablets (iPad Pro 12.9")
       "tablet-lg": "1024px",
-      
+
       // ========================================
       // LAPTOPS & DESKTOPS
       // ========================================
       // Small laptops / Chromebooks
-      "lg": "1024px",
+      lg: "1024px",
       // Standard laptops (MacBook Air/Pro 13")
-      "laptop": "1280px",
+      laptop: "1280px",
       // Desktop monitors
-      "xl": "1280px",
+      xl: "1280px",
       // Large desktops
       "2xl": "1536px",
       // Ultra-wide / 4K
       "3xl": "1920px",
       // 5K / Large displays
       "4xl": "2560px",
-      
+
       // ========================================
       // DEVICE-SPECIFIC BREAKPOINTS
       // ========================================
       // Mobile-only (phones)
-      "mobile": { "max": "767px" },
+      mobile: { max: "767px" },
       // Tablet-only
-      "tablet-only": { "min": "768px", "max": "1023px" },
+      "tablet-only": { min: "768px", max: "1023px" },
       // Laptop-only
-      "laptop-only": { "min": "1024px", "max": "1279px" },
+      "laptop-only": { min: "1024px", max: "1279px" },
       // Desktop and above
-      "desktop": { "min": "1280px" },
-      
+      desktop: { min: "1280px" },
+
       // ========================================
       // FOLDABLE DEVICES
       // ========================================
       // Samsung Galaxy Fold (closed)
-      "fold-closed": { "raw": "(max-width: 280px)" },
+      "fold-closed": { raw: "(max-width: 280px)" },
       // Samsung Galaxy Fold (open)
-      "fold-open": { "raw": "(min-width: 717px) and (max-width: 884px)" },
-      
+      "fold-open": { raw: "(min-width: 717px) and (max-width: 884px)" },
+
       // ========================================
       // ORIENTATION
       // ========================================
-      "portrait": { "raw": "(orientation: portrait)" },
-      "landscape": { "raw": "(orientation: landscape)" },
-      
+      portrait: { raw: "(orientation: portrait)" },
+      landscape: { raw: "(orientation: landscape)" },
+
       // ========================================
       // INPUT METHODS
       // ========================================
       // Touch devices (phones, tablets)
-      "touch": { "raw": "(hover: none) and (pointer: coarse)" },
+      touch: { raw: "(hover: none) and (pointer: coarse)" },
       // Stylus devices (drawing tablets)
-      "stylus": { "raw": "(hover: none) and (pointer: fine)" },
+      stylus: { raw: "(hover: none) and (pointer: fine)" },
       // Mouse/trackpad devices (laptops, desktops)
-      "mouse": { "raw": "(hover: hover) and (pointer: fine)" },
+      mouse: { raw: "(hover: hover) and (pointer: fine)" },
       // Keyboard navigation
-      "keyboard": { "raw": "(hover: hover)" },
-      
+      keyboard: { raw: "(hover: hover)" },
+
       // ========================================
       // DISPLAY QUALITY
       // ========================================
       // Standard displays
-      "standard-dpi": { "raw": "(max-resolution: 1dppx)" },
+      "standard-dpi": { raw: "(max-resolution: 1dppx)" },
       // Retina / High-DPI displays
-      "retina": { "raw": "(-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi)" },
+      retina: { raw: "(-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi)" },
       // Super Retina / 3x displays
-      "retina-3x": { "raw": "(-webkit-min-device-pixel-ratio: 3), (min-resolution: 288dpi)" },
-      
+      "retina-3x": { raw: "(-webkit-min-device-pixel-ratio: 3), (min-resolution: 288dpi)" },
+
       // ========================================
       // USER PREFERENCES
       // ========================================
-      "motion-safe": { "raw": "(prefers-reduced-motion: no-preference)" },
-      "motion-reduce": { "raw": "(prefers-reduced-motion: reduce)" },
-      "dark-mode": { "raw": "(prefers-color-scheme: dark)" },
-      "light-mode": { "raw": "(prefers-color-scheme: light)" },
-      "high-contrast": { "raw": "(prefers-contrast: high)" },
-      
+      "motion-safe": { raw: "(prefers-reduced-motion: no-preference)" },
+      "motion-reduce": { raw: "(prefers-reduced-motion: reduce)" },
+      "dark-mode": { raw: "(prefers-color-scheme: dark)" },
+      "light-mode": { raw: "(prefers-color-scheme: light)" },
+      "high-contrast": { raw: "(prefers-contrast: high)" },
+
       // ========================================
       // SPECIAL SCREENS
       // ========================================
       // Short screens (landscape phones)
-      "short": { "raw": "(max-height: 500px)" },
+      short: { raw: "(max-height: 500px)" },
       // Tall screens
-      "tall": { "raw": "(min-height: 900px)" },
+      tall: { raw: "(min-height: 900px)" },
       // Wide screens (ultra-wide monitors)
-      "wide": { "raw": "(min-aspect-ratio: 21/9)" },
+      wide: { raw: "(min-aspect-ratio: 21/9)" },
       // Square-ish screens
-      "square": { "raw": "(min-aspect-ratio: 3/4) and (max-aspect-ratio: 4/3)" },
-      
+      square: { raw: "(min-aspect-ratio: 3/4) and (max-aspect-ratio: 4/3)" },
+
       // ========================================
       // TV & LARGE SCREENS
       // ========================================
-      "tv": { "raw": "(min-width: 1920px) and (min-height: 1080px)" },
-      "tv-4k": { "raw": "(min-width: 3840px)" },
-      
+      tv: { raw: "(min-width: 1920px) and (min-height: 1080px)" },
+      "tv-4k": { raw: "(min-width: 3840px)" },
+
       // ========================================
       // CHROMEBOOK / HYBRID
       // ========================================
-      "chromebook": { "raw": "(min-width: 1024px) and (hover: hover) and (pointer: fine), (min-width: 1024px) and (hover: none) and (pointer: coarse)" },
-      
+      chromebook: {
+        raw: "(min-width: 1024px) and (hover: hover) and (pointer: fine), (min-width: 1024px) and (hover: none) and (pointer: coarse)",
+      },
+
       // ========================================
       // PRINT
       // ========================================
-      "print": { "raw": "print" },
-      "screen": { "raw": "screen" },
+      print: { raw: "print" },
+      screen: { raw: "screen" },
     },
     extend: {
       fontFamily: {
         // Noto Sans as primary - supports 300+ languages/scripts
         sans: [
-          'Noto Sans',
-          'Noto Sans Devanagari',
-          'Noto Sans Bengali',
-          'Noto Sans Tamil',
-          'Noto Sans Telugu',
-          'Noto Sans Kannada',
-          'Noto Sans Malayalam',
-          'Noto Sans Gujarati',
-          'Noto Sans Gurmukhi',
-          'Noto Sans Arabic',
-          'Noto Sans Hebrew',
-          'Noto Sans Thai',
-          'Noto Sans SC',
-          'Noto Sans JP',
-          'Noto Sans KR',
-          'system-ui',
-          '-apple-system',
-          'sans-serif'
+          "Noto Sans",
+          "Noto Sans Devanagari",
+          "Noto Sans Bengali",
+          "Noto Sans Tamil",
+          "Noto Sans Telugu",
+          "Noto Sans Kannada",
+          "Noto Sans Malayalam",
+          "Noto Sans Gujarati",
+          "Noto Sans Gurmukhi",
+          "Noto Sans Arabic",
+          "Noto Sans Hebrew",
+          "Noto Sans Thai",
+          "Noto Sans SC",
+          "Noto Sans JP",
+          "Noto Sans KR",
+          "system-ui",
+          "-apple-system",
+          "sans-serif",
         ],
         display: [
-          'Noto Sans',
-          'Noto Sans Devanagari',
-          'Noto Sans Arabic',
-          'Noto Sans SC',
-          'system-ui',
-          'sans-serif'
+          "Noto Sans",
+          "Noto Sans Devanagari",
+          "Noto Sans Arabic",
+          "Noto Sans SC",
+          "system-ui",
+          "sans-serif",
         ],
-        mono: [
-          'Noto Sans Mono',
-          'ui-monospace',
-          'monospace'
-        ],
+        mono: ["Noto Sans Mono", "ui-monospace", "monospace"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -288,20 +291,20 @@ export default {
         "safe-bottom": "env(safe-area-inset-bottom)",
         "safe-left": "env(safe-area-inset-left)",
         // Touch-friendly sizes
-        "touch": "44px",
+        touch: "44px",
         "touch-sm": "36px",
         "touch-lg": "48px",
       },
       minHeight: {
         "screen-safe": "calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom))",
-        "touch": "44px",
+        touch: "44px",
       },
       maxWidth: {
-        "mobile": "480px",
-        "tablet": "768px",
-        "laptop": "1024px",
-        "desktop": "1280px",
-        "wide": "1536px",
+        mobile: "480px",
+        tablet: "768px",
+        laptop: "1024px",
+        desktop: "1280px",
+        wide: "1536px",
       },
       fontSize: {
         // Responsive font sizes

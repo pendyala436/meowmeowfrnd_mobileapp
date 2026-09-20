@@ -1,24 +1,36 @@
-import { useState, useEffect, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useEffect, useRef } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
-import AdminNav from '@/components/AdminNav';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
-import { toast } from 'sonner';
-import { format } from 'date-fns';
+import AdminNav from "@/components/AdminNav";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import { format } from "date-fns";
 import {
-  Send, Users, MessageSquare, Globe, Search, RefreshCw, Trash2,
-  UserCheck, Crown, Loader2, Mail, Inbox, Shield, Megaphone
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { ScrollingAnnouncementsManager } from '@/components/ScrollingAnnouncementsManager';
+  Send,
+  Users,
+  MessageSquare,
+  Globe,
+  Search,
+  RefreshCw,
+  Trash2,
+  UserCheck,
+  Crown,
+  Loader2,
+  Mail,
+  Inbox,
+  Shield,
+  Megaphone,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { ScrollingAnnouncementsManager } from "@/components/ScrollingAnnouncementsManager";
 
-type TargetGroup = 'all' | 'indian_women' | 'world_women' | 'indian_men' | 'world_men';
+type TargetGroup = "all" | "indian_women" | "world_women" | "indian_men" | "world_men";
 
 interface Message {
   id: string;
@@ -51,18 +63,43 @@ interface InboxThread {
 }
 
 const GROUP_CONFIG: { key: TargetGroup; label: string; icon: React.ReactNode; color: string }[] = [
-  { key: 'all', label: 'All Users', icon: <Users className="h-4 w-4" />, color: 'bg-primary/10 text-primary' },
-  { key: 'indian_women', label: 'Indian Women', icon: <Crown className="h-4 w-4" />, color: 'bg-primary/10 text-primary' },
-  { key: 'world_women', label: 'World Women', icon: <Globe className="h-4 w-4" />, color: 'bg-primary/10 text-primary' },
-  { key: 'indian_men', label: 'Indian Men', icon: <UserCheck className="h-4 w-4" />, color: 'bg-primary/10 text-primary' },
-  { key: 'world_men', label: 'World Men', icon: <Globe className="h-4 w-4" />, color: 'bg-primary/10 text-primary' },
+  {
+    key: "all",
+    label: "All Users",
+    icon: <Users className="h-4 w-4" />,
+    color: "bg-primary/10 text-primary",
+  },
+  {
+    key: "indian_women",
+    label: "Indian Women",
+    icon: <Crown className="h-4 w-4" />,
+    color: "bg-primary/10 text-primary",
+  },
+  {
+    key: "world_women",
+    label: "World Women",
+    icon: <Globe className="h-4 w-4" />,
+    color: "bg-primary/10 text-primary",
+  },
+  {
+    key: "indian_men",
+    label: "Indian Men",
+    icon: <UserCheck className="h-4 w-4" />,
+    color: "bg-primary/10 text-primary",
+  },
+  {
+    key: "world_men",
+    label: "World Men",
+    icon: <Globe className="h-4 w-4" />,
+    color: "bg-primary/10 text-primary",
+  },
 ];
 
 const AdminMessaging = () => {
   const { isAdmin, isLoading: adminLoading } = useAdminAccess();
-  const [activeTab, setActiveTab] = useState<'inbox' | 'broadcast' | 'chat' | 'scrolling'>('inbox');
-  const [selectedGroup, setSelectedGroup] = useState<TargetGroup>('all');
-  const [broadcastMessage, setBroadcastMessage] = useState('');
+  const [activeTab, setActiveTab] = useState<"inbox" | "broadcast" | "chat" | "scrolling">("inbox");
+  const [selectedGroup, setSelectedGroup] = useState<TargetGroup>("all");
+  const [broadcastMessage, setBroadcastMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
@@ -72,13 +109,13 @@ const AdminMessaging = () => {
   const [inboxThreads, setInboxThreads] = useState<InboxThread[]>([]);
   const [selectedThread, setSelectedThread] = useState<InboxThread | null>(null);
   const [threadMessages, setThreadMessages] = useState<Message[]>([]);
-  const [inboxReply, setInboxReply] = useState('');
+  const [inboxReply, setInboxReply] = useState("");
 
   // Chat state
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<UserProfile[]>([]);
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
-  const [chatMessage, setChatMessage] = useState('');
+  const [chatMessage, setChatMessage] = useState("");
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -95,21 +132,27 @@ const AdminMessaging = () => {
 
     // #4: Realtime subscription instead of polling — use refs to avoid stale closures
     const channel = supabase
-      .channel('admin-messaging-rt')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'admin_user_messages' }, () => {
-        fetchBroadcastMessages();
-        fetchInboxThreads();
-        if (selectedThreadRef.current) fetchThreadMessages(selectedThreadRef.current.user_id);
-        if (selectedUserRef.current) fetchChatMessages(selectedUserRef.current.user_id);
-      })
+      .channel("admin-messaging-rt")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "admin_user_messages" },
+        () => {
+          fetchBroadcastMessages();
+          fetchInboxThreads();
+          if (selectedThreadRef.current) fetchThreadMessages(selectedThreadRef.current.user_id);
+          if (selectedUserRef.current) fetchChatMessages(selectedUserRef.current.user_id);
+        },
+      )
       .subscribe((status) => {
         // FIX #17: Error handler for channel
-        if (status === 'CHANNEL_ERROR') {
-          console.warn('[AdminMessaging] Realtime channel error, will auto-reconnect');
+        if (status === "CHANNEL_ERROR") {
+          console.warn("[AdminMessaging] Realtime channel error, will auto-reconnect");
         }
       });
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   useEffect(() => {
@@ -121,15 +164,17 @@ const AdminMessaging = () => {
   }, [selectedThread]);
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages]);
 
   useEffect(() => {
-    inboxEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    inboxEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [threadMessages]);
 
   const loadAdmin = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (session?.user) setAdminId(session.user.id);
   };
 
@@ -138,11 +183,11 @@ const AdminMessaging = () => {
     try {
       // Get all user-sent messages (sender_role = 'user')
       const { data: userMessages } = await supabase
-        .from('admin_user_messages')
-        .select('*')
-        .eq('sender_role', 'user')
-        .not('target_user_id', 'is', null)
-        .order('created_at', { ascending: false })
+        .from("admin_user_messages")
+        .select("*")
+        .eq("sender_role", "user")
+        .not("target_user_id", "is", null)
+        .order("created_at", { ascending: false })
         .limit(500);
 
       if (!userMessages || userMessages.length === 0) {
@@ -152,27 +197,27 @@ const AdminMessaging = () => {
       }
 
       // Group by user
-      const userIds = [...new Set(userMessages.map(m => m.sender_id))];
+      const userIds = [...new Set(userMessages.map((m) => m.sender_id))];
 
       // Fetch profiles
       const { data: profiles } = await supabase
-        .from('profiles')
-        .select('user_id, full_name, gender, is_indian')
-        .in('user_id', userIds);
+        .from("profiles")
+        .select("user_id, full_name, gender, is_indian")
+        .in("user_id", userIds);
 
-      const profileMap = new Map((profiles as any[] || []).map(p => [p.user_id, p]));
+      const profileMap = new Map(((profiles as any[]) || []).map((p) => [p.user_id, p]));
 
-      const threads: InboxThread[] = userIds.map(uid => {
-        const userMsgs = userMessages.filter(m => m.sender_id === uid);
+      const threads: InboxThread[] = userIds.map((uid) => {
+        const userMsgs = userMessages.filter((m) => m.sender_id === uid);
         const profile = profileMap.get(uid) as any;
-        const unread = userMsgs.filter(m => !m.is_read).length;
+        const unread = userMsgs.filter((m) => !m.is_read).length;
         return {
           user_id: uid as string,
-          user_name: profile?.full_name || 'Unknown User',
-          gender: profile?.gender || 'Unknown',
+          user_name: profile?.full_name || "Unknown User",
+          gender: profile?.gender || "Unknown",
           is_indian: profile?.is_indian || false,
-          last_message: userMsgs[0]?.message || '',
-          last_time: userMsgs[0]?.created_at || '',
+          last_message: userMsgs[0]?.message || "",
+          last_time: userMsgs[0]?.created_at || "",
           unread_count: unread,
         };
       });
@@ -186,7 +231,7 @@ const AdminMessaging = () => {
 
       setInboxThreads(threads);
     } catch {
-      toast.error('Failed to load inbox');
+      toast.error("Failed to load inbox");
     } finally {
       setIsLoading(false);
     }
@@ -194,45 +239,45 @@ const AdminMessaging = () => {
 
   const fetchThreadMessages = async (userId: string) => {
     const { data } = await supabase
-      .from('admin_user_messages')
-      .select('*')
-      .eq('target_user_id', userId)
-      .order('created_at', { ascending: true })
+      .from("admin_user_messages")
+      .select("*")
+      .eq("target_user_id", userId)
+      .order("created_at", { ascending: true })
       .limit(200);
 
     if (data) setThreadMessages(data as Message[]);
 
     // Mark user messages as read
     await supabase
-      .from('admin_user_messages')
+      .from("admin_user_messages")
       .update({ is_read: true })
-      .eq('target_user_id', userId)
-      .eq('sender_role', 'user')
-      .eq('is_read', false);
+      .eq("target_user_id", userId)
+      .eq("sender_role", "user")
+      .eq("is_read", false);
 
     // Update thread unread
-    setInboxThreads(prev => prev.map(t =>
-      t.user_id === userId ? { ...t, unread_count: 0 } : t
-    ));
+    setInboxThreads((prev) =>
+      prev.map((t) => (t.user_id === userId ? { ...t, unread_count: 0 } : t)),
+    );
   };
 
   const sendInboxReply = async () => {
     if (!inboxReply.trim() || !adminId || !selectedThread) return;
     setIsSending(true);
     try {
-      const { error } = await supabase.from('admin_user_messages').insert({
+      const { error } = await supabase.from("admin_user_messages").insert({
         admin_id: adminId,
-        target_group: 'direct',
+        target_group: "direct",
         target_user_id: selectedThread.user_id,
-        sender_role: 'admin',
+        sender_role: "admin",
         sender_id: adminId,
         message: inboxReply.trim(),
       });
       if (error) throw error;
-      setInboxReply('');
+      setInboxReply("");
       fetchThreadMessages(selectedThread.user_id);
     } catch (err: any) {
-      toast.error(err.message || 'Failed to send');
+      toast.error(err.message || "Failed to send");
     } finally {
       setIsSending(false);
     }
@@ -240,15 +285,15 @@ const AdminMessaging = () => {
 
   const fetchBroadcastMessages = async () => {
     const { data, error } = await supabase
-      .from('admin_user_messages')
-      .select('*')
-      .is('target_user_id', null)
-      .order('created_at', { ascending: false })
+      .from("admin_user_messages")
+      .select("*")
+      .is("target_user_id", null)
+      .order("created_at", { ascending: false })
       .limit(100);
 
     if (error) {
-      console.error('[AdminMessaging] broadcast fetch failed:', error);
-      toast.error('Failed to load broadcasts', { description: error.message });
+      console.error("[AdminMessaging] broadcast fetch failed:", error);
+      toast.error("Failed to load broadcasts", { description: error.message });
       return;
     }
     if (data) setMessages(data as Message[]);
@@ -256,14 +301,14 @@ const AdminMessaging = () => {
 
   const fetchChatMessages = async (userId: string) => {
     const { data, error } = await supabase
-      .from('admin_user_messages')
-      .select('*')
-      .eq('target_user_id', userId)
-      .order('created_at', { ascending: true })
+      .from("admin_user_messages")
+      .select("*")
+      .eq("target_user_id", userId)
+      .order("created_at", { ascending: true })
       .limit(200);
 
     if (error) {
-      console.error('[AdminMessaging] chat fetch failed:', error);
+      console.error("[AdminMessaging] chat fetch failed:", error);
       return;
     }
     if (data) setChatMessages(data as Message[]);
@@ -273,19 +318,19 @@ const AdminMessaging = () => {
     if (!broadcastMessage.trim() || !adminId) return;
     setIsSending(true);
     try {
-      const { error } = await supabase.from('admin_user_messages').insert({
+      const { error } = await supabase.from("admin_user_messages").insert({
         admin_id: adminId,
         target_group: selectedGroup,
-        sender_role: 'admin',
+        sender_role: "admin",
         sender_id: adminId,
         message: broadcastMessage.trim(),
       });
       if (error) throw error;
-      toast.success(`Message sent to ${GROUP_CONFIG.find(g => g.key === selectedGroup)?.label}`);
-      setBroadcastMessage('');
+      toast.success(`Message sent to ${GROUP_CONFIG.find((g) => g.key === selectedGroup)?.label}`);
+      setBroadcastMessage("");
       fetchBroadcastMessages();
     } catch (err: any) {
-      toast.error(err.message || 'Failed to send');
+      toast.error(err.message || "Failed to send");
     } finally {
       setIsSending(false);
     }
@@ -295,19 +340,19 @@ const AdminMessaging = () => {
     if (!chatMessage.trim() || !adminId || !selectedUser) return;
     setIsSending(true);
     try {
-      const { error } = await supabase.from('admin_user_messages').insert({
+      const { error } = await supabase.from("admin_user_messages").insert({
         admin_id: adminId,
-        target_group: 'direct',
+        target_group: "direct",
         target_user_id: selectedUser.user_id,
-        sender_role: 'admin',
+        sender_role: "admin",
         sender_id: adminId,
         message: chatMessage.trim(),
       });
       if (error) throw error;
-      setChatMessage('');
+      setChatMessage("");
       fetchChatMessages(selectedUser.user_id);
     } catch (err: any) {
-      toast.error(err.message || 'Failed to send');
+      toast.error(err.message || "Failed to send");
     } finally {
       setIsSending(false);
     }
@@ -319,18 +364,21 @@ const AdminMessaging = () => {
     setIsSearching(true);
     try {
       // Sanitize for PostgREST .or() — strip chars that would break filter syntax
-      const safe = q.replace(/[,()*\\]/g, ' ').replace(/%/g, '').slice(0, 80);
+      const safe = q
+        .replace(/[,()*\\]/g, " ")
+        .replace(/%/g, "")
+        .slice(0, 80);
       const { data, error } = await supabase
-        .from('profiles')
-        .select('user_id, full_name, gender, country, is_indian')
+        .from("profiles")
+        .select("user_id, full_name, gender, country, is_indian")
         .or(`full_name.ilike.%${safe}%,email.ilike.%${safe}%`)
         .limit(20);
 
       if (error) throw error;
       setSearchResults((data as UserProfile[]) || []);
     } catch (err: any) {
-      console.error('[AdminMessaging] search failed:', err);
-      toast.error('Search failed', { description: err?.message || 'Try a different query' });
+      console.error("[AdminMessaging] search failed:", err);
+      toast.error("Search failed", { description: err?.message || "Try a different query" });
       setSearchResults([]);
     } finally {
       setIsSearching(false);
@@ -338,18 +386,19 @@ const AdminMessaging = () => {
   };
 
   const deleteMessage = async (id: string) => {
-    const { error } = await supabase.from('admin_user_messages').delete().eq('id', id);
+    const { error } = await supabase.from("admin_user_messages").delete().eq("id", id);
     if (error) {
-      toast.error('Delete failed', { description: error.message });
+      toast.error("Delete failed", { description: error.message });
       return;
     }
-    setMessages(prev => prev.filter(m => m.id !== id));
-    setChatMessages(prev => prev.filter(m => m.id !== id));
-    setThreadMessages(prev => prev.filter(m => m.id !== id));
-    toast.success('Message deleted');
+    setMessages((prev) => prev.filter((m) => m.id !== id));
+    setChatMessages((prev) => prev.filter((m) => m.id !== id));
+    setThreadMessages((prev) => prev.filter((m) => m.id !== id));
+    toast.success("Message deleted");
   };
 
-  const getGroupLabel = (group: string) => GROUP_CONFIG.find(g => g.key === group)?.label || group;
+  const getGroupLabel = (group: string) =>
+    GROUP_CONFIG.find((g) => g.key === group)?.label || group;
 
   const totalUnread = inboxThreads.reduce((sum, t) => sum + t.unread_count, 0);
 
@@ -379,13 +428,18 @@ const AdminMessaging = () => {
           </Badge>
         </div>
 
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'inbox' | 'broadcast' | 'chat' | 'scrolling')}>
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as "inbox" | "broadcast" | "chat" | "scrolling")}
+        >
           <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 max-w-2xl h-auto">
             <TabsTrigger value="inbox" className="gap-2">
               <Inbox className="h-4 w-4" />
               Inbox
               {totalUnread > 0 && (
-                <Badge variant="destructive" className="text-xs px-1.5 py-0 ml-1">{totalUnread}</Badge>
+                <Badge variant="destructive" className="text-xs px-1.5 py-0 ml-1">
+                  {totalUnread}
+                </Badge>
               )}
             </TabsTrigger>
             <TabsTrigger value="broadcast" className="gap-2">
@@ -409,7 +463,12 @@ const AdminMessaging = () => {
               <Card className="lg:col-span-1">
                 <CardHeader className="pb-3 flex-row items-center justify-between">
                   <CardTitle className="text-base">User Messages</CardTitle>
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={fetchInboxThreads}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={fetchInboxThreads}
+                  >
                     <RefreshCw className="h-4 w-4" />
                   </Button>
                 </CardHeader>
@@ -431,22 +490,28 @@ const AdminMessaging = () => {
                             key={thread.user_id}
                             onClick={() => setSelectedThread(thread)}
                             className={cn(
-                              'w-full flex items-start gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors text-left',
+                              "w-full flex items-start gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors text-left",
                               selectedThread?.user_id === thread.user_id
-                                ? 'bg-primary/10 border border-primary/30'
-                                : 'hover:bg-muted'
+                                ? "bg-primary/10 border border-primary/30"
+                                : "hover:bg-muted",
                             )}
                           >
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
                                 <p className="font-medium truncate">{thread.user_name}</p>
                                 {thread.unread_count > 0 && (
-                                  <Badge variant="destructive" className="text-xs px-1.5 py-0">{thread.unread_count}</Badge>
+                                  <Badge variant="destructive" className="text-xs px-1.5 py-0">
+                                    {thread.unread_count}
+                                  </Badge>
                                 )}
                               </div>
-                              <p className="text-xs text-muted-foreground truncate">{thread.last_message}</p>
+                              <p className="text-xs text-muted-foreground truncate">
+                                {thread.last_message}
+                              </p>
                               <p className="text-xs text-muted-foreground mt-0.5">
-                                {thread.gender} · {thread.is_indian ? 'Indian' : 'World'} · {thread.last_time && format(new Date(thread.last_time), 'MMM dd, hh:mm a')}
+                                {thread.gender} · {thread.is_indian ? "Indian" : "World"} ·{" "}
+                                {thread.last_time &&
+                                  format(new Date(thread.last_time), "MMM dd, hh:mm a")}
                               </p>
                             </div>
                           </button>
@@ -470,7 +535,7 @@ const AdminMessaging = () => {
                   </CardTitle>
                   {selectedThread && (
                     <Badge variant="outline" className="text-xs">
-                      {selectedThread.gender} · {selectedThread.is_indian ? 'Indian' : 'World'}
+                      {selectedThread.gender} · {selectedThread.is_indian ? "Indian" : "World"}
                     </Badge>
                   )}
                 </CardHeader>
@@ -485,33 +550,42 @@ const AdminMessaging = () => {
                       <ScrollArea className="h-[300px] rounded-lg bg-muted/30 p-3">
                         <div className="space-y-2">
                           {threadMessages.length === 0 && (
-                            <p className="text-center text-sm text-muted-foreground py-8">No messages</p>
+                            <p className="text-center text-sm text-muted-foreground py-8">
+                              No messages
+                            </p>
                           )}
                           {threadMessages.map((msg) => (
                             <div
                               key={msg.id}
                               className={cn(
-                                'max-w-[80%] p-2.5 rounded-lg text-sm',
-                                msg.sender_role === 'admin'
-                                  ? 'ml-auto bg-primary text-primary-foreground'
-                                  : 'mr-auto bg-muted'
+                                "max-w-[80%] p-2.5 rounded-lg text-sm",
+                                msg.sender_role === "admin"
+                                  ? "ml-auto bg-primary text-primary-foreground"
+                                  : "mr-auto bg-muted",
                               )}
                             >
                               <div className="flex items-center gap-1 mb-0.5">
-                                {msg.sender_role === 'admin' ? (
+                                {msg.sender_role === "admin" ? (
                                   <span className="text-xs font-semibold flex items-center gap-1">
                                     <Shield className="h-3 w-3" /> Admin
                                   </span>
                                 ) : (
-                                  <span className="text-xs font-semibold">{selectedThread.user_name}</span>
+                                  <span className="text-xs font-semibold">
+                                    {selectedThread.user_name}
+                                  </span>
                                 )}
                               </div>
                               <p>{msg.message}</p>
                               <div className="flex items-center justify-between mt-1">
                                 <span className="text-xs opacity-70">
-                                  {format(new Date(msg.created_at), 'hh:mm a')}
+                                  {format(new Date(msg.created_at), "hh:mm a")}
                                 </span>
-                                <Button variant="ghost" size="icon" className="h-5 w-5 opacity-60 hover:opacity-100" onClick={() => deleteMessage(msg.id)}>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-5 w-5 opacity-60 hover:opacity-100"
+                                  onClick={() => deleteMessage(msg.id)}
+                                >
                                   <Trash2 className="h-3 w-3" />
                                 </Button>
                               </div>
@@ -529,7 +603,7 @@ const AdminMessaging = () => {
                           rows={2}
                           className="resize-none flex-1"
                           onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
+                            if (e.key === "Enter" && !e.shiftKey) {
                               e.preventDefault();
                               sendInboxReply();
                             }
@@ -541,7 +615,11 @@ const AdminMessaging = () => {
                           onClick={sendInboxReply}
                           disabled={!inboxReply.trim() || isSending}
                         >
-                          {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                          {isSending ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Send className="h-4 w-4" />
+                          )}
                         </Button>
                       </div>
                     </div>
@@ -567,10 +645,10 @@ const AdminMessaging = () => {
                           key={group.key}
                           onClick={() => setSelectedGroup(group.key)}
                           className={cn(
-                            'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all border',
+                            "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all border",
                             selectedGroup === group.key
-                              ? 'border-primary bg-primary/10 text-primary shadow-sm'
-                              : 'border-border hover:bg-muted text-muted-foreground'
+                              ? "border-primary bg-primary/10 text-primary shadow-sm"
+                              : "border-border hover:bg-muted text-muted-foreground",
                           )}
                         >
                           {group.icon}
@@ -589,9 +667,17 @@ const AdminMessaging = () => {
                       className="resize-none"
                     />
                   </div>
-                  <Button className="w-full gap-2" onClick={sendBroadcast} disabled={!broadcastMessage.trim() || isSending}>
-                    {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                    Send to {GROUP_CONFIG.find(g => g.key === selectedGroup)?.label}
+                  <Button
+                    className="w-full gap-2"
+                    onClick={sendBroadcast}
+                    disabled={!broadcastMessage.trim() || isSending}
+                  >
+                    {isSending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
+                    Send to {GROUP_CONFIG.find((g) => g.key === selectedGroup)?.label}
                   </Button>
                 </CardContent>
               </Card>
@@ -599,7 +685,12 @@ const AdminMessaging = () => {
               <Card className="lg:col-span-2">
                 <CardHeader className="pb-3 flex-row items-center justify-between">
                   <CardTitle className="text-base">Sent Broadcasts</CardTitle>
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={fetchBroadcastMessages}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={fetchBroadcastMessages}
+                  >
                     <RefreshCw className="h-4 w-4" />
                   </Button>
                 </CardHeader>
@@ -613,12 +704,24 @@ const AdminMessaging = () => {
                     <ScrollArea className="h-[400px]">
                       <div className="space-y-3">
                         {messages.map((msg) => (
-                          <div key={msg.id} className="p-3 rounded-lg bg-muted/50 border border-border/50">
+                          <div
+                            key={msg.id}
+                            className="p-3 rounded-lg bg-muted/50 border border-border/50"
+                          >
                             <div className="flex items-center justify-between mb-1">
-                              <Badge variant="secondary" className="text-xs">{getGroupLabel(msg.target_group)}</Badge>
+                              <Badge variant="secondary" className="text-xs">
+                                {getGroupLabel(msg.target_group)}
+                              </Badge>
                               <div className="flex items-center gap-2">
-                                <span className="text-xs text-muted-foreground">{format(new Date(msg.created_at), 'MMM dd, hh:mm a')}</span>
-                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMessage(msg.id)}>
+                                <span className="text-xs text-muted-foreground">
+                                  {format(new Date(msg.created_at), "MMM dd, hh:mm a")}
+                                </span>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6"
+                                  onClick={() => deleteMessage(msg.id)}
+                                >
                                   <Trash2 className="h-3 w-3 text-destructive" />
                                 </Button>
                               </div>
@@ -647,10 +750,14 @@ const AdminMessaging = () => {
                       placeholder="Search by name..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && searchUsers()}
+                      onKeyDown={(e) => e.key === "Enter" && searchUsers()}
                     />
                     <Button size="icon" onClick={searchUsers} disabled={isSearching}>
-                      {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                      {isSearching ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Search className="h-4 w-4" />
+                      )}
                     </Button>
                   </div>
                   <ScrollArea className="h-[350px]">
@@ -660,25 +767,28 @@ const AdminMessaging = () => {
                           key={user.user_id}
                           onClick={() => setSelectedUser(user)}
                           className={cn(
-                            'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors text-left',
+                            "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors text-left",
                             selectedUser?.user_id === user.user_id
-                              ? 'bg-primary/10 text-primary border border-primary/30'
-                              : 'hover:bg-muted text-foreground'
+                              ? "bg-primary/10 text-primary border border-primary/30"
+                              : "hover:bg-muted text-foreground",
                           )}
                         >
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium truncate">{user.full_name || 'Unknown'}</p>
+                            <p className="font-medium truncate">{user.full_name || "Unknown"}</p>
                             <p className="text-xs text-muted-foreground">
-                              {user.gender} · {user.is_indian ? 'Indian' : 'World'} · {user.country || 'N/A'}
+                              {user.gender} · {user.is_indian ? "Indian" : "World"} ·{" "}
+                              {user.country || "N/A"}
                             </p>
                           </div>
                           <Badge variant="outline" className="text-xs shrink-0">
-                            {user.gender?.toLowerCase() === 'female' ? '♀' : '♂'}
+                            {user.gender?.toLowerCase() === "female" ? "♀" : "♂"}
                           </Badge>
                         </button>
                       ))}
                       {searchResults.length === 0 && searchQuery && !isSearching && (
-                        <p className="text-center text-sm text-muted-foreground py-4">No users found</p>
+                        <p className="text-center text-sm text-muted-foreground py-4">
+                          No users found
+                        </p>
                       )}
                     </div>
                   </ScrollArea>
@@ -689,11 +799,15 @@ const AdminMessaging = () => {
                 <CardHeader className="pb-3 flex-row items-center justify-between">
                   <CardTitle className="text-base flex items-center gap-2">
                     <MessageSquare className="h-4 w-4" />
-                    {selectedUser ? <span>Chat with {selectedUser.full_name}</span> : <span>Select a user to chat</span>}
+                    {selectedUser ? (
+                      <span>Chat with {selectedUser.full_name}</span>
+                    ) : (
+                      <span>Select a user to chat</span>
+                    )}
                   </CardTitle>
                   {selectedUser && (
                     <Badge variant="outline" className="text-xs">
-                      {selectedUser.gender} · {selectedUser.is_indian ? 'Indian' : 'World'}
+                      {selectedUser.gender} · {selectedUser.is_indian ? "Indian" : "World"}
                     </Badge>
                   )}
                 </CardHeader>
@@ -708,23 +822,32 @@ const AdminMessaging = () => {
                       <ScrollArea className="h-[300px] rounded-lg bg-muted/30 p-3">
                         <div className="space-y-2">
                           {chatMessages.length === 0 && (
-                            <p className="text-center text-sm text-muted-foreground py-8">No messages yet</p>
+                            <p className="text-center text-sm text-muted-foreground py-8">
+                              No messages yet
+                            </p>
                           )}
                           {chatMessages.map((msg) => (
                             <div
                               key={msg.id}
                               className={cn(
-                                'max-w-[80%] p-2.5 rounded-lg text-sm',
-                                msg.sender_role === 'admin'
-                                  ? 'ml-auto bg-primary text-primary-foreground'
-                                  : 'mr-auto bg-muted'
+                                "max-w-[80%] p-2.5 rounded-lg text-sm",
+                                msg.sender_role === "admin"
+                                  ? "ml-auto bg-primary text-primary-foreground"
+                                  : "mr-auto bg-muted",
                               )}
                             >
                               <p>{msg.message}</p>
                               <div className="flex items-center justify-between mt-1">
-                                <span className="text-xs opacity-70">{format(new Date(msg.created_at), 'hh:mm a')}</span>
-                                {msg.sender_role === 'admin' && (
-                                  <Button variant="ghost" size="icon" className="h-5 w-5 opacity-60 hover:opacity-100" onClick={() => deleteMessage(msg.id)}>
+                                <span className="text-xs opacity-70">
+                                  {format(new Date(msg.created_at), "hh:mm a")}
+                                </span>
+                                {msg.sender_role === "admin" && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-5 w-5 opacity-60 hover:opacity-100"
+                                    onClick={() => deleteMessage(msg.id)}
+                                  >
                                     <Trash2 className="h-3 w-3" />
                                   </Button>
                                 )}
@@ -742,14 +865,23 @@ const AdminMessaging = () => {
                           rows={2}
                           className="resize-none flex-1"
                           onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
+                            if (e.key === "Enter" && !e.shiftKey) {
                               e.preventDefault();
                               sendChatMessage();
                             }
                           }}
                         />
-                        <Button size="icon" className="h-auto" onClick={sendChatMessage} disabled={!chatMessage.trim() || isSending}>
-                          {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                        <Button
+                          size="icon"
+                          className="h-auto"
+                          onClick={sendChatMessage}
+                          disabled={!chatMessage.trim() || isSending}
+                        >
+                          {isSending ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Send className="h-4 w-4" />
+                          )}
                         </Button>
                       </div>
                     </div>

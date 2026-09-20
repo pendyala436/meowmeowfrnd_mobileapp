@@ -1,7 +1,23 @@
 import { useState, lazy, Suspense } from "react";
 import { useRegistrationGuard } from "@/hooks/useRegistrationGuard";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, User, Ruler, Briefcase, GraduationCap, Heart, Utensils, Dumbbell, Baby, PawPrint, Plane, Brain, Star, Wine, Cigarette } from "lucide-react";
+import {
+  ArrowLeft,
+  User,
+  Ruler,
+  Briefcase,
+  GraduationCap,
+  Heart,
+  Utensils,
+  Dumbbell,
+  Baby,
+  PawPrint,
+  Plane,
+  Brain,
+  Star,
+  Wine,
+  Cigarette,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -121,21 +137,47 @@ const zodiacOptions = [
 ];
 
 const interestOptions = [
-  "Music", "Movies", "Travel", "Reading", "Sports", "Cooking", "Photography",
-  "Art", "Gaming", "Fitness", "Dancing", "Writing", "Technology", "Fashion",
-  "Nature", "Yoga", "Meditation", "Food", "Pets", "Adventure"
+  "Music",
+  "Movies",
+  "Travel",
+  "Reading",
+  "Sports",
+  "Cooking",
+  "Photography",
+  "Art",
+  "Gaming",
+  "Fitness",
+  "Dancing",
+  "Writing",
+  "Technology",
+  "Fashion",
+  "Nature",
+  "Yoga",
+  "Meditation",
+  "Food",
+  "Pets",
+  "Adventure",
 ];
 
 const lifeGoalOptions = [
-  "Career Growth", "Family", "Travel the World", "Financial Freedom", 
-  "Health & Fitness", "Education", "Start a Business", "Spiritual Growth",
-  "Creative Pursuits", "Community Service", "Finding Love", "Personal Development"
+  "Career Growth",
+  "Family",
+  "Travel the World",
+  "Financial Freedom",
+  "Health & Fitness",
+  "Education",
+  "Start a Business",
+  "Spiritual Growth",
+  "Creative Pursuits",
+  "Community Service",
+  "Finding Love",
+  "Personal Development",
 ];
 
 const PersonalDetailsScreen = () => {
   const navigate = useNavigate();
   useRegistrationGuard([{ key: "userEmail" }, { key: "userGender" }], "/basic-info");
-  
+
   // Form state
   const [bio, setBio] = useState("");
   const [heightCm, setHeightCm] = useState("");
@@ -157,28 +199,43 @@ const PersonalDetailsScreen = () => {
   const [selectedLifeGoals, setSelectedLifeGoals] = useState<string[]>([]);
 
   const toggleInterest = (interest: string) => {
-    setSelectedInterests(prev => 
-      prev.includes(interest) 
-        ? prev.filter(i => i !== interest)
-        : prev.length < 10 ? [...prev, interest] : prev
+    setSelectedInterests((prev) =>
+      prev.includes(interest)
+        ? prev.filter((i) => i !== interest)
+        : prev.length < 10
+          ? [...prev, interest]
+          : prev,
     );
   };
 
   const toggleLifeGoal = (goal: string) => {
-    setSelectedLifeGoals(prev => 
-      prev.includes(goal) 
-        ? prev.filter(g => g !== goal)
-        : prev.length < 5 ? [...prev, goal] : prev
+    setSelectedLifeGoals((prev) =>
+      prev.includes(goal)
+        ? prev.filter((g) => g !== goal)
+        : prev.length < 5
+          ? [...prev, goal]
+          : prev,
     );
   };
 
   // Minimum required fields for a non-blank profile
   const requiredFieldsFilled = bio.trim().length >= 10 && occupation.trim() && maritalStatus;
   const completedFieldsCount = [
-    bio.trim(), heightCm, occupation.trim(), bodyType, education,
-    maritalStatus, religion, smokingHabit, drinkingHabit,
-    dietaryPreference, fitnessLevel, petPreference,
-    travelFrequency, personalityType, zodiacSign,
+    bio.trim(),
+    heightCm,
+    occupation.trim(),
+    bodyType,
+    education,
+    maritalStatus,
+    religion,
+    smokingHabit,
+    drinkingHabit,
+    dietaryPreference,
+    fitnessLevel,
+    petPreference,
+    travelFrequency,
+    personalityType,
+    zodiacSign,
     hasChildren !== null ? "yes" : "",
     selectedInterests.length > 0 ? "yes" : "",
     selectedLifeGoals.length > 0 ? "yes" : "",
@@ -259,12 +316,14 @@ const PersonalDetailsScreen = () => {
   return (
     <div className="min-h-screen flex flex-col relative bg-background text-foreground">
       {/* Aurora Background */}
-      <Suspense fallback={
-        <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background to-secondary/30" />
-      }>
+      <Suspense
+        fallback={
+          <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background to-secondary/30" />
+        }
+      >
         <AuroraBackground />
       </Suspense>
-      
+
       {/* Header */}
       <header className="px-6 pt-8 pb-4 relative z-10">
         <div className="flex items-center gap-4 mb-4">
@@ -295,7 +354,6 @@ const PersonalDetailsScreen = () => {
 
           {/* Form */}
           <div className="space-y-6 bg-card/70 backdrop-blur-xl rounded-3xl p-6 border border-primary/20 shadow-[0_0_40px_hsl(var(--primary)/0.1)]">
-            
             {/* Bio */}
             <div className="space-y-2">
               <Label className="flex items-center gap-2 text-sm font-semibold">
@@ -333,7 +391,11 @@ const PersonalDetailsScreen = () => {
                   onBlur={() => {
                     if (heightCm && (Number(heightCm) < 100 || Number(heightCm) > 250)) {
                       setHeightCm("");
-                      toast({ title: "Invalid height", description: "Height must be between 100-250 cm", variant: "destructive" });
+                      toast({
+                        title: "Invalid height",
+                        description: "Height must be between 100-250 cm",
+                        variant: "destructive",
+                      });
                     }
                   }}
                   min="100"
@@ -368,7 +430,7 @@ const PersonalDetailsScreen = () => {
                       "px-4 py-2 rounded-full text-sm border-2 transition-all",
                       bodyType === opt.value
                         ? "border-primary bg-primary/10 text-primary"
-                        : "border-input bg-background/50 hover:border-primary/50"
+                        : "border-input bg-background/50 hover:border-primary/50",
                     )}
                   >
                     {opt.icon} {opt.label}
@@ -419,7 +481,7 @@ const PersonalDetailsScreen = () => {
             {/* Lifestyle Section */}
             <div className="pt-4 border-t border-border/50">
               <h3 className="text-sm font-semibold text-foreground mb-4">Lifestyle</h3>
-              
+
               {/* Smoking & Drinking */}
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div className="space-y-2">
@@ -495,7 +557,7 @@ const PersonalDetailsScreen = () => {
                         "flex-1 px-4 py-2 rounded-xl text-sm border-2 transition-all",
                         hasChildren === opt.value
                           ? "border-primary bg-primary/10 text-primary"
-                          : "border-input bg-background/50 hover:border-primary/50"
+                          : "border-input bg-background/50 hover:border-primary/50",
                       )}
                     >
                       {opt.label}
@@ -576,7 +638,7 @@ const PersonalDetailsScreen = () => {
                       "px-3 py-1.5 rounded-full text-xs border transition-all",
                       selectedInterests.includes(interest)
                         ? "border-primary bg-primary/20 text-primary"
-                        : "border-input bg-background/50 hover:border-primary/50"
+                        : "border-input bg-background/50 hover:border-primary/50",
                     )}
                   >
                     {interest}
@@ -603,7 +665,7 @@ const PersonalDetailsScreen = () => {
                       "px-3 py-1.5 rounded-full text-xs border transition-all",
                       selectedLifeGoals.includes(goal)
                         ? "border-accent bg-accent/20 text-accent-foreground"
-                        : "border-input bg-background/50 hover:border-accent/50"
+                        : "border-input bg-background/50 hover:border-accent/50",
                     )}
                   >
                     {goal}

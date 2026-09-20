@@ -9,14 +9,20 @@
  * Used inside chat windows and 1-on-1 audio/video call screens.
  * Only rendered for male senders. Receiver is the conversation partner.
  */
-import { useEffect, useState } from 'react';
-import { Gift } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
-import { formatGiftMessage } from '@/lib/gift-message';
+import { useEffect, useState } from "react";
+import { Gift } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import { formatGiftMessage } from "@/lib/gift-message";
 
 interface GiftItem {
   id: string;
@@ -31,10 +37,10 @@ interface SendGiftButtonProps {
   /** auth user_id of the female recipient (chat partner / call peer) */
   recipientUserId: string;
   /** Optional context label embedded in the wallet description (e.g. "chat", "video call") */
-  context?: 'chat' | 'audio_call' | 'video_call';
+  context?: "chat" | "audio_call" | "video_call";
   className?: string;
   /** Visual size — small for chat headers, normal for call controls */
-  variant?: 'icon-sm' | 'icon-md' | 'control';
+  variant?: "icon-sm" | "icon-md" | "control";
   /** When set, broadcasts gift to chat so both call parties see the animation */
   chatId?: string;
   senderName?: string;
@@ -44,11 +50,11 @@ interface SendGiftButtonProps {
 export const SendGiftButton = ({
   senderUserId,
   recipientUserId,
-  context = 'chat',
+  context = "chat",
   className,
-  variant = 'icon-sm',
+  variant = "icon-sm",
   chatId,
-  senderName = 'Someone',
+  senderName = "Someone",
   onGiftSent,
 }: SendGiftButtonProps) => {
   const [open, setOpen] = useState(false);
@@ -59,10 +65,10 @@ export const SendGiftButton = ({
     if (!open || gifts.length > 0) return;
     (async () => {
       const { data } = await supabase
-        .from('gifts')
-        .select('id,name,emoji,price')
-        .eq('is_active', true)
-        .order('sort_order', { ascending: true })
+        .from("gifts")
+        .select("id,name,emoji,price")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true })
         .limit(24);
       if (data) setGifts(data as GiftItem[]);
     })();
@@ -77,30 +83,32 @@ export const SendGiftButton = ({
         const { data } = await supabase.auth.getSession();
         senderAuthId = data.session?.user?.id;
       }
-      if (!senderAuthId) throw new Error('Not signed in');
+      if (!senderAuthId) throw new Error("Not signed in");
 
       // bill_gift_or_tip expects profiles.id, not auth user_id (mirrors group call path)
       const [{ data: manProf }, { data: womanProf }] = await Promise.all([
-        supabase.from('profiles').select('id').eq('user_id', senderAuthId).maybeSingle(),
-        supabase.from('profiles').select('id').eq('user_id', recipientUserId).maybeSingle(),
+        supabase.from("profiles").select("id").eq("user_id", senderAuthId).maybeSingle(),
+        supabase.from("profiles").select("id").eq("user_id", recipientUserId).maybeSingle(),
       ]);
-      if (!manProf?.id || !womanProf?.id) throw new Error('Profile not found');
+      if (!manProf?.id || !womanProf?.id) throw new Error("Profile not found");
 
-      const ref = (typeof crypto !== 'undefined' && crypto.randomUUID)
-        ? `gift_${context}_${gift.id}_${crypto.randomUUID()}`
-        : `gift_${context}_${gift.id}_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+      const ref =
+        typeof crypto !== "undefined" && crypto.randomUUID
+          ? `gift_${context}_${gift.id}_${crypto.randomUUID()}`
+          : `gift_${context}_${gift.id}_${Date.now()}_${Math.random().toString(36).slice(2)}`;
 
-      const ctxLabel = context === 'video_call'
-        ? 'Video call gift'
-        : context === 'audio_call'
-          ? 'Audio call gift'
-          : 'Chat gift';
+      const ctxLabel =
+        context === "video_call"
+          ? "Video call gift"
+          : context === "audio_call"
+            ? "Audio call gift"
+            : "Chat gift";
 
-      const { data, error } = await supabase.rpc('bill_gift_or_tip', {
+      const { data, error } = await supabase.rpc("bill_gift_or_tip", {
         p_man_id: manProf.id,
         p_woman_id: womanProf.id,
         p_amount: gift.price ?? 0,
-        p_type: 'gift',
+        p_type: "gift",
         p_description: `${ctxLabel}: ${gift.name ?? gift.emoji}`,
         p_reference_id: ref,
       });
@@ -108,7 +116,7 @@ export const SendGiftButton = ({
       const r = data as { success: boolean; error?: string };
       if (r?.success) {
         if (chatId) {
-          await supabase.from('chat_messages').insert({
+          await supabase.from("chat_messages").insert({
             chat_id: chatId,
             sender_id: senderAuthId,
             receiver_id: recipientUserId,
@@ -116,27 +124,32 @@ export const SendGiftButton = ({
           });
         }
         onGiftSent?.(gift);
-        window.dispatchEvent(new CustomEvent('meow-call-gift', {
-          detail: { emoji: gift.emoji, name: gift.name, senderName },
-        }));
+        window.dispatchEvent(
+          new CustomEvent("meow-call-gift", {
+            detail: { emoji: gift.emoji, name: gift.name, senderName },
+          }),
+        );
         toast.success(`${gift.emoji} Gift sent!`);
         setOpen(false);
       } else {
-        toast.error(r?.error || 'Failed to send gift');
+        toast.error(r?.error || "Failed to send gift");
       }
     } catch (e: any) {
-      toast.error(e?.message || 'Failed to send gift');
+      toast.error(e?.message || "Failed to send gift");
     } finally {
       setSending(null);
     }
   };
 
   const trigger = (() => {
-    if (variant === 'control') {
+    if (variant === "control") {
       return (
         <button
           onClick={() => setOpen(true)}
-          className={cn('flex flex-col items-center gap-1 p-3 rounded-full bg-white/10 transition-colors', className)}
+          className={cn(
+            "flex flex-col items-center gap-1 p-3 rounded-full bg-white/10 transition-colors",
+            className,
+          )}
           aria-label="Send gift"
         >
           <Gift className="w-6 h-6 text-white" />
@@ -144,14 +157,17 @@ export const SendGiftButton = ({
         </button>
       );
     }
-    const sizeCls = variant === 'icon-md' ? 'h-9 w-9' : 'h-5 w-5';
-    const iconCls = variant === 'icon-md' ? 'h-4 w-4' : 'h-2.5 w-2.5';
+    const sizeCls = variant === "icon-md" ? "h-9 w-9" : "h-5 w-5";
+    const iconCls = variant === "icon-md" ? "h-4 w-4" : "h-2.5 w-2.5";
     return (
       <Button
         variant="ghost"
         size="icon"
-        className={cn(sizeCls, 'text-pink-500 hover:text-pink-600', className)}
-        onClick={(e) => { e.stopPropagation(); setOpen(true); }}
+        className={cn(sizeCls, "text-pink-500 hover:text-pink-600", className)}
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen(true);
+        }}
         title="Send gift"
         aria-label="Send gift"
       >
@@ -178,8 +194,8 @@ export const SendGiftButton = ({
                 disabled={sending !== null}
                 onClick={() => handleSend(g)}
                 className={cn(
-                  'flex flex-col items-center gap-1 p-3 rounded-lg border bg-card hover:bg-accent transition-colors',
-                  sending === g.id && 'opacity-60'
+                  "flex flex-col items-center gap-1 p-3 rounded-lg border bg-card hover:bg-accent transition-colors",
+                  sending === g.id && "opacity-60",
                 )}
               >
                 <span className="text-3xl">{g.emoji}</span>

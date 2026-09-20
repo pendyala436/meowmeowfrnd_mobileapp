@@ -81,7 +81,7 @@ export const PartnerStatusLine = memo<PartnerStatusLineProps>(
           tone === "online" && "text-online",
           tone === "warn" && "text-warning",
           tone === "muted" && "text-muted-foreground",
-          className
+          className,
         )}
         aria-live="polite"
         aria-label={`${partnerName} ${label}`}
@@ -95,7 +95,7 @@ export const PartnerStatusLine = memo<PartnerStatusLineProps>(
         <span className="truncate italic">{label}</span>
       </div>
     );
-  }
+  },
 );
 
 PartnerStatusLine.displayName = "PartnerStatusLine";

@@ -33,9 +33,11 @@ export function useIOSCaptureGuard() {
   useEffect(() => {
     if (Capacitor.getPlatform() !== "ios") return;
 
-    const plugin = (Capacitor as unknown as {
-      Plugins: { ScreenCapture?: ScreenCapturePlugin };
-    }).Plugins.ScreenCapture;
+    const plugin = (
+      Capacitor as unknown as {
+        Plugins: { ScreenCapture?: ScreenCapturePlugin };
+      }
+    ).Plugins.ScreenCapture;
     if (!plugin) return; // plugin not yet installed in the native shell
 
     const subs: Array<{ remove: () => Promise<void> }> = [];

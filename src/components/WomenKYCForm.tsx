@@ -7,14 +7,36 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { ERROR_MESSAGES, classifyError } from "@/lib/errors";
 import { toast } from "sonner";
-import { CheckCircle, Clock, XCircle, Loader2, AlertCircle, Camera, X, ImagePlus } from "lucide-react";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  CheckCircle,
+  Clock,
+  XCircle,
+  Loader2,
+  AlertCircle,
+  Camera,
+  X,
+  ImagePlus,
+} from "lucide-react";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
 
 type KycPreviewKey =
@@ -34,7 +56,9 @@ async function getSignedKycUrl(storedValue: string | null | undefined): Promise<
     if (idx !== -1) filePath = storedValue.substring(idx + marker.length);
     // Already a full URL
     if (/^https?:\/\//i.test(filePath)) return filePath;
-    const { data, error } = await supabase.storage.from("kyc-documents").createSignedUrl(filePath, 3600);
+    const { data, error } = await supabase.storage
+      .from("kyc-documents")
+      .createSignedUrl(filePath, 3600);
     if (error || !data?.signedUrl) return null;
     return data.signedUrl;
   } catch {
@@ -145,7 +169,9 @@ function KycFileUploadBox({
           </div>
         )}
         {isPdfOnly && (
-          <p className="text-xs text-muted-foreground">PDF on file — tap the photo icon to replace.</p>
+          <p className="text-xs text-muted-foreground">
+            PDF on file — tap the photo icon to replace.
+          </p>
         )}
         {!hasImage && !isPdfOnly && isEditable && (
           <p className="text-[11px] text-muted-foreground">Tap the photo icon to add.</p>
@@ -179,10 +205,25 @@ const kycSchema = z.object({
   permanent_address: z.string().optional(),
   city: z.string().optional(),
   state: z.string().optional(),
-  pin_code: z.string().regex(/^\d{6}$/, "PIN code must be 6 digits").optional().or(z.literal("")),
+  pin_code: z
+    .string()
+    .regex(/^\d{6}$/, "PIN code must be 6 digits")
+    .optional()
+    .or(z.literal("")),
 
   // Section 3: Identity Proof
-  id_type: z.enum(["pan", "passport", "voter_id", "driving_license", "ration_card", "college_id", "government_id", "nrega_card", "defence_id", "postal_id"]),
+  id_type: z.enum([
+    "pan",
+    "passport",
+    "voter_id",
+    "driving_license",
+    "ration_card",
+    "college_id",
+    "government_id",
+    "nrega_card",
+    "defence_id",
+    "postal_id",
+  ]),
   id_number: z.string().min(6, "Valid ID number required").max(20),
 
   // Section 4: Aadhaar (Address Proof)
@@ -201,9 +242,17 @@ const kycSchema = z.object({
   ifsc_code: z
     .string()
     .transform((v) => v.trim().toUpperCase())
-    .pipe(z.string().regex(/^[A-Z]{4}0[A-Z0-9]{6}$/, "Enter a valid IFSC (any Indian bank, e.g. HDFC0001234)")),
+    .pipe(
+      z
+        .string()
+        .regex(/^[A-Z]{4}0[A-Z0-9]{6}$/, "Enter a valid IFSC (any Indian bank, e.g. HDFC0001234)"),
+    ),
   account_type: z.string().default("savings"),
-  upi_id: z.string().regex(/^[a-zA-Z0-9._-]+@[a-zA-Z0-9]+$/, "Invalid UPI ID format (e.g. name@upi)").optional().or(z.literal("")),
+  upi_id: z
+    .string()
+    .regex(/^[a-zA-Z0-9._-]+@[a-zA-Z0-9]+$/, "Invalid UPI ID format (e.g. name@upi)")
+    .optional()
+    .or(z.literal("")),
   beneficiary_purpose: z.string().default("others"),
 
   // Section 7: Nominee Details
@@ -214,7 +263,7 @@ const kycSchema = z.object({
 
   // Section 8: Declaration
   declaration_place: z.string().optional(),
-  consent_given: z.boolean().refine(val => val === true, "You must provide consent"),
+  consent_given: z.boolean().refine((val) => val === true, "You must provide consent"),
 });
 
 type KYCFormData = z.infer<typeof kycSchema>;
@@ -290,7 +339,10 @@ export function WomenKYCForm() {
   const [showSelfieCamera, setShowSelfieCamera] = useState(false);
   const [selfieStream, setSelfieStream] = useState<MediaStream | null>(null);
   const [selfieLocalPreview, setSelfieLocalPreview] = useState<string | null>(null);
-  const [saveBanner, setSaveBanner] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [saveBanner, setSaveBanner] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
   const selfieVideoRef = useRef<HTMLVideoElement>(null);
   const selfieCanvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -371,7 +423,7 @@ export function WomenKYCForm() {
       ["selfie", record.selfie_url],
     ];
     const resolved = await Promise.all(
-      entries.map(async ([key, path]) => [key, await getSignedKycUrl(path)] as const)
+      entries.map(async ([key, path]) => [key, await getSignedKycUrl(path)] as const),
     );
     const next: Partial<Record<KycPreviewKey, string>> = {};
     for (const [key, url] of resolved) {
@@ -422,21 +474,23 @@ export function WomenKYCForm() {
         stopSelfieCamera();
       },
       "image/jpeg",
-      0.92
+      0.92,
     );
   };
 
   const loadExistingKYC = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session?.user) return;
       setUserId(session.user.id);
 
       // Fetch App ID + SNO from profiles (single source of truth)
       const { data: profileRow } = await supabase
-        .from('profiles')
-        .select('app_id, app_sno')
-        .eq('user_id', session.user.id)
+        .from("profiles")
+        .select("app_id, app_sno")
+        .eq("user_id", session.user.id)
         .maybeSingle();
       if (profileRow) {
         setAppId((profileRow as any).app_id ?? null);
@@ -444,13 +498,15 @@ export function WomenKYCForm() {
       }
 
       const { data, error } = await supabase
-        .from('women_kyc')
-        .select('*')
-        .eq('user_id', session.user.id)
+        .from("women_kyc")
+        .select("*")
+        .eq("user_id", session.user.id)
         .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
-        toast.error('Verification unavailable', { description: ERROR_MESSAGES.profile.kycLoadFailed });
+      if (error && error.code !== "PGRST116") {
+        toast.error("Verification unavailable", {
+          description: ERROR_MESSAGES.profile.kycLoadFailed,
+        });
         return;
       }
 
@@ -485,8 +541,8 @@ export function WomenKYCForm() {
           upi_id: (data as any).upi_id || (data as any).upi_vpa || "",
           beneficiary_purpose: (data as any).beneficiary_purpose || "others",
           aadhaar_number: (data as any).aadhaar_number || "",
-          id_type: (data.id_type === 'aadhaar' ? 'pan' : data.id_type) as any,
-          id_number: data.id_type === 'aadhaar' ? "" : (data.id_number || ""),
+          id_type: (data.id_type === "aadhaar" ? "pan" : data.id_type) as any,
+          id_number: data.id_type === "aadhaar" ? "" : data.id_number || "",
           address_proof_type: (data as any).address_proof_type || "aadhaar",
           nominee_name: (data as any).nominee_name || "",
           nominee_relationship: (data as any).nominee_relationship || "",
@@ -512,10 +568,10 @@ export function WomenKYCForm() {
 
   const uploadFile = async (file: File, folder: string): Promise<string> => {
     if (!userId) throw new Error("Please log in to submit KYC");
-    const fileExt = file.name.split('.').pop();
+    const fileExt = file.name.split(".").pop();
     const randomSuffix = crypto.randomUUID().slice(0, 8);
     const storagePath = `${userId}/${folder}/${Date.now()}-${randomSuffix}.${fileExt}`;
-    const { error } = await supabase.storage.from('kyc-documents').upload(storagePath, file);
+    const { error } = await supabase.storage.from("kyc-documents").upload(storagePath, file);
     if (error) {
       throw new Error(ERROR_MESSAGES.upload.failed);
     }
@@ -548,12 +604,12 @@ export function WomenKYCForm() {
       let addressProofUrl = existingKYC?.address_proof_url || null;
       let selfieUrl = existingKYC?.selfie_url || null;
 
-      if (aadhaarFront) aadhaarFrontUrl = await uploadFile(aadhaarFront, 'aadhaar-front');
-      if (aadhaarBack) aadhaarBackUrl = await uploadFile(aadhaarBack, 'aadhaar-back');
-      if (idProofFront) idProofFrontUrl = await uploadFile(idProofFront, 'id-proof-front');
-      if (idProofBack) idProofBackUrl = await uploadFile(idProofBack, 'id-proof-back');
-      if (addressProof) addressProofUrl = await uploadFile(addressProof, 'address-proof');
-      if (selfie) selfieUrl = await uploadFile(selfie, 'selfie');
+      if (aadhaarFront) aadhaarFrontUrl = await uploadFile(aadhaarFront, "aadhaar-front");
+      if (aadhaarBack) aadhaarBackUrl = await uploadFile(aadhaarBack, "aadhaar-back");
+      if (idProofFront) idProofFrontUrl = await uploadFile(idProofFront, "id-proof-front");
+      if (idProofBack) idProofBackUrl = await uploadFile(idProofBack, "id-proof-back");
+      if (addressProof) addressProofUrl = await uploadFile(addressProof, "address-proof");
+      if (selfie) selfieUrl = await uploadFile(selfie, "selfie");
 
       setUploadingFiles(false);
 
@@ -604,19 +660,19 @@ export function WomenKYCForm() {
         declaration_place: data.declaration_place?.trim() || null,
         consent_given: data.consent_given,
         consent_timestamp: new Date().toISOString(),
-        verification_status: 'pending',
+        verification_status: "pending",
       };
 
       // Robust upsert (was a conditional update/insert that could silently
       // affect 0 rows yet still report success). .select() detects a
       // blocked / no-op write and surfaces an actionable message.
       const { data: saved, error } = await supabase
-        .from('women_kyc')
-        .upsert({ ...kycData, user_id: userId }, { onConflict: 'user_id' })
-        .select('id');
+        .from("women_kyc")
+        .upsert({ ...kycData, user_id: userId }, { onConflict: "user_id" })
+        .select("id");
       if (error) throw error;
       if (!saved || saved.length === 0) {
-        throw new Error('Your session expired — please log out, log in again, and re-submit KYC.');
+        throw new Error("Your session expired — please log out, log in again, and re-submit KYC.");
       }
 
       const wasUpdate = Boolean(existingKYC);
@@ -639,7 +695,9 @@ export function WomenKYCForm() {
       await loadExistingKYC();
       // Keep banner visible inside the sheet (toasts can sit under the sheet overlay)
       requestAnimationFrame(() => {
-        document.querySelector("[data-kyc-form-top]")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        document
+          .querySelector("[data-kyc-form-top]")
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
       });
     } catch (error: any) {
       const message = classifyError(error, "submit your verification documents").message;
@@ -649,7 +707,9 @@ export function WomenKYCForm() {
         duration: 6000,
       });
       requestAnimationFrame(() => {
-        document.querySelector("[data-kyc-form-top]")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        document
+          .querySelector("[data-kyc-form-top]")
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
       });
     } finally {
       setSubmitting(false);
@@ -659,62 +719,142 @@ export function WomenKYCForm() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'approved': return <Badge className="bg-success text-success-foreground"><CheckCircle className="w-3 h-3 mr-1" /> Verified</Badge>;
-      case 'pending': return <Badge className="bg-warning text-warning-foreground"><Clock className="w-3 h-3 mr-1" /> Pending Review</Badge>;
-      case 'rejected': return <Badge variant="destructive"><XCircle className="w-3 h-3 mr-1" /> Rejected</Badge>;
-      default: return <Badge variant="outline">Unknown</Badge>;
+      case "approved":
+        return (
+          <Badge className="bg-success text-success-foreground">
+            <CheckCircle className="w-3 h-3 mr-1" /> Verified
+          </Badge>
+        );
+      case "pending":
+        return (
+          <Badge className="bg-warning text-warning-foreground">
+            <Clock className="w-3 h-3 mr-1" /> Pending Review
+          </Badge>
+        );
+      case "rejected":
+        return (
+          <Badge variant="destructive">
+            <XCircle className="w-3 h-3 mr-1" /> Rejected
+          </Badge>
+        );
+      default:
+        return <Badge variant="outline">Unknown</Badge>;
     }
   };
 
   const getIdTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
-      pan: 'PAN Card', passport: 'Passport', voter_id: 'Voter ID',
-      driving_license: 'Driving Licence', ration_card: 'Ration Card',
-      college_id: 'College ID', government_id: 'Government ID',
-      nrega_card: 'NREGA Job Card', defence_id: 'Defence ID', postal_id: 'India Post ID',
+      pan: "PAN Card",
+      passport: "Passport",
+      voter_id: "Voter ID",
+      driving_license: "Driving Licence",
+      ration_card: "Ration Card",
+      college_id: "College ID",
+      government_id: "Government ID",
+      nrega_card: "NREGA Job Card",
+      defence_id: "Defence ID",
+      postal_id: "India Post ID",
     };
     return labels[type] || type;
   };
 
   if (loading) {
-    return <Card><CardContent className="flex items-center justify-center py-10"><Loader2 className="w-6 h-6 animate-spin" /></CardContent></Card>;
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center py-10">
+          <Loader2 className="w-6 h-6 animate-spin" />
+        </CardContent>
+      </Card>
+    );
   }
 
   // Approved read-only view
-  if (existingKYC?.verification_status === 'approved' && !editingApproved) {
+  if (existingKYC?.verification_status === "approved" && !editingApproved) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">KYC Verification {getStatusBadge('approved')}</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            KYC Verification {getStatusBadge("approved")}
+          </CardTitle>
           <CardDescription>Your KYC has been verified. You can receive payouts.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {(appId || appSno !== null) && (
             <div className="grid grid-cols-2 gap-4 text-sm p-3 rounded-lg bg-primary/5 border border-primary/20">
-              {appId && <div><Label className="text-muted-foreground">App ID</Label><p className="font-mono font-semibold text-primary">{appId}</p></div>}
-              {appSno !== null && <div><Label className="text-muted-foreground">Beneficiary ID / S.No</Label><p className="font-mono font-semibold text-primary">{appSno}</p></div>}
+              {appId && (
+                <div>
+                  <Label className="text-muted-foreground">App ID</Label>
+                  <p className="font-mono font-semibold text-primary">{appId}</p>
+                </div>
+              )}
+              {appSno !== null && (
+                <div>
+                  <Label className="text-muted-foreground">Beneficiary ID / S.No</Label>
+                  <p className="font-mono font-semibold text-primary">{appSno}</p>
+                </div>
+              )}
             </div>
           )}
           <div className="grid grid-cols-2 gap-4 text-sm">
-            <div><Label className="text-muted-foreground">Full Name</Label><p className="font-medium">{existingKYC.full_name_as_per_bank}</p></div>
-            <div><Label className="text-muted-foreground">Bank</Label><p className="font-medium">{existingKYC.bank_name}</p></div>
-            <div><Label className="text-muted-foreground">Account Number</Label><p className="font-medium">****{existingKYC.account_number.slice(-4)}</p></div>
-            <div><Label className="text-muted-foreground">IFSC</Label><p className="font-medium">{existingKYC.ifsc_code}</p></div>
-            <div><Label className="text-muted-foreground">Aadhaar</Label><p className="font-medium">****{(existingKYC.aadhaar_number || '').slice(-4)}</p></div>
-            <div><Label className="text-muted-foreground">ID Proof</Label><p className="font-medium">{getIdTypeLabel(existingKYC.id_type)}: ****{existingKYC.id_number.slice(-4)}</p></div>
-            <div><Label className="text-muted-foreground">Beneficiary Purpose</Label><p className="font-medium capitalize">{(existingKYC as any).beneficiary_purpose || 'others'}</p></div>
-            {((existingKYC as any).upi_id || (existingKYC as any).upi_vpa) && <div><Label className="text-muted-foreground">UPI VPA</Label><p className="font-medium">{(existingKYC as any).upi_id || (existingKYC as any).upi_vpa}</p></div>}
+            <div>
+              <Label className="text-muted-foreground">Full Name</Label>
+              <p className="font-medium">{existingKYC.full_name_as_per_bank}</p>
+            </div>
+            <div>
+              <Label className="text-muted-foreground">Bank</Label>
+              <p className="font-medium">{existingKYC.bank_name}</p>
+            </div>
+            <div>
+              <Label className="text-muted-foreground">Account Number</Label>
+              <p className="font-medium">****{existingKYC.account_number.slice(-4)}</p>
+            </div>
+            <div>
+              <Label className="text-muted-foreground">IFSC</Label>
+              <p className="font-medium">{existingKYC.ifsc_code}</p>
+            </div>
+            <div>
+              <Label className="text-muted-foreground">Aadhaar</Label>
+              <p className="font-medium">****{(existingKYC.aadhaar_number || "").slice(-4)}</p>
+            </div>
+            <div>
+              <Label className="text-muted-foreground">ID Proof</Label>
+              <p className="font-medium">
+                {getIdTypeLabel(existingKYC.id_type)}: ****{existingKYC.id_number.slice(-4)}
+              </p>
+            </div>
+            <div>
+              <Label className="text-muted-foreground">Beneficiary Purpose</Label>
+              <p className="font-medium capitalize">
+                {(existingKYC as any).beneficiary_purpose || "others"}
+              </p>
+            </div>
+            {((existingKYC as any).upi_id || (existingKYC as any).upi_vpa) && (
+              <div>
+                <Label className="text-muted-foreground">UPI VPA</Label>
+                <p className="font-medium">
+                  {(existingKYC as any).upi_id || (existingKYC as any).upi_vpa}
+                </p>
+              </div>
+            )}
           </div>
           <div className="pt-2 border-t">
-            <p className="text-xs text-muted-foreground mb-2">Editing will reset your KYC status to pending for re-verification.</p>
-            <Button variant="outline" size="sm" onClick={() => setEditingApproved(true)}>Edit KYC Details</Button>
+            <p className="text-xs text-muted-foreground mb-2">
+              Editing will reset your KYC status to pending for re-verification.
+            </p>
+            <Button variant="outline" size="sm" onClick={() => setEditingApproved(true)}>
+              Edit KYC Details
+            </Button>
           </div>
         </CardContent>
       </Card>
     );
   }
 
-  const isEditable = !existingKYC || existingKYC.verification_status === 'pending' || existingKYC.verification_status === 'rejected' || editingApproved;
+  const isEditable =
+    !existingKYC ||
+    existingKYC.verification_status === "pending" ||
+    existingKYC.verification_status === "rejected" ||
+    editingApproved;
 
   return (
     <Card data-kyc-form-top>
@@ -723,8 +863,10 @@ export function WomenKYCForm() {
           Bank KYC Verification
           {existingKYC && getStatusBadge(existingKYC.verification_status)}
         </CardTitle>
-        <CardDescription>Complete your KYC for bank payouts. All information is stored securely.</CardDescription>
-        {existingKYC?.verification_status === 'rejected' && existingKYC.rejection_reason && (
+        <CardDescription>
+          Complete your KYC for bank payouts. All information is stored securely.
+        </CardDescription>
+        {existingKYC?.verification_status === "rejected" && existingKYC.rejection_reason && (
           <div className="flex items-start gap-2 p-3 mt-2 bg-destructive/10 rounded-lg">
             <AlertCircle className="w-5 h-5 text-destructive mt-0.5" />
             <div>
@@ -750,68 +892,176 @@ export function WomenKYCForm() {
         )}
         {(appId || appSno !== null) && (
           <div className="grid grid-cols-2 gap-4 text-sm p-3 mb-6 rounded-lg bg-primary/5 border border-primary/20">
-            {appId && <div><Label className="text-muted-foreground text-xs">App ID</Label><p className="font-mono font-semibold text-primary">{appId}</p></div>}
-            {appSno !== null && <div><Label className="text-muted-foreground text-xs">Beneficiary ID / S.No</Label><p className="font-mono font-semibold text-primary">{appSno}</p></div>}
+            {appId && (
+              <div>
+                <Label className="text-muted-foreground text-xs">App ID</Label>
+                <p className="font-mono font-semibold text-primary">{appId}</p>
+              </div>
+            )}
+            {appSno !== null && (
+              <div>
+                <Label className="text-muted-foreground text-xs">Beneficiary ID / S.No</Label>
+                <p className="font-mono font-semibold text-primary">{appSno}</p>
+              </div>
+            )}
           </div>
         )}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className="space-y-8">
-
             {/* Section 1: Personal Information */}
             <div className="space-y-4">
               <h3 className="font-semibold text-lg border-b pb-2">1. Personal Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField control={form.control} name="full_name_as_per_bank" render={({ field }) => (
-                  <FormItem><FormLabel>Full Name (as per bank) *</FormLabel><FormControl><Input {...field} placeholder="Enter full name" disabled={!isEditable} /></FormControl><FormMessage /></FormItem>
-                )} />
-                <FormField control={form.control} name="fathers_name" render={({ field }) => (
-                  <FormItem><FormLabel>Father's / Mother's Name</FormLabel><FormControl><Input {...field} placeholder="Father's or Mother's name" disabled={!isEditable} /></FormControl><FormMessage /></FormItem>
-                )} />
-                <FormField control={form.control} name="date_of_birth" render={({ field }) => (
-                  <FormItem><FormLabel>Date of Birth *</FormLabel><FormControl><Input {...field} type="date" disabled={!isEditable} /></FormControl><FormMessage /></FormItem>
-                )} />
-                <FormField control={form.control} name="gender" render={({ field }) => (
-                  <FormItem><FormLabel>Gender</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value} disabled={!isEditable}>
-                      <FormControl><SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger></FormControl>
-                      <SelectContent>
-                        <SelectItem value="female">Female</SelectItem>
-                        <SelectItem value="male">Male</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select><FormMessage /></FormItem>
-                )} />
-                <FormField control={form.control} name="marital_status" render={({ field }) => (
-                  <FormItem><FormLabel>Marital Status</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value} disabled={!isEditable}>
-                      <FormControl><SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger></FormControl>
-                      <SelectContent>
-                        <SelectItem value="single">Single</SelectItem>
-                        <SelectItem value="married">Married</SelectItem>
-                        <SelectItem value="divorced">Divorced</SelectItem>
-                        <SelectItem value="widowed">Widowed</SelectItem>
-                      </SelectContent>
-                    </Select><FormMessage /></FormItem>
-                )} />
-                <FormField control={form.control} name="nationality" render={({ field }) => (
-                  <FormItem><FormLabel>Nationality</FormLabel><FormControl><Input {...field} disabled={!isEditable} /></FormControl><FormMessage /></FormItem>
-                )} />
-                <FormField control={form.control} name="occupation" render={({ field }) => (
-                  <FormItem><FormLabel>Occupation</FormLabel><FormControl><Input {...field} placeholder="Your occupation" disabled={!isEditable} /></FormControl><FormMessage /></FormItem>
-                )} />
-                <FormField control={form.control} name="annual_income_range" render={({ field }) => (
-                  <FormItem><FormLabel>Annual Income Range</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value} disabled={!isEditable}>
-                      <FormControl><SelectTrigger><SelectValue placeholder="Select range" /></SelectTrigger></FormControl>
-                      <SelectContent>
-                        <SelectItem value="below_1l">Below ₹1 Lakh</SelectItem>
-                        <SelectItem value="1l_5l">₹1 - 5 Lakh</SelectItem>
-                        <SelectItem value="5l_10l">₹5 - 10 Lakh</SelectItem>
-                        <SelectItem value="10l_25l">₹10 - 25 Lakh</SelectItem>
-                        <SelectItem value="above_25l">Above ₹25 Lakh</SelectItem>
-                      </SelectContent>
-                    </Select><FormMessage /></FormItem>
-                )} />
+                <FormField
+                  control={form.control}
+                  name="full_name_as_per_bank"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Full Name (as per bank) *</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Enter full name" disabled={!isEditable} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="fathers_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Father's / Mother's Name</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="Father's or Mother's name"
+                          disabled={!isEditable}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="date_of_birth"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Date of Birth *</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="date" disabled={!isEditable} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="gender"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Gender</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        disabled={!isEditable}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select gender" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="female">Female</SelectItem>
+                          <SelectItem value="male">Male</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="marital_status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Marital Status</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        disabled={!isEditable}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="single">Single</SelectItem>
+                          <SelectItem value="married">Married</SelectItem>
+                          <SelectItem value="divorced">Divorced</SelectItem>
+                          <SelectItem value="widowed">Widowed</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="nationality"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nationality</FormLabel>
+                      <FormControl>
+                        <Input {...field} disabled={!isEditable} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="occupation"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Occupation</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Your occupation" disabled={!isEditable} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="annual_income_range"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Annual Income Range</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        disabled={!isEditable}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select range" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="below_1l">Below ₹1 Lakh</SelectItem>
+                          <SelectItem value="1l_5l">₹1 - 5 Lakh</SelectItem>
+                          <SelectItem value="5l_10l">₹5 - 10 Lakh</SelectItem>
+                          <SelectItem value="10l_25l">₹10 - 25 Lakh</SelectItem>
+                          <SelectItem value="above_25l">Above ₹25 Lakh</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
             </div>
 
@@ -821,29 +1071,119 @@ export function WomenKYCForm() {
             <div className="space-y-4">
               <h3 className="font-semibold text-lg border-b pb-2">2. Contact Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField control={form.control} name="mobile_number" render={({ field }) => (
-                  <FormItem><FormLabel>Mobile Number</FormLabel><FormControl><Input {...field} placeholder="+91 XXXXX XXXXX" disabled={!isEditable} /></FormControl><FormMessage /></FormItem>
-                )} />
-                <FormField control={form.control} name="email_address" render={({ field }) => (
-                  <FormItem><FormLabel>Email Address</FormLabel><FormControl><Input {...field} type="email" placeholder="email@example.com" disabled={!isEditable} /></FormControl><FormMessage /></FormItem>
-                )} />
+                <FormField
+                  control={form.control}
+                  name="mobile_number"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Mobile Number</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="+91 XXXXX XXXXX" disabled={!isEditable} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="email_address"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email Address</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="email"
+                          placeholder="email@example.com"
+                          disabled={!isEditable}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
-              <FormField control={form.control} name="current_address" render={({ field }) => (
-                <FormItem><FormLabel>Current Address</FormLabel><FormControl><Textarea {...field} placeholder="Current residential address" disabled={!isEditable} rows={2} /></FormControl><FormMessage /></FormItem>
-              )} />
-              <FormField control={form.control} name="permanent_address" render={({ field }) => (
-                <FormItem><FormLabel>Permanent Address</FormLabel><FormControl><Textarea {...field} placeholder="Permanent address (if different)" disabled={!isEditable} rows={2} /></FormControl><FormMessage /></FormItem>
-              )} />
+              <FormField
+                control={form.control}
+                name="current_address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Current Address</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        {...field}
+                        placeholder="Current residential address"
+                        disabled={!isEditable}
+                        rows={2}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="permanent_address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Permanent Address</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        {...field}
+                        placeholder="Permanent address (if different)"
+                        disabled={!isEditable}
+                        rows={2}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <FormField control={form.control} name="city" render={({ field }) => (
-                  <FormItem><FormLabel>City</FormLabel><FormControl><Input {...field} placeholder="City" disabled={!isEditable} /></FormControl><FormMessage /></FormItem>
-                )} />
-                <FormField control={form.control} name="state" render={({ field }) => (
-                  <FormItem><FormLabel>State</FormLabel><FormControl><Input {...field} placeholder="State" disabled={!isEditable} /></FormControl><FormMessage /></FormItem>
-                )} />
-                <FormField control={form.control} name="pin_code" render={({ field }) => (
-                  <FormItem><FormLabel>PIN Code</FormLabel><FormControl><Input {...field} placeholder="6-digit PIN" maxLength={6} disabled={!isEditable} /></FormControl><FormMessage /></FormItem>
-                )} />
+                <FormField
+                  control={form.control}
+                  name="city"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>City</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="City" disabled={!isEditable} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="state"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>State</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="State" disabled={!isEditable} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="pin_code"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>PIN Code</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="6-digit PIN"
+                          maxLength={6}
+                          disabled={!isEditable}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
             </div>
 
@@ -853,27 +1193,52 @@ export function WomenKYCForm() {
             <div className="space-y-4">
               <h3 className="font-semibold text-lg border-b pb-2">3. Identity Proof</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField control={form.control} name="id_type" render={({ field }) => (
-                  <FormItem><FormLabel>ID Type *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value} disabled={!isEditable}>
-                      <FormControl><SelectTrigger><SelectValue placeholder="Select ID type" /></SelectTrigger></FormControl>
-                      <SelectContent>
-                        <SelectItem value="pan">PAN Card</SelectItem>
-                        <SelectItem value="passport">Passport</SelectItem>
-                        <SelectItem value="voter_id">Voter ID</SelectItem>
-                        <SelectItem value="driving_license">Driving Licence</SelectItem>
-                        <SelectItem value="ration_card">Ration Card</SelectItem>
-                        <SelectItem value="college_id">College / University ID</SelectItem>
-                        <SelectItem value="government_id">Government Employee ID</SelectItem>
-                        <SelectItem value="nrega_card">NREGA Job Card</SelectItem>
-                        <SelectItem value="defence_id">Defence / Ex-Servicemen ID</SelectItem>
-                        <SelectItem value="postal_id">India Post ID Card</SelectItem>
-                      </SelectContent>
-                    </Select><FormMessage /></FormItem>
-                )} />
-                <FormField control={form.control} name="id_number" render={({ field }) => (
-                  <FormItem><FormLabel>ID Number *</FormLabel><FormControl><Input {...field} placeholder="Enter ID number" disabled={!isEditable} /></FormControl><FormMessage /></FormItem>
-                )} />
+                <FormField
+                  control={form.control}
+                  name="id_type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>ID Type *</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        disabled={!isEditable}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select ID type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="pan">PAN Card</SelectItem>
+                          <SelectItem value="passport">Passport</SelectItem>
+                          <SelectItem value="voter_id">Voter ID</SelectItem>
+                          <SelectItem value="driving_license">Driving Licence</SelectItem>
+                          <SelectItem value="ration_card">Ration Card</SelectItem>
+                          <SelectItem value="college_id">College / University ID</SelectItem>
+                          <SelectItem value="government_id">Government Employee ID</SelectItem>
+                          <SelectItem value="nrega_card">NREGA Job Card</SelectItem>
+                          <SelectItem value="defence_id">Defence / Ex-Servicemen ID</SelectItem>
+                          <SelectItem value="postal_id">India Post ID Card</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="id_number"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>ID Number *</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Enter ID number" disabled={!isEditable} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <KycFileUploadBox
@@ -915,11 +1280,31 @@ export function WomenKYCForm() {
 
             {/* Section 4: Aadhaar Upload */}
             <div className="space-y-4">
-              <h3 className="font-semibold text-lg border-b pb-2">4. Aadhaar Card (Address Proof)</h3>
-              <p className="text-xs text-muted-foreground">Aadhaar number is required. Front/back photo uploads are optional (JPEG if uploaded).</p>
-              <FormField control={form.control} name="aadhaar_number" render={({ field }) => (
-                <FormItem><FormLabel>Aadhaar Number (12 digits) *</FormLabel><FormControl><Input {...field} placeholder="XXXX XXXX XXXX" maxLength={12} disabled={!isEditable} /></FormControl><FormMessage /></FormItem>
-              )} />
+              <h3 className="font-semibold text-lg border-b pb-2">
+                4. Aadhaar Card (Address Proof)
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                Aadhaar number is required. Front/back photo uploads are optional (JPEG if
+                uploaded).
+              </p>
+              <FormField
+                control={form.control}
+                name="aadhaar_number"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Aadhaar Number (12 digits) *</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="XXXX XXXX XXXX"
+                        maxLength={12}
+                        disabled={!isEditable}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <KycFileUploadBox
                   label="Aadhaar Front (optional)"
@@ -960,24 +1345,43 @@ export function WomenKYCForm() {
 
             {/* Section 5: Additional Address Proof */}
             <div className="space-y-4">
-              <h3 className="font-semibold text-lg border-b pb-2">5. Additional Address Proof (Optional)</h3>
-              <p className="text-xs text-muted-foreground">Optional. Upload only if you want extra address verification.</p>
-              <FormField control={form.control} name="address_proof_type" render={({ field }) => (
-                <FormItem><FormLabel>Address Proof Type</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value} disabled={!isEditable}>
-                    <FormControl><SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger></FormControl>
-                    <SelectContent>
-                      <SelectItem value="aadhaar">Aadhaar Card</SelectItem>
-                      <SelectItem value="passport">Passport</SelectItem>
-                      <SelectItem value="driving_license">Driving Licence</SelectItem>
-                      <SelectItem value="electricity_bill">Electricity Bill</SelectItem>
-                      <SelectItem value="gas_bill">Gas Bill</SelectItem>
-                      <SelectItem value="water_bill">Water Bill</SelectItem>
-                      <SelectItem value="bank_statement">Bank Statement</SelectItem>
-                      <SelectItem value="rent_agreement">Rent Agreement</SelectItem>
-                    </SelectContent>
-                  </Select><FormMessage /></FormItem>
-              )} />
+              <h3 className="font-semibold text-lg border-b pb-2">
+                5. Additional Address Proof (Optional)
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                Optional. Upload only if you want extra address verification.
+              </p>
+              <FormField
+                control={form.control}
+                name="address_proof_type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Address Proof Type</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      disabled={!isEditable}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="aadhaar">Aadhaar Card</SelectItem>
+                        <SelectItem value="passport">Passport</SelectItem>
+                        <SelectItem value="driving_license">Driving Licence</SelectItem>
+                        <SelectItem value="electricity_bill">Electricity Bill</SelectItem>
+                        <SelectItem value="gas_bill">Gas Bill</SelectItem>
+                        <SelectItem value="water_bill">Water Bill</SelectItem>
+                        <SelectItem value="bank_statement">Bank Statement</SelectItem>
+                        <SelectItem value="rent_agreement">Rent Agreement</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <KycFileUploadBox
                 label="Address Proof Document"
                 file={addressProof}
@@ -1001,59 +1405,157 @@ export function WomenKYCForm() {
             <div className="space-y-4">
               <h3 className="font-semibold text-lg border-b pb-2">6. Bank Details *</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField control={form.control} name="bank_name" render={({ field }) => (
-                  <FormItem><FormLabel>Bank Name *</FormLabel><FormControl><Input {...field} placeholder="e.g. State Bank of India" disabled={!isEditable} /></FormControl><FormMessage /></FormItem>
-                )} />
-                <FormField control={form.control} name="bank_branch_name" render={({ field }) => (
-                  <FormItem><FormLabel>Branch Name</FormLabel><FormControl><Input {...field} placeholder="Branch name" disabled={!isEditable} /></FormControl><FormMessage /></FormItem>
-                )} />
-                <FormField control={form.control} name="account_holder_name" render={({ field }) => (
-                  <FormItem><FormLabel>Account Holder Name *</FormLabel><FormControl><Input {...field} placeholder="Name as on bank account" disabled={!isEditable} /></FormControl><FormMessage /></FormItem>
-                )} />
-                <FormField control={form.control} name="account_number" render={({ field }) => (
-                  <FormItem><FormLabel>Account Number *</FormLabel><FormControl><Input {...field} placeholder="Bank account number" disabled={!isEditable} /></FormControl><FormMessage /></FormItem>
-                )} />
-                <FormField control={form.control} name="ifsc_code" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>IFSC Code *</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="Any bank, e.g. HDFC0001234"
-                        className="uppercase"
+                <FormField
+                  control={form.control}
+                  name="bank_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Bank Name *</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="e.g. State Bank of India"
+                          disabled={!isEditable}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="bank_branch_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Branch Name</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Branch name" disabled={!isEditable} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="account_holder_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Account Holder Name *</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="Name as on bank account"
+                          disabled={!isEditable}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="account_number"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Account Number *</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="Bank account number"
+                          disabled={!isEditable}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="ifsc_code"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>IFSC Code *</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="Any bank, e.g. HDFC0001234"
+                          className="uppercase"
+                          disabled={!isEditable}
+                          onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                        />
+                      </FormControl>
+                      <p className="text-[11px] text-muted-foreground">
+                        Accepted for all Indian banks (not SBI-only).
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="account_type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Account Type</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
                         disabled={!isEditable}
-                        onChange={(e) => field.onChange(e.target.value.toUpperCase())}
-                      />
-                    </FormControl>
-                    <p className="text-[11px] text-muted-foreground">Accepted for all Indian banks (not SBI-only).</p>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                <FormField control={form.control} name="account_type" render={({ field }) => (
-                  <FormItem><FormLabel>Account Type</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value} disabled={!isEditable}>
-                      <FormControl><SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger></FormControl>
-                      <SelectContent>
-                        <SelectItem value="savings">Savings</SelectItem>
-                        <SelectItem value="current">Current</SelectItem>
-                      </SelectContent>
-                    </Select><FormMessage /></FormItem>
-                )} />
-                <FormField control={form.control} name="upi_id" render={({ field }) => (
-                  <FormItem><FormLabel>UPI VPA</FormLabel><FormControl><Input {...field} placeholder="e.g. yourname@upi" disabled={!isEditable} /></FormControl><FormMessage /></FormItem>
-                )} />
-                <FormField control={form.control} name="beneficiary_purpose" render={({ field }) => (
-                  <FormItem><FormLabel>Beneficiary Purpose *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value} disabled={!isEditable}>
-                      <FormControl><SelectTrigger><SelectValue placeholder="Select purpose" /></SelectTrigger></FormControl>
-                      <SelectContent>
-                        <SelectItem value="others">Others</SelectItem>
-                        <SelectItem value="salary">Salary</SelectItem>
-                        <SelectItem value="reimbursement">Reimbursement</SelectItem>
-                        <SelectItem value="vendor_payment">Vendor Payment</SelectItem>
-                      </SelectContent>
-                    </Select><FormMessage /></FormItem>
-                )} />
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="savings">Savings</SelectItem>
+                          <SelectItem value="current">Current</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="upi_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>UPI VPA</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="e.g. yourname@upi" disabled={!isEditable} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="beneficiary_purpose"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Beneficiary Purpose *</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        disabled={!isEditable}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select purpose" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="others">Others</SelectItem>
+                          <SelectItem value="salary">Salary</SelectItem>
+                          <SelectItem value="reimbursement">Reimbursement</SelectItem>
+                          <SelectItem value="vendor_payment">Vendor Payment</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
             </div>
 
@@ -1063,31 +1565,81 @@ export function WomenKYCForm() {
             <div className="space-y-4">
               <h3 className="font-semibold text-lg border-b pb-2">7. Nominee Details (Optional)</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField control={form.control} name="nominee_name" render={({ field }) => (
-                  <FormItem><FormLabel>Nominee Name</FormLabel><FormControl><Input {...field} placeholder="Nominee full name" disabled={!isEditable} /></FormControl><FormMessage /></FormItem>
-                )} />
-                <FormField control={form.control} name="nominee_relationship" render={({ field }) => (
-                  <FormItem><FormLabel>Relationship</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value} disabled={!isEditable}>
-                      <FormControl><SelectTrigger><SelectValue placeholder="Select relationship" /></SelectTrigger></FormControl>
-                      <SelectContent>
-                        <SelectItem value="spouse">Spouse</SelectItem>
-                        <SelectItem value="father">Father</SelectItem>
-                        <SelectItem value="mother">Mother</SelectItem>
-                        <SelectItem value="son">Son</SelectItem>
-                        <SelectItem value="daughter">Daughter</SelectItem>
-                        <SelectItem value="sibling">Sibling</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select><FormMessage /></FormItem>
-                )} />
-                <FormField control={form.control} name="nominee_dob" render={({ field }) => (
-                  <FormItem><FormLabel>Nominee Date of Birth</FormLabel><FormControl><Input {...field} type="date" disabled={!isEditable} /></FormControl><FormMessage /></FormItem>
-                )} />
+                <FormField
+                  control={form.control}
+                  name="nominee_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nominee Name</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Nominee full name" disabled={!isEditable} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="nominee_relationship"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Relationship</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        disabled={!isEditable}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select relationship" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="spouse">Spouse</SelectItem>
+                          <SelectItem value="father">Father</SelectItem>
+                          <SelectItem value="mother">Mother</SelectItem>
+                          <SelectItem value="son">Son</SelectItem>
+                          <SelectItem value="daughter">Daughter</SelectItem>
+                          <SelectItem value="sibling">Sibling</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="nominee_dob"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nominee Date of Birth</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="date" disabled={!isEditable} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
-              <FormField control={form.control} name="nominee_address" render={({ field }) => (
-                <FormItem><FormLabel>Nominee Address</FormLabel><FormControl><Textarea {...field} placeholder="Nominee's address" disabled={!isEditable} rows={2} /></FormControl><FormMessage /></FormItem>
-              )} />
+              <FormField
+                control={form.control}
+                name="nominee_address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nominee Address</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        {...field}
+                        placeholder="Nominee's address"
+                        disabled={!isEditable}
+                        rows={2}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
             <Separator />
@@ -1144,7 +1696,9 @@ export function WomenKYCForm() {
               )}
 
               {!selfieLocalPreview && !savedPreviews.selfie && !showSelfieCamera && isEditable && (
-                <p className="text-[11px] text-muted-foreground">Tap the camera icon to take a selfie.</p>
+                <p className="text-[11px] text-muted-foreground">
+                  Tap the camera icon to take a selfie.
+                </p>
               )}
 
               {showSelfieCamera && (
@@ -1160,10 +1714,21 @@ export function WomenKYCForm() {
                   </div>
                   <canvas ref={selfieCanvasRef} className="hidden" />
                   <div className="flex gap-2">
-                    <Button type="button" variant="outline" size="sm" className="flex-1" onClick={stopSelfieCamera}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={stopSelfieCamera}
+                    >
                       Cancel
                     </Button>
-                    <Button type="button" size="sm" className="flex-1 gap-2" onClick={captureSelfiePhoto}>
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="flex-1 gap-2"
+                      onClick={captureSelfiePhoto}
+                    >
                       <Camera className="w-4 h-4" />
                       Capture
                     </Button>
@@ -1177,31 +1742,58 @@ export function WomenKYCForm() {
             {/* Section 9: Declaration */}
             <div className="space-y-4">
               <h3 className="font-semibold text-lg border-b pb-2">9. Declaration</h3>
-              <FormField control={form.control} name="declaration_place" render={({ field }) => (
-                <FormItem><FormLabel>Place</FormLabel><FormControl><Input {...field} placeholder="City/Town" disabled={!isEditable} /></FormControl><FormMessage /></FormItem>
-              )} />
-              <FormField control={form.control} name="consent_given" render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 border-border">
-                  <FormControl>
-                    <Checkbox checked={field.value} onCheckedChange={field.onChange} disabled={!isEditable} />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>I declare that the information provided is true and correct *</FormLabel>
-                    <p className="text-xs text-muted-foreground">
-                      I hereby declare that the details furnished above are true and correct to the best of my knowledge and belief. I authorize Meow MEOW FRND APP to verify my identity and bank details for payout purposes.
-                    </p>
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )} />
+              <FormField
+                control={form.control}
+                name="declaration_place"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Place</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="City/Town" disabled={!isEditable} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="consent_given"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 border-border">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        disabled={!isEditable}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>
+                        I declare that the information provided is true and correct *
+                      </FormLabel>
+                      <p className="text-xs text-muted-foreground">
+                        I hereby declare that the details furnished above are true and correct to
+                        the best of my knowledge and belief. I authorize Meow MEOW FRND APP to
+                        verify my identity and bank details for payout purposes.
+                      </p>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
             {isEditable && (
               <Button type="submit" className="w-full" disabled={submitting}>
                 {submitting ? (
-                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{uploadingFiles ? 'Uploading documents...' : 'Submitting...'}</>
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    {uploadingFiles ? "Uploading documents..." : "Submitting..."}
+                  </>
+                ) : existingKYC ? (
+                  "Update KYC"
                 ) : (
-                  existingKYC ? 'Update KYC' : 'Submit KYC'
+                  "Submit KYC"
                 )}
               </Button>
             )}

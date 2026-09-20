@@ -67,9 +67,11 @@ const PasswordSetupScreen = () => {
 
   return (
     <div className="min-h-screen flex flex-col relative bg-background text-foreground">
-      <Suspense fallback={
-        <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background to-secondary/30" />
-      }>
+      <Suspense
+        fallback={
+          <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background to-secondary/30" />
+        }
+      >
         <AuroraBackground />
       </Suspense>
 
@@ -121,7 +123,7 @@ const PasswordSetupScreen = () => {
                     "h-11 pr-10 rounded-xl border-2 transition-all",
                     touched.password && !allRequirementsMet
                       ? "border-destructive focus:border-destructive"
-                      : "border-input focus:border-primary"
+                      : "border-input focus:border-primary",
                   )}
                 />
                 <button
@@ -144,10 +146,14 @@ const PasswordSetupScreen = () => {
                       key={index}
                       className={cn(
                         "flex items-center gap-1 text-[10px] transition-all duration-200",
-                        met ? "text-success" : "text-muted-foreground"
+                        met ? "text-success" : "text-muted-foreground",
                       )}
                     >
-                      {met ? <Check className="h-3 w-3 shrink-0" /> : <X className="h-3 w-3 shrink-0" />}
+                      {met ? (
+                        <Check className="h-3 w-3 shrink-0" />
+                      ) : (
+                        <X className="h-3 w-3 shrink-0" />
+                      )}
                       <span className="truncate">{req.label}</span>
                     </div>
                   );
@@ -174,7 +180,7 @@ const PasswordSetupScreen = () => {
                       ? "border-destructive focus:border-destructive"
                       : passwordsMatch
                         ? "border-success focus:border-success"
-                        : "border-input focus:border-primary"
+                        : "border-input focus:border-primary",
                   )}
                 />
                 <button
@@ -182,14 +188,18 @@ const PasswordSetupScreen = () => {
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               </div>
               {confirmPassword.length > 0 && (
                 <p
                   className={cn(
                     "text-xs flex items-center gap-1 animate-fade-in",
-                    passwordsMatch ? "text-success" : "text-destructive"
+                    passwordsMatch ? "text-success" : "text-destructive",
                   )}
                 >
                   {passwordsMatch ? (

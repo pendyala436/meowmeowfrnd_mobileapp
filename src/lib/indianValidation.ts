@@ -31,7 +31,7 @@ export function isIndianLanguageInput(input: string | null | undefined): boolean
   const v = input.trim();
   if (!v) return false;
   // Try as code first
-  const byCode = languages.find(l => l.code.toLowerCase() === v.toLowerCase());
+  const byCode = languages.find((l) => l.code.toLowerCase() === v.toLowerCase());
   const name = byCode?.name ?? v;
   return isIndianLanguage(name);
 }

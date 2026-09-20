@@ -1,9 +1,9 @@
 /**
  * Admin User Search Dialog
- * 
+ *
  * Allows admin to search for any user by name, email, or phone number
  * and view complete details including KYC information for legal compliance.
- * 
+ *
  * Purpose: Government/Police case compliance - complete user data retrieval
  */
 
@@ -24,12 +24,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import {
   Search,
@@ -184,7 +179,9 @@ export const AdminUserSearchDialog = () => {
       const { data: profiles, error } = await supabase
         .from("profiles")
         .select("*")
-        .or(`full_name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%,phone.ilike.%${searchQuery}%`)
+        .or(
+          `full_name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%,phone.ilike.%${searchQuery}%`,
+        )
         .limit(20);
 
       if (error) throw error;
@@ -255,7 +252,7 @@ export const AdminUserSearchDialog = () => {
               blocked: blockedCount || 0,
             },
           };
-        })
+        }),
       );
 
       setResults(enrichedResults);
@@ -302,7 +299,11 @@ export const AdminUserSearchDialog = () => {
     toast.success("User data exported successfully");
   };
 
-  const renderCopyableField = (label: string, value: string | null | undefined, fieldKey: string) => {
+  const renderCopyableField = (
+    label: string,
+    value: string | null | undefined,
+    fieldKey: string,
+  ) => {
     if (!value) return null;
     return (
       <div className="flex items-center justify-between py-2 border-b border-border/50">
@@ -341,7 +342,8 @@ export const AdminUserSearchDialog = () => {
             User Search - Legal Compliance
           </DialogTitle>
           <DialogDescription>
-            Search for any user by name, email, or phone number to retrieve complete information for government/police case compliance.
+            Search for any user by name, email, or phone number to retrieve complete information for
+            government/police case compliance.
           </DialogDescription>
         </DialogHeader>
 
@@ -493,11 +495,23 @@ export const AdminUserSearchDialog = () => {
                             Basic Information
                           </h4>
                           <div className="space-y-1 text-sm">
-                            {renderCopyableField("User ID", selectedUser.profile.user_id, "user_id")}
+                            {renderCopyableField(
+                              "User ID",
+                              selectedUser.profile.user_id,
+                              "user_id",
+                            )}
                             {renderCopyableField("Email", selectedUser.profile.email, "email")}
                             {renderCopyableField("Phone", selectedUser.profile.phone, "phone")}
-                            {renderCopyableField("Date of Birth", selectedUser.profile.date_of_birth, "dob")}
-                            {renderCopyableField("Age", selectedUser.profile.age?.toString(), "age")}
+                            {renderCopyableField(
+                              "Date of Birth",
+                              selectedUser.profile.date_of_birth,
+                              "dob",
+                            )}
+                            {renderCopyableField(
+                              "Age",
+                              selectedUser.profile.age?.toString(),
+                              "age",
+                            )}
                           </div>
                         </div>
 
@@ -510,7 +524,11 @@ export const AdminUserSearchDialog = () => {
                             Location
                           </h4>
                           <div className="space-y-1 text-sm">
-                            {renderCopyableField("Country", selectedUser.profile.country, "country")}
+                            {renderCopyableField(
+                              "Country",
+                              selectedUser.profile.country,
+                              "country",
+                            )}
                             {renderCopyableField("State", selectedUser.profile.state, "state")}
                             {renderCopyableField("City", selectedUser.profile.city, "city")}
                           </div>
@@ -525,14 +543,46 @@ export const AdminUserSearchDialog = () => {
                             Lifestyle Details
                           </h4>
                           <div className="grid grid-cols-2 gap-2 text-sm">
-                            {renderCopyableField("Occupation", selectedUser.profile.occupation, "occupation")}
-                            {renderCopyableField("Education", selectedUser.profile.education_level, "education")}
-                            {renderCopyableField("Religion", selectedUser.profile.religion, "religion")}
-                            {renderCopyableField("Marital Status", selectedUser.profile.marital_status, "marital")}
-                            {renderCopyableField("Height (cm)", selectedUser.profile.height_cm?.toString(), "height")}
-                            {renderCopyableField("Body Type", selectedUser.profile.body_type, "body")}
-                            {renderCopyableField("Smoking", selectedUser.profile.smoking_habit, "smoking")}
-                            {renderCopyableField("Drinking", selectedUser.profile.drinking_habit, "drinking")}
+                            {renderCopyableField(
+                              "Occupation",
+                              selectedUser.profile.occupation,
+                              "occupation",
+                            )}
+                            {renderCopyableField(
+                              "Education",
+                              selectedUser.profile.education_level,
+                              "education",
+                            )}
+                            {renderCopyableField(
+                              "Religion",
+                              selectedUser.profile.religion,
+                              "religion",
+                            )}
+                            {renderCopyableField(
+                              "Marital Status",
+                              selectedUser.profile.marital_status,
+                              "marital",
+                            )}
+                            {renderCopyableField(
+                              "Height (cm)",
+                              selectedUser.profile.height_cm?.toString(),
+                              "height",
+                            )}
+                            {renderCopyableField(
+                              "Body Type",
+                              selectedUser.profile.body_type,
+                              "body",
+                            )}
+                            {renderCopyableField(
+                              "Smoking",
+                              selectedUser.profile.smoking_habit,
+                              "smoking",
+                            )}
+                            {renderCopyableField(
+                              "Drinking",
+                              selectedUser.profile.drinking_habit,
+                              "drinking",
+                            )}
                           </div>
                         </div>
 
@@ -550,14 +600,14 @@ export const AdminUserSearchDialog = () => {
                               selectedUser.profile.created_at
                                 ? format(new Date(selectedUser.profile.created_at), "PPpp")
                                 : null,
-                              "created"
+                              "created",
                             )}
                             {renderCopyableField(
                               "Last Active",
                               selectedUser.profile.last_active_at
                                 ? format(new Date(selectedUser.profile.last_active_at), "PPpp")
                                 : null,
-                              "last_active"
+                              "last_active",
                             )}
                           </div>
                         </div>
@@ -581,8 +631,8 @@ export const AdminUserSearchDialog = () => {
                                   selectedUser.kyc.verification_status === "approved"
                                     ? "default"
                                     : selectedUser.kyc.verification_status === "rejected"
-                                    ? "destructive"
-                                    : "secondary"
+                                      ? "destructive"
+                                      : "secondary"
                                 }
                               >
                                 {selectedUser.kyc.verification_status || "pending"}
@@ -601,11 +651,31 @@ export const AdminUserSearchDialog = () => {
                                 Bank Information
                               </h4>
                               <div className="space-y-1 text-sm">
-                                {renderCopyableField("Name (as per bank)", selectedUser.kyc.full_name_as_per_bank, "kyc_name")}
-                                {renderCopyableField("Bank Name", selectedUser.kyc.bank_name, "bank_name")}
-                                {renderCopyableField("Account Holder", selectedUser.kyc.account_holder_name, "acc_holder")}
-                                {renderCopyableField("Account Number", selectedUser.kyc.account_number, "acc_number")}
-                                {renderCopyableField("IFSC Code", selectedUser.kyc.ifsc_code, "ifsc")}
+                                {renderCopyableField(
+                                  "Name (as per bank)",
+                                  selectedUser.kyc.full_name_as_per_bank,
+                                  "kyc_name",
+                                )}
+                                {renderCopyableField(
+                                  "Bank Name",
+                                  selectedUser.kyc.bank_name,
+                                  "bank_name",
+                                )}
+                                {renderCopyableField(
+                                  "Account Holder",
+                                  selectedUser.kyc.account_holder_name,
+                                  "acc_holder",
+                                )}
+                                {renderCopyableField(
+                                  "Account Number",
+                                  selectedUser.kyc.account_number,
+                                  "acc_number",
+                                )}
+                                {renderCopyableField(
+                                  "IFSC Code",
+                                  selectedUser.kyc.ifsc_code,
+                                  "ifsc",
+                                )}
                               </div>
                             </div>
 
@@ -618,10 +688,26 @@ export const AdminUserSearchDialog = () => {
                                 Identity Documents
                               </h4>
                               <div className="space-y-1 text-sm">
-                                {renderCopyableField("ID Type", selectedUser.kyc.id_type, "id_type")}
-                                {renderCopyableField("ID Number", selectedUser.kyc.id_number, "id_number")}
-                                {renderCopyableField("DOB (KYC)", selectedUser.kyc.date_of_birth, "kyc_dob")}
-                                {renderCopyableField("Country of Residence", selectedUser.kyc.country_of_residence, "kyc_country")}
+                                {renderCopyableField(
+                                  "ID Type",
+                                  selectedUser.kyc.id_type,
+                                  "id_type",
+                                )}
+                                {renderCopyableField(
+                                  "ID Number",
+                                  selectedUser.kyc.id_number,
+                                  "id_number",
+                                )}
+                                {renderCopyableField(
+                                  "DOB (KYC)",
+                                  selectedUser.kyc.date_of_birth,
+                                  "kyc_dob",
+                                )}
+                                {renderCopyableField(
+                                  "Country of Residence",
+                                  selectedUser.kyc.country_of_residence,
+                                  "kyc_country",
+                                )}
                               </div>
                             </div>
 
@@ -691,24 +777,28 @@ export const AdminUserSearchDialog = () => {
                                 {renderCopyableField(
                                   "Consent Given",
                                   selectedUser.kyc.consent_given ? "Yes" : "No",
-                                  "consent"
+                                  "consent",
                                 )}
                                 {renderCopyableField(
                                   "Consent Timestamp",
                                   selectedUser.kyc.consent_timestamp
                                     ? format(new Date(selectedUser.kyc.consent_timestamp), "PPpp")
                                     : null,
-                                  "consent_time"
+                                  "consent_time",
                                 )}
                                 {renderCopyableField(
                                   "Verified At",
                                   selectedUser.kyc.verified_at
                                     ? format(new Date(selectedUser.kyc.verified_at), "PPpp")
                                     : null,
-                                  "verified_at"
+                                  "verified_at",
                                 )}
                                 {selectedUser.kyc.rejection_reason &&
-                                  renderCopyableField("Rejection Reason", selectedUser.kyc.rejection_reason, "rejection")}
+                                  renderCopyableField(
+                                    "Rejection Reason",
+                                    selectedUser.kyc.rejection_reason,
+                                    "rejection",
+                                  )}
                               </div>
                             </div>
                           </>
@@ -734,7 +824,8 @@ export const AdminUserSearchDialog = () => {
                                 <CardContent className="p-3">
                                   <p className="text-xs text-muted-foreground">Balance</p>
                                   <p className="text-lg font-bold">
-                                    {selectedUser.wallet.currency} {selectedUser.wallet.balance.toFixed(2)}
+                                    {selectedUser.wallet.currency}{" "}
+                                    {selectedUser.wallet.balance.toFixed(2)}
                                   </p>
                                 </CardContent>
                               </Card>
@@ -775,7 +866,10 @@ export const AdminUserSearchDialog = () => {
                                   <p className="text-xs text-muted-foreground">Last Chat</p>
                                   <p className="text-sm font-medium">
                                     {selectedUser.chatStats.last_chat_date
-                                      ? format(new Date(selectedUser.chatStats.last_chat_date), "PP")
+                                      ? format(
+                                          new Date(selectedUser.chatStats.last_chat_date),
+                                          "PP",
+                                        )
                                       : "Never"}
                                   </p>
                                 </CardContent>
@@ -798,24 +892,24 @@ export const AdminUserSearchDialog = () => {
                             {renderCopyableField(
                               "Performance Score",
                               selectedUser.profile.performance_score?.toString(),
-                              "perf_score"
+                              "perf_score",
                             )}
                             {renderCopyableField(
                               "Avg Response Time (sec)",
                               selectedUser.profile.avg_response_time_seconds?.toString(),
-                              "resp_time"
+                              "resp_time",
                             )}
                             {renderCopyableField(
                               "Profile Completeness",
                               selectedUser.profile.profile_completeness
                                 ? `${selectedUser.profile.profile_completeness}%`
                                 : null,
-                              "completeness"
+                              "completeness",
                             )}
                             {renderCopyableField(
                               "Monthly Chat Minutes",
                               selectedUser.profile.monthly_chat_minutes?.toString(),
-                              "chat_mins"
+                              "chat_mins",
                             )}
                           </div>
                         </div>
@@ -828,11 +922,15 @@ export const AdminUserSearchDialog = () => {
                           <div className="flex gap-4 text-sm">
                             <div>
                               <span className="text-muted-foreground">Friends: </span>
-                              <span className="font-medium">{selectedUser.relationships.friends}</span>
+                              <span className="font-medium">
+                                {selectedUser.relationships.friends}
+                              </span>
                             </div>
                             <div>
                               <span className="text-muted-foreground">Blocked: </span>
-                              <span className="font-medium">{selectedUser.relationships.blocked}</span>
+                              <span className="font-medium">
+                                {selectedUser.relationships.blocked}
+                              </span>
                             </div>
                           </div>
                         </div>

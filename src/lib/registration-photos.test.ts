@@ -51,10 +51,7 @@ describe("uploadRegistrationPhoto", () => {
     upload.mockResolvedValue({ data: null, error: { message: "denied" } });
     const err = vi.spyOn(console, "error").mockImplementation(() => {});
     await expect(uploadRegistrationPhoto("user-1", SAMPLE_JPEG, "selfie")).resolves.toBeNull();
-    expect(err).toHaveBeenCalledWith(
-      "[Registration] Photo upload failed:",
-      "denied",
-    );
+    expect(err).toHaveBeenCalledWith("[Registration] Photo upload failed:", "denied");
     err.mockRestore();
   });
 
@@ -62,10 +59,7 @@ describe("uploadRegistrationPhoto", () => {
     upload.mockResolvedValue({ data: null, error: null });
     const err = vi.spyOn(console, "error").mockImplementation(() => {});
     await expect(uploadRegistrationPhoto("user-1", SAMPLE_JPEG, "selfie")).resolves.toBeNull();
-    expect(err).toHaveBeenCalledWith(
-      "[Registration] Photo upload failed:",
-      "unknown error",
-    );
+    expect(err).toHaveBeenCalledWith("[Registration] Photo upload failed:", "unknown error");
     err.mockRestore();
   });
 

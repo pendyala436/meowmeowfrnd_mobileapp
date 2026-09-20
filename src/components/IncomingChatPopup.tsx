@@ -17,7 +17,7 @@ interface IncomingChatPopupProps {
   startedAt: string;
   userGender: "male" | "female";
   onAccept: (sessionId: string) => void;
-  onReject: (sessionId: string, reason?: 'manual' | 'auto_timeout') => void;
+  onReject: (sessionId: string, reason?: "manual" | "auto_timeout") => void;
 }
 
 // Sound is managed globally by useIncomingChats hook - no duplicate sound here
@@ -31,7 +31,7 @@ const IncomingChatPopup = ({
   startedAt,
   userGender,
   onAccept,
-  onReject
+  onReject,
 }: IncomingChatPopupProps) => {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
@@ -40,7 +40,7 @@ const IncomingChatPopup = ({
   // Calculate elapsed time since chat started
   useEffect(() => {
     const startTime = new Date(startedAt).getTime();
-    
+
     const updateElapsed = () => {
       const elapsed = Math.floor((Date.now() - startTime) / 1000);
       setElapsedSeconds(elapsed);
@@ -66,12 +66,12 @@ const IncomingChatPopup = ({
   };
 
   const handleReject = () => {
-    onReject(sessionId, 'manual');
+    onReject(sessionId, "manual");
     setIsExiting(true);
   };
 
   const handleAutoReject = () => {
-    onReject(sessionId, 'auto_timeout');
+    onReject(sessionId, "auto_timeout");
     setIsExiting(true);
   };
 
@@ -83,12 +83,14 @@ const IncomingChatPopup = ({
   if (!isVisible) return null;
 
   return (
-    <Card className={cn(
-      "w-72 p-4 shadow-2xl border-2 border-primary/50 bg-background",
-      "animate-in slide-in-from-bottom-5 fade-in duration-300",
-      "z-[9999] relative",
-      isExiting && "animate-out slide-out-to-right fade-out duration-200"
-    )}>
+    <Card
+      className={cn(
+        "w-72 p-4 shadow-2xl border-2 border-primary/50 bg-background",
+        "animate-in slide-in-from-bottom-5 fade-in duration-300",
+        "z-[9999] relative",
+        isExiting && "animate-out slide-out-to-right fade-out duration-200",
+      )}
+    >
       {/* Pulsing indicator with sound icon */}
       <div className="absolute -top-1 -right-1 flex items-center gap-1">
         <span className="relative flex h-4 w-4">
@@ -110,7 +112,7 @@ const IncomingChatPopup = ({
           </Avatar>
           <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-online border-2 border-background" />
         </div>
-        
+
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-foreground truncate">{partnerName}</p>
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">

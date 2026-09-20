@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useCallback, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useCallback, useState } from "react";
 
 interface UserActivityContextValue {
   /** Timestamp of last user activity */
@@ -9,7 +9,14 @@ interface UserActivityContextValue {
 
 const UserActivityContext = createContext<UserActivityContextValue | null>(null);
 
-const ACTIVITY_EVENTS = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'] as const;
+const ACTIVITY_EVENTS = [
+  "mousedown",
+  "mousemove",
+  "keydown",
+  "scroll",
+  "touchstart",
+  "click",
+] as const;
 const THROTTLE_MS = 5000; // 5s throttle — matches both existing implementations
 
 export const UserActivityProvider = ({ children }: { children: React.ReactNode }) => {
@@ -21,7 +28,9 @@ export const UserActivityProvider = ({ children }: { children: React.ReactNode }
 
   const subscribe = useCallback((callback: () => void) => {
     subscribersRef.current.add(callback);
-    return () => { subscribersRef.current.delete(callback); };
+    return () => {
+      subscribersRef.current.delete(callback);
+    };
   }, []);
 
   useEffect(() => {
@@ -33,25 +42,25 @@ export const UserActivityProvider = ({ children }: { children: React.ReactNode }
       lastEventTime = now;
       lastActivityRef.current = now;
       lastActivityTimeRef.current = now;
-      subscribersRef.current.forEach(cb => cb());
+      subscribersRef.current.forEach((cb) => cb());
     };
 
-    ACTIVITY_EVENTS.forEach(event => {
+    ACTIVITY_EVENTS.forEach((event) => {
       document.addEventListener(event, handleActivity, { passive: true });
     });
 
     const handleVisibility = () => {
-      if (document.visibilityState === 'visible') {
+      if (document.visibilityState === "visible") {
         handleActivity();
       }
     };
-    document.addEventListener('visibilitychange', handleVisibility);
+    document.addEventListener("visibilitychange", handleVisibility);
 
     return () => {
-      ACTIVITY_EVENTS.forEach(event => {
+      ACTIVITY_EVENTS.forEach((event) => {
         document.removeEventListener(event, handleActivity);
       });
-      document.removeEventListener('visibilitychange', handleVisibility);
+      document.removeEventListener("visibilitychange", handleVisibility);
     };
   }, []);
 
@@ -60,14 +69,12 @@ export const UserActivityProvider = ({ children }: { children: React.ReactNode }
   valueRef.current.lastActivityTime = lastActivityTimeRef.current;
 
   return (
-    <UserActivityContext.Provider value={valueRef.current}>
-      {children}
-    </UserActivityContext.Provider>
+    <UserActivityContext.Provider value={valueRef.current}>{children}</UserActivityContext.Provider>
   );
 };
 
 export const useUserActivity = () => {
   const ctx = useContext(UserActivityContext);
-  if (!ctx) throw new Error('useUserActivity must be used within UserActivityProvider');
+  if (!ctx) throw new Error("useUserActivity must be used within UserActivityProvider");
   return ctx;
 };

@@ -32,7 +32,7 @@ import {
   MessageCircle,
   UserPlus,
   Trash2,
-  Search
+  Search,
 } from "lucide-react";
 
 interface DashboardStats {
@@ -55,7 +55,7 @@ const AdminDashboard = () => {
     activeChats: 0,
     todayEarnings: 0,
     pendingApprovals: 0,
-    policyAlerts: 0
+    policyAlerts: 0,
   });
   const [seedingUsers, setSeedingUsers] = useState(false);
   const [runningCleanup, setRunningCleanup] = useState(false);
@@ -64,10 +64,11 @@ const AdminDashboard = () => {
     setRunningCleanup(true);
     try {
       const results = await runAllCleanups();
-      
-      const successCount = [results.dataCleanup, results.groupCleanup, results.videoCleanup]
-        .filter(r => r.success).length;
-      
+
+      const successCount = [results.dataCleanup, results.groupCleanup, results.videoCleanup].filter(
+        (r) => r.success,
+      ).length;
+
       if (successCount === 3) {
         toast.success("All cleanup tasks completed successfully!");
       } else if (successCount > 0) {
@@ -75,7 +76,7 @@ const AdminDashboard = () => {
       } else {
         toast.error("Cleanup tasks failed");
       }
-      
+
       loadStats();
     } catch (error) {
       console.error("Cleanup error:", error);
@@ -88,23 +89,25 @@ const AdminDashboard = () => {
   const handleSeedSuperUsers = async () => {
     setSeedingUsers(true);
     try {
-      const { data: result, error } = await supabase.functions.invoke('seed-super-users', {
-        method: 'POST',
+      const { data: result, error } = await supabase.functions.invoke("seed-super-users", {
+        method: "POST",
       });
 
       if (error) {
         toast.error(error.message || "Failed to seed super users");
         return;
       }
-      
+
       if (result?.success) {
-        const created = (result.results?.females?.filter((f: any) => f.status === 'created').length || 0) +
-                       (result.results?.males?.filter((m: any) => m.status === 'created').length || 0) +
-                       (result.results?.admins?.filter((a: any) => a.status === 'created').length || 0);
-        const existing = (result.results?.females?.filter((f: any) => f.status === 'already exists').length || 0) +
-                        (result.results?.males?.filter((m: any) => m.status === 'already exists').length || 0) +
-                        (result.results?.admins?.filter((a: any) => a.status === 'already exists').length || 0);
-        
+        const created =
+          (result.results?.females?.filter((f: any) => f.status === "created").length || 0) +
+          (result.results?.males?.filter((m: any) => m.status === "created").length || 0) +
+          (result.results?.admins?.filter((a: any) => a.status === "created").length || 0);
+        const existing =
+          (result.results?.females?.filter((f: any) => f.status === "already exists").length || 0) +
+          (result.results?.males?.filter((m: any) => m.status === "already exists").length || 0) +
+          (result.results?.admins?.filter((a: any) => a.status === "already exists").length || 0);
+
         toast.success(`Super users seeded! Created: ${created}, Already existed: ${existing}`);
         loadStats();
       } else {
@@ -124,7 +127,7 @@ const AdminDashboard = () => {
       description: "Manage users, roles, and permissions",
       icon: <Users className="h-6 w-6" />,
       path: "/admin/users",
-      badge: stats.pendingApprovals > 0 ? `${stats.pendingApprovals} pending` : undefined
+      badge: stats.pendingApprovals > 0 ? `${stats.pendingApprovals} pending` : undefined,
     },
     {
       title: "User Lookup",
@@ -149,7 +152,7 @@ const AdminDashboard = () => {
       description: "Monitor active chats and conversations",
       icon: <MessageSquare className="h-6 w-6" />,
       path: "/admin/chat-monitoring",
-      badge: stats.activeChats > 0 ? `${stats.activeChats} active` : undefined
+      badge: stats.activeChats > 0 ? `${stats.activeChats} active` : undefined,
     },
     {
       title: "Online & Chat",
@@ -210,7 +213,7 @@ const AdminDashboard = () => {
       description: "View policy violation alerts",
       icon: <AlertTriangle className="h-6 w-6" />,
       path: "/admin/policy-alerts",
-      badge: stats.policyAlerts > 0 ? `${stats.policyAlerts} alerts` : undefined
+      badge: stats.policyAlerts > 0 ? `${stats.policyAlerts} alerts` : undefined,
     },
     {
       title: "Performance",
@@ -259,7 +262,7 @@ const AdminDashboard = () => {
       description: "Enable or disable users and features",
       icon: <Settings className="h-6 w-6" />,
       path: "/admin/enable-disable",
-    }
+    },
   ];
 
   const loadStats = useCallback(async () => {
@@ -277,20 +280,39 @@ const AdminDashboard = () => {
         earningsRes,
       ] = await Promise.allSettled([
         supabase.from("profiles").select("*", { count: "exact", head: true }),
-        supabase.from("user_status").select("*", { count: "exact", head: true }).eq("is_online", true),
-        supabase.from("active_chat_sessions").select("*", { count: "exact", head: true }).eq("status", "active"),
+        supabase
+          .from("user_status")
+          .select("*", { count: "exact", head: true })
+          .eq("is_online", true),
+        supabase
+          .from("active_chat_sessions")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "active"),
         supabase.from("chat_messages").select("*", { count: "exact", head: true }),
-        supabase.from("female_profiles").select("*", { count: "exact", head: true }).eq("approval_status", "pending"),
-        supabase.from("policy_violation_alerts").select("*", { count: "exact", head: true }).eq("status", "pending"),
-        supabase.from("wallet_transactions").select("amount").eq("transaction_type", "recharge").eq("type","credit").gte("created_at", `${today}T00:00:00`).lte("created_at", `${today}T23:59:59`),
+        supabase
+          .from("female_profiles")
+          .select("*", { count: "exact", head: true })
+          .eq("approval_status", "pending"),
+        supabase
+          .from("policy_violation_alerts")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "pending"),
+        supabase
+          .from("wallet_transactions")
+          .select("amount")
+          .eq("transaction_type", "recharge")
+          .eq("type", "credit")
+          .gte("created_at", `${today}T00:00:00`)
+          .lte("created_at", `${today}T23:59:59`),
       ]);
 
-      const getCount = (res: PromiseSettledResult<any>) => 
-        res.status === 'fulfilled' && !res.value.error ? (res.value.count || 0) : 0;
+      const getCount = (res: PromiseSettledResult<any>) =>
+        res.status === "fulfilled" && !res.value.error ? res.value.count || 0 : 0;
 
       let todayEarnings = 0;
-      if (earningsRes.status === 'fulfilled' && !earningsRes.value.error) {
-        todayEarnings = earningsRes.value.data?.reduce((acc: number, t: any) => acc + Number(t.amount), 0) || 0;
+      if (earningsRes.status === "fulfilled" && !earningsRes.value.error) {
+        todayEarnings =
+          earningsRes.value.data?.reduce((acc: number, t: any) => acc + Number(t.amount), 0) || 0;
       }
 
       setStats({
@@ -310,9 +332,15 @@ const AdminDashboard = () => {
 
   // Real-time subscriptions for dashboard stats
   useMultipleRealtimeSubscriptions(
-    ["profiles", "user_status", "active_chat_sessions", "policy_violation_alerts", "wallet_transactions"],
+    [
+      "profiles",
+      "user_status",
+      "active_chat_sessions",
+      "policy_violation_alerts",
+      "wallet_transactions",
+    ],
     loadStats,
-    isAdmin
+    isAdmin,
   );
 
   useEffect(() => {
@@ -344,8 +372,8 @@ const AdminDashboard = () => {
             </p>
           </div>
           <div className="flex gap-2 shrink-0 flex-wrap">
-            <Button 
-              onClick={handleRunCleanup} 
+            <Button
+              onClick={handleRunCleanup}
               disabled={runningCleanup}
               variant="outline"
               size="sm"
@@ -356,8 +384,8 @@ const AdminDashboard = () => {
               {runningCleanup ? "Cleaning..." : "Cleanup"}
             </Button>
             {!import.meta.env.PROD && (
-              <Button 
-                onClick={handleSeedSuperUsers} 
+              <Button
+                onClick={handleSeedSuperUsers}
                 disabled={seedingUsers}
                 size="sm"
                 className="bg-gradient-to-r from-primary to-secondary text-xs sm:text-sm"
@@ -371,7 +399,10 @@ const AdminDashboard = () => {
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-2 gap-2.5 sm:gap-4 md:grid-cols-4 animate-fade-in" style={{ animationDelay: "0.1s" }}>
+        <div
+          className="grid grid-cols-2 gap-2.5 sm:gap-4 md:grid-cols-4 animate-fade-in"
+          style={{ animationDelay: "0.1s" }}
+        >
           <Card className="p-2.5 sm:p-4 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-primary/20">
@@ -425,7 +456,9 @@ const AdminDashboard = () => {
 
         {/* Admin Modules Grid */}
         <div className="animate-fade-in" style={{ animationDelay: "0.2s" }}>
-          <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">Admin Modules</h2>
+          <h2 className="text-base sm:text-lg font-semibold text-foreground mb-3 sm:mb-4">
+            Admin Modules
+          </h2>
           <div className="space-y-1">
             {adminModules.map((module) => (
               <button
@@ -457,18 +490,21 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-
-
         {/* Alerts Section */}
         {(stats.pendingApprovals > 0 || stats.policyAlerts > 0) && (
-          <Card className="p-3 sm:p-6 bg-gradient-to-r from-warning/10 to-warning/10 border-warning/20 animate-fade-in" style={{ animationDelay: "0.3s" }}>
+          <Card
+            className="p-3 sm:p-6 bg-gradient-to-r from-warning/10 to-warning/10 border-warning/20 animate-fade-in"
+            style={{ animationDelay: "0.3s" }}
+          >
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
               <div className="flex items-center gap-3 flex-1 min-w-0">
                 <div className="p-2 sm:p-3 rounded-lg sm:rounded-xl bg-warning/20 shrink-0">
                   <Bell className="w-5 h-5 sm:w-6 sm:h-6 text-warning" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="font-semibold text-sm sm:text-base text-foreground">Pending Actions</h3>
+                  <h3 className="font-semibold text-sm sm:text-base text-foreground">
+                    Pending Actions
+                  </h3>
                   <p className="text-xs sm:text-sm text-muted-foreground">
                     {stats.pendingApprovals > 0 && `${stats.pendingApprovals} approvals. `}
                     {stats.policyAlerts > 0 && `${stats.policyAlerts} alerts.`}
@@ -477,12 +513,22 @@ const AdminDashboard = () => {
               </div>
               <div className="flex gap-2 shrink-0">
                 {stats.pendingApprovals > 0 && (
-                  <Button size="sm" variant="outline" className="text-xs" onClick={() => navigate("/admin/users")}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-xs"
+                    onClick={() => navigate("/admin/users")}
+                  >
                     Review
                   </Button>
                 )}
                 {stats.policyAlerts > 0 && (
-                  <Button size="sm" variant="outline" className="text-xs" onClick={() => navigate("/admin/policy-alerts")}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-xs"
+                    onClick={() => navigate("/admin/policy-alerts")}
+                  >
                     Alerts
                   </Button>
                 )}

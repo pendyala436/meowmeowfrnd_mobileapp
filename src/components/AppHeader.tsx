@@ -3,8 +3,15 @@ import { cn } from "@/lib/utils";
 import MeowLogo from "@/components/MeowLogo";
 import { Switch } from "@/components/ui/switch";
 import {
-  Mail, Shield, BellRing, Users2, Settings, LogOut, FileCheck,
-  Search, MoreVertical
+  Mail,
+  Shield,
+  BellRing,
+  Users2,
+  Settings,
+  LogOut,
+  FileCheck,
+  Search,
+  MoreVertical,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -96,9 +103,11 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                 aria-label="More options"
               >
                 <MoreVertical className="w-[16px] h-[16px] text-primary-foreground" />
-                {(unreadAdminMessages + unreadAdminChat) > 0 && (
+                {unreadAdminMessages + unreadAdminChat > 0 && (
                   <span className="absolute top-0.5 right-0.5 min-w-[12px] h-[12px] rounded-full bg-destructive text-destructive-foreground text-[8px] font-bold flex items-center justify-center px-0.5">
-                    {(unreadAdminMessages + unreadAdminChat) > 9 ? "9+" : (unreadAdminMessages + unreadAdminChat)}
+                    {unreadAdminMessages + unreadAdminChat > 9
+                      ? "9+"
+                      : unreadAdminMessages + unreadAdminChat}
                   </span>
                 )}
               </button>

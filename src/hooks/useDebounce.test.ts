@@ -26,10 +26,9 @@ describe("useDebounce", () => {
   });
 
   it("debounces value updates", () => {
-    const { result, rerender } = renderHook(
-      ({ value, delay }) => useDebounce(value, delay),
-      { initialProps: { value: "a", delay: 300 } },
-    );
+    const { result, rerender } = renderHook(({ value, delay }) => useDebounce(value, delay), {
+      initialProps: { value: "a", delay: 300 },
+    });
 
     rerender({ value: "ab", delay: 300 });
     expect(result.current).toBe("a");
@@ -46,10 +45,9 @@ describe("useDebounce", () => {
   });
 
   it("resets timer when value changes rapidly", () => {
-    const { result, rerender } = renderHook(
-      ({ value }) => useDebounce(value, 200),
-      { initialProps: { value: "first" } },
-    );
+    const { result, rerender } = renderHook(({ value }) => useDebounce(value, 200), {
+      initialProps: { value: "first" },
+    });
 
     rerender({ value: "second" });
     act(() => {
@@ -68,10 +66,9 @@ describe("useDebounce", () => {
   });
 
   it("respects custom delay", () => {
-    const { result, rerender } = renderHook(
-      ({ value, delay }) => useDebounce(value, delay),
-      { initialProps: { value: 1, delay: 500 } },
-    );
+    const { result, rerender } = renderHook(({ value, delay }) => useDebounce(value, delay), {
+      initialProps: { value: 1, delay: 500 },
+    });
 
     rerender({ value: 2, delay: 500 });
     act(() => {
@@ -225,7 +222,10 @@ describe("useIntersectionObserver", () => {
       constructor(private cb: IntersectionObserverCallback) {}
       observe = (el: Element) => {
         observe(el);
-        this.cb([{ isIntersecting: true } as IntersectionObserverEntry], this as unknown as IntersectionObserver);
+        this.cb(
+          [{ isIntersecting: true } as IntersectionObserverEntry],
+          this as unknown as IntersectionObserver,
+        );
       };
       disconnect = disconnect;
     }
@@ -249,13 +249,18 @@ describe("useIntersectionObserver", () => {
   it("respects custom observer options", async () => {
     const observe = vi.fn();
     class MockIntersectionObserver {
-      constructor(_cb: IntersectionObserverCallback, public options?: IntersectionObserverInit) {}
+      constructor(
+        _cb: IntersectionObserverCallback,
+        public options?: IntersectionObserverInit,
+      ) {}
       observe = observe;
       disconnect = vi.fn();
     }
     vi.stubGlobal("IntersectionObserver", MockIntersectionObserver);
 
-    const { result } = renderHook(() => useIntersectionObserver({ threshold: 0.5, rootMargin: "8px" }));
+    const { result } = renderHook(() =>
+      useIntersectionObserver({ threshold: 0.5, rootMargin: "8px" }),
+    );
     const [setRef] = result.current;
     act(() => {
       setRef(document.createElement("div"));
@@ -277,8 +282,7 @@ describe("useIdleCallback", () => {
 
   it("falls back to setTimeout when requestIdleCallback missing", () => {
     const original = window.requestIdleCallback;
-    // @ts-expect-error test override
-    delete window.requestIdleCallback;
+    delete (window as any).requestIdleCallback;
 
     const fn = vi.fn();
     renderHook(() => useIdleCallback(fn));

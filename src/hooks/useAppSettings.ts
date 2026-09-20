@@ -1,6 +1,6 @@
 /**
  * useAppSettings Hook (Singleton)
- * 
+ *
  * PURPOSE: Fetches dynamic application settings from the database.
  * Uses a shared global cache so multiple components share one fetch + subscription.
  */
@@ -72,7 +72,13 @@ const DEFAULT_SETTINGS: AppSettings = {
   },
   paymentGateways: {
     indian: [
-      { id: "razorpay", name: "Razorpay", logo: "💳", description: "Cards, UPI, Wallets, EMI", features: ["Cards", "UPI", "Wallets", "EMI"] },
+      {
+        id: "razorpay",
+        name: "Razorpay",
+        logo: "💳",
+        description: "Cards, UPI, Wallets, EMI",
+        features: ["Cards", "UPI", "Wallets", "EMI"],
+      },
     ],
     international: [],
   },
@@ -148,12 +154,17 @@ function parseRow(row: any): [keyof AppSettings, any] | null {
   try {
     if (row.setting_type === "json") {
       if (typeof row.setting_value === "string") {
-        try { value = JSON.parse(row.setting_value); } catch { value = row.setting_value; }
+        try {
+          value = JSON.parse(row.setting_value);
+        } catch {
+          value = row.setting_value;
+        }
       } else {
         value = row.setting_value;
       }
     } else if (row.setting_type === "number") {
-      value = typeof row.setting_value === "string" ? parseFloat(row.setting_value) : row.setting_value;
+      value =
+        typeof row.setting_value === "string" ? parseFloat(row.setting_value) : row.setting_value;
     } else {
       value = row.setting_value;
     }
@@ -198,7 +209,10 @@ async function fetchSettings() {
     }
   } catch (err) {
     console.error("Error fetching app settings:", err);
-    setState({ error: err instanceof Error ? err.message : "Failed to load settings", isLoading: false });
+    setState({
+      error: err instanceof Error ? err.message : "Failed to load settings",
+      isLoading: false,
+    });
   } finally {
     fetchInFlight = false;
   }
@@ -214,11 +228,9 @@ function ensureSubscription() {
   // Single realtime subscription shared by all consumers
   const channel = supabase
     .channel("app-settings-singleton")
-    .on(
-      "postgres_changes",
-      { event: "*", schema: "public", table: "app_settings" },
-      () => { fetchSettings(); }
-    )
+    .on("postgres_changes", { event: "*", schema: "public", table: "app_settings" }, () => {
+      fetchSettings();
+    })
     .subscribe();
 
   // Never unsubscribe — this is app-lifetime
@@ -227,7 +239,9 @@ function ensureSubscription() {
 function subscribe(listener: () => void) {
   ensureSubscription();
   listeners.add(listener);
-  return () => { listeners.delete(listener); };
+  return () => {
+    listeners.delete(listener);
+  };
 }
 
 function getSnapshot(): StoreState {
@@ -239,9 +253,12 @@ function getSnapshot(): StoreState {
 export const useAppSettings = () => {
   const snap = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 
-  const getSetting = useCallback(<K extends keyof AppSettings>(key: K): AppSettings[K] => {
-    return snap.settings[key];
-  }, [snap.settings]);
+  const getSetting = useCallback(
+    <K extends keyof AppSettings>(key: K): AppSettings[K] => {
+      return snap.settings[key];
+    },
+    [snap.settings],
+  );
 
   return {
     settings: snap.settings,

@@ -66,20 +66,27 @@ describe("classifyError", () => {
   });
 
   it("classifies auth message fallbacks", () => {
-    expect(classifyError({ __isAuthError: true, message: "invalid password" }).title)
-      .toBe("Incorrect email or password");
-    expect(classifyError({ __isAuthError: true, message: "invalid credential" }).title)
-      .toBe("Incorrect email or password");
-    expect(classifyError({ __isAuthError: true, message: "email not confirmed yet" }).title)
-      .toBe("Email not verified");
-    expect(classifyError({ __isAuthError: true, message: "already registered" }).title)
-      .toBe("Email already registered");
-    expect(classifyError({ __isAuthError: true, message: "rate limit hit" }).category)
-      .toBe(ErrorCategory.RATE_LIMIT);
-    expect(classifyError({ __isAuthError: true, message: "password weak" }).title)
-      .toBe("Password too weak");
-    expect(classifyError({ __isAuthError: true, status: 403, message: "forbidden" }).title)
-      .toBe("Session expired");
+    expect(classifyError({ __isAuthError: true, message: "invalid password" }).title).toBe(
+      "Incorrect email or password",
+    );
+    expect(classifyError({ __isAuthError: true, message: "invalid credential" }).title).toBe(
+      "Incorrect email or password",
+    );
+    expect(classifyError({ __isAuthError: true, message: "email not confirmed yet" }).title).toBe(
+      "Email not verified",
+    );
+    expect(classifyError({ __isAuthError: true, message: "already registered" }).title).toBe(
+      "Email already registered",
+    );
+    expect(classifyError({ __isAuthError: true, message: "rate limit hit" }).category).toBe(
+      ErrorCategory.RATE_LIMIT,
+    );
+    expect(classifyError({ __isAuthError: true, message: "password weak" }).title).toBe(
+      "Password too weak",
+    );
+    expect(classifyError({ __isAuthError: true, status: 403, message: "forbidden" }).title).toBe(
+      "Session expired",
+    );
   });
 
   it("returns generic auth error for unknown auth codes", () => {
@@ -117,8 +124,9 @@ describe("classifyError", () => {
   });
 
   it("classifies HTTP status patterns", () => {
-    expect(classifyError(new Error("HTTP 502 Bad Gateway")).title)
-      .toBe("Server temporarily unavailable");
+    expect(classifyError(new Error("HTTP 502 Bad Gateway")).title).toBe(
+      "Server temporarily unavailable",
+    );
     expect(classifyError(new Error("500 Internal Server Error")).title).toBe("Server error");
     expect(classifyError(new Error("401 Unauthorized")).title).toBe("Not authorised");
     expect(classifyError(new Error("403 Forbidden")).title).toBe("Access denied");
@@ -176,8 +184,9 @@ describe("classifyError", () => {
   });
 
   it("classifies FunctionsHttpError statuses", () => {
-    expect(classifyError({ name: "FunctionsHttpError", status: 401 }).category)
-      .toBe(ErrorCategory.AUTH);
+    expect(classifyError({ name: "FunctionsHttpError", status: 401 }).category).toBe(
+      ErrorCategory.AUTH,
+    );
     expect(classifyError({ context: {}, status: 403 }).title).toBe("Session expired");
     expect(classifyError({ context: {}, status: 429 }).category).toBe(ErrorCategory.RATE_LIMIT);
     expect(classifyError({ context: {}, status: 503 }).category).toBe(ErrorCategory.SERVER);
@@ -225,8 +234,9 @@ describe("classifyError", () => {
 
 describe("getErrorMessage", () => {
   it("returns classified message", () => {
-    expect(getErrorMessage({ __isAuthError: true, code: "weak_password", message: "weak" }))
-      .toContain("6 characters");
+    expect(
+      getErrorMessage({ __isAuthError: true, code: "weak_password", message: "weak" }),
+    ).toContain("6 characters");
   });
 
   it("uses fallback when message empty", () => {

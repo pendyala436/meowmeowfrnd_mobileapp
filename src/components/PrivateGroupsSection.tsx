@@ -1,11 +1,11 @@
 import { classifyError } from "@/lib/errors";
-import { useState, useEffect, useMemo } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { toast } from 'sonner';
-import { Users, Video, MessageCircle, Radio, Square, RefreshCw } from 'lucide-react';
-import { PrivateGroupCallWindow } from './PrivateGroupCallWindow';
+import { useState, useEffect, useMemo } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+import { Users, Video, MessageCircle, Radio, Square, RefreshCw } from "lucide-react";
+import { PrivateGroupCallWindow } from "./PrivateGroupCallWindow";
 import {
   isGroupCallLanguage,
   canJoinGroupCall,
@@ -13,18 +13,28 @@ import {
   GROUP_HOST_TAKEN,
   assertGroupHostLanguageSlot,
   MAX_GROUP_CALL_PARTICIPANTS,
-} from '@/lib/call-languages';
-import { cn } from '@/lib/utils';
-import { getFlowerImage } from '@/assets/flowers';
-import { useAppSettings } from '@/hooks/useAppSettings';
+} from "@/lib/call-languages";
+import { cn } from "@/lib/utils";
+import { getFlowerImage } from "@/assets/flowers";
+import { useAppSettings } from "@/hooks/useAppSettings";
 
-const TIP_INFO = 'Tips are optional — 50% reaches host.';
+const TIP_INFO = "Tips are optional — 50% reaches host.";
 
 interface PrivateGroup {
-  id: string; name: string; description: string | null; min_gift_amount: number;
-  access_type: string; is_active: boolean; is_live: boolean; stream_id: string | null;
-  participant_count: number; created_at: string; current_host_id: string | null;
-  current_host_name: string | null; owner_id: string; owner_language: string | null;
+  id: string;
+  name: string;
+  description: string | null;
+  min_gift_amount: number;
+  access_type: string;
+  is_active: boolean;
+  is_live: boolean;
+  stream_id: string | null;
+  participant_count: number;
+  created_at: string;
+  current_host_id: string | null;
+  current_host_name: string | null;
+  owner_id: string;
+  owner_language: string | null;
   updated_at: string;
 }
 
@@ -37,11 +47,18 @@ interface ActiveHost {
 }
 
 interface PrivateGroupsSectionProps {
-  currentUserId: string; userName: string; userPhoto: string | null;
+  currentUserId: string;
+  userName: string;
+  userPhoto: string | null;
   userLanguage?: string | null;
 }
 
-export function PrivateGroupsSection({ currentUserId, userName, userPhoto, userLanguage }: PrivateGroupsSectionProps) {
+export function PrivateGroupsSection({
+  currentUserId,
+  userName,
+  userPhoto,
+  userLanguage,
+}: PrivateGroupsSectionProps) {
   const { settings } = useAppSettings();
   const groupsEnabled = settings.privateGroupsEnabledWomen !== false;
   const [groups, setGroups] = useState<PrivateGroup[]>([]);
@@ -54,59 +71,84 @@ export function PrivateGroupsSection({ currentUserId, userName, userPhoto, userL
   useEffect(() => {
     fetchAll();
     const channel = supabase
-      .channel('private-groups-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'private_groups' }, fetchAll)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'group_active_hosts' }, fetchAll)
+      .channel("private-groups-changes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "private_groups" }, fetchAll)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "group_active_hosts" },
+        fetchAll,
+      )
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchAll = async () => {
     try {
       const [{ data: gData, error: gErr }, { data: hData }] = await Promise.all([
-        supabase.from('private_groups').select('*').eq('is_active', true)
-          .order('is_live', { ascending: false }).order('name', { ascending: true }),
-        supabase.from('group_active_hosts').select('group_id,host_id,host_name,host_language,participant_count')
-          .eq('is_active', true),
+        supabase
+          .from("private_groups")
+          .select("*")
+          .eq("is_active", true)
+          .order("is_live", { ascending: false })
+          .order("name", { ascending: true }),
+        supabase
+          .from("group_active_hosts")
+          .select("group_id,host_id,host_name,host_language,participant_count")
+          .eq("is_active", true),
       ]);
       if (gErr) throw gErr;
       setGroups((gData as any[]) || []);
       setActiveHosts((hData as any[]) || []);
     } catch (error) {
-      console.error('Error fetching groups:', error);
-      toast.error('Groups unavailable', { description: 'Unable to load your groups. Please refresh the page.' });
-    } finally { setIsLoading(false); }
+      console.error("Error fetching groups:", error);
+      toast.error("Groups unavailable", {
+        description: "Unable to load your groups. Please refresh the page.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const myActiveHostSession = useMemo(
-    () => activeHosts.find(h => h.host_id === currentUserId) || null,
-    [activeHosts, currentUserId]
+    () => activeHosts.find((h) => h.host_id === currentUserId) || null,
+    [activeHosts, currentUserId],
   );
 
   const languageHostTaken = useMemo(
-    () => activeHosts.some(h => h.host_id !== currentUserId && canJoinGroupCall(userLanguage, h.host_language)),
-    [activeHosts, currentUserId, userLanguage]
+    () =>
+      activeHosts.some(
+        (h) => h.host_id !== currentUserId && canJoinGroupCall(userLanguage, h.host_language),
+      ),
+    [activeHosts, currentUserId, userLanguage],
   );
 
   const handleGoLive = async (group: PrivateGroup) => {
     if (!groupsEnabled) {
-      toast.error('Private group calls are temporarily unavailable.');
+      toast.error("Private group calls are temporarily unavailable.");
       return;
     }
     const { data: freshHost } = await supabase
-      .from('group_active_hosts')
-      .select('group_id,host_id,host_name,host_language,participant_count')
-      .eq('host_id', currentUserId)
-      .eq('is_active', true)
+      .from("group_active_hosts")
+      .select("group_id,host_id,host_name,host_language,participant_count")
+      .eq("host_id", currentUserId)
+      .eq("is_active", true)
       .maybeSingle();
 
     if (freshHost && freshHost.group_id !== group.id) {
-      toast.error('You are already hosting another group. Stop that first.');
+      toast.error("You are already hosting another group. Stop that first.");
       fetchAll();
       return;
     }
     if (freshHost?.group_id === group.id) {
-      setActiveGroup({ ...group, is_live: true, current_host_id: currentUserId, current_host_name: userName, owner_language: freshHost.host_language });
+      setActiveGroup({
+        ...group,
+        is_live: true,
+        current_host_id: currentUserId,
+        current_host_name: userName,
+        owner_language: freshHost.host_language,
+      });
       fetchAll();
       return;
     }
@@ -125,42 +167,74 @@ export function PrivateGroupsSection({ currentUserId, userName, userPhoto, userL
     let preStream: MediaStream | null = null;
     try {
       preStream = await navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 }, facingMode: 'user' },
+        video: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          frameRate: { ideal: 30 },
+          facingMode: "user",
+        },
         audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 48000 },
       });
     } catch (mediaErr) {
-      console.error('[PrivateGroups] Pre-acquire media failed:', mediaErr);
-      toast.error('Could not access camera/microphone. Please allow access.');
+      console.error("[PrivateGroups] Pre-acquire media failed:", mediaErr);
+      toast.error("Could not access camera/microphone. Please allow access.");
       setGoingLive(null);
       return;
     }
 
     try {
-      await supabase.from('group_memberships').upsert({
-        group_id: group.id, user_id: currentUserId, has_access: true, gift_amount_paid: 0,
-        joined_host_id: currentUserId,
-      }, { onConflict: 'group_id,user_id' });
+      await supabase.from("group_memberships").upsert(
+        {
+          group_id: group.id,
+          user_id: currentUserId,
+          has_access: true,
+          gift_amount_paid: 0,
+          joined_host_id: currentUserId,
+        },
+        { onConflict: "group_id,user_id" },
+      );
 
       setActiveGroupStream(preStream);
-      setActiveGroup({ ...group, is_live: true, current_host_id: currentUserId, current_host_name: userName, owner_language: userLanguage || null });
-      const { data: meProf } = await supabase.from('profiles').select('host_number').eq('id', currentUserId).maybeSingle();
+      setActiveGroup({
+        ...group,
+        is_live: true,
+        current_host_id: currentUserId,
+        current_host_name: userName,
+        owner_language: userLanguage || null,
+      });
+      const { data: meProf } = await supabase
+        .from("profiles")
+        .select("host_number")
+        .eq("id", currentUserId)
+        .maybeSingle();
       const hostNum = (meProf as any)?.host_number;
-      toast.success(`You are live in ${group.name} (${userLanguage})${hostNum ? ` — Host #${hostNum}` : ''}`);
+      toast.success(
+        `You are live in ${group.name} (${userLanguage})${hostNum ? ` — Host #${hostNum}` : ""}`,
+      );
     } catch (error: any) {
-      preStream.getTracks().forEach(t => t.stop());
-      toast.error('Unable to go live', { description: classifyError(error, 'start the live stream').message });
-    } finally { setGoingLive(null); }
+      preStream.getTracks().forEach((t) => t.stop());
+      toast.error("Unable to go live", {
+        description: classifyError(error, "start the live stream").message,
+      });
+    } finally {
+      setGoingLive(null);
+    }
   };
 
   const handleStopLive = async (group: PrivateGroup) => {
-    if (activeGroupStream) { activeGroupStream.getTracks().forEach(t => t.stop()); setActiveGroupStream(null); }
+    if (activeGroupStream) {
+      activeGroupStream.getTracks().forEach((t) => t.stop());
+      setActiveGroupStream(null);
+    }
     try {
-      const { error } = await supabase.rpc('stop_host_session', { p_group_id: group.id });
+      const { error } = await supabase.rpc("stop_host_session", { p_group_id: group.id });
       if (error) throw error;
       toast.success(`Stopped live in ${group.name}`);
       fetchAll();
     } catch (error: any) {
-      toast.error('Unable to stop', { description: classifyError(error, 'stop the stream').message });
+      toast.error("Unable to stop", {
+        description: classifyError(error, "stop the stream").message,
+      });
       fetchAll();
     }
   };
@@ -182,7 +256,13 @@ export function PrivateGroupsSection({ currentUserId, userName, userPhoto, userL
           <Badge className="bg-primary-foreground/20 text-primary-foreground border-0 text-[10px] h-5">
             {liveCount} Live
           </Badge>
-          <button onClick={() => { setIsLoading(true); fetchAll(); }} className="hover:bg-primary-foreground/10 rounded-full p-1.5 transition-colors">
+          <button
+            onClick={() => {
+              setIsLoading(true);
+              fetchAll();
+            }}
+            className="hover:bg-primary-foreground/10 rounded-full p-1.5 transition-colors"
+          >
             <RefreshCw className="h-3.5 w-3.5" />
           </button>
         </div>
@@ -201,24 +281,27 @@ export function PrivateGroupsSection({ currentUserId, userName, userPhoto, userL
           </div>
         )}
         {groups.map((group) => {
-          const hostsHere = activeHosts.filter(h => h.group_id === group.id);
+          const hostsHere = activeHosts.filter((h) => h.group_id === group.id);
           const isLive = hostsHere.length > 0;
-          const myHostInThisGroup = hostsHere.find(h => h.host_id === currentUserId);
+          const myHostInThisGroup = hostsHere.find((h) => h.host_id === currentUserId);
           const isMyHost = !!myHostInThisGroup;
-          const canGoLive = !myActiveHostSession && isGroupCallLanguage(userLanguage) && !languageHostTaken;
+          const canGoLive =
+            !myActiveHostSession && isGroupCallLanguage(userLanguage) && !languageHostTaken;
 
           return (
             <div
               key={group.id}
               className={cn(
                 "flex items-center gap-3 px-3 py-3 transition-colors hover:bg-muted/40",
-                isLive && "bg-accent/10"
+                isLive && "bg-accent/10",
               )}
             >
-              <div className={cn(
-                "w-11 h-11 rounded-full overflow-hidden shrink-0 bg-muted",
-                isLive && "ring-2 ring-accent"
-              )}>
+              <div
+                className={cn(
+                  "w-11 h-11 rounded-full overflow-hidden shrink-0 bg-muted",
+                  isLive && "ring-2 ring-accent",
+                )}
+              >
                 <img
                   src={getFlowerImage(group.name)}
                   alt={group.name}
@@ -231,7 +314,9 @@ export function PrivateGroupsSection({ currentUserId, userName, userPhoto, userL
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="font-semibold text-sm text-foreground truncate">{group.name}</span>
+                  <span className="font-semibold text-sm text-foreground truncate">
+                    {group.name}
+                  </span>
                   {isLive && (
                     <Badge className="bg-accent text-accent-foreground text-[9px] h-4 px-1.5 border-0 gap-0.5 shrink-0">
                       <Radio className="h-2 w-2 animate-pulse" /> LIVE
@@ -241,11 +326,14 @@ export function PrivateGroupsSection({ currentUserId, userName, userPhoto, userL
                 <div className="flex items-center gap-2 mt-0.5">
                   {isMyHost ? (
                     <span className="text-xs text-primary font-medium truncate">
-                      📹 You are hosting{myHostInThisGroup?.host_language ? ` · ${myHostInThisGroup.host_language}` : ''}
+                      📹 You are hosting
+                      {myHostInThisGroup?.host_language
+                        ? ` · ${myHostInThisGroup.host_language}`
+                        : ""}
                     </span>
                   ) : isLive ? (
                     <span className="text-xs text-muted-foreground truncate">
-                      {hostsHere.length} host{hostsHere.length > 1 ? 's' : ''} live
+                      {hostsHere.length} host{hostsHere.length > 1 ? "s" : ""} live
                     </span>
                   ) : (
                     <span className="text-xs text-muted-foreground">Offline</span>
@@ -253,7 +341,8 @@ export function PrivateGroupsSection({ currentUserId, userName, userPhoto, userL
                 </div>
                 <div className="flex items-center gap-1.5 mt-1">
                   <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
-                    <Users className="h-2.5 w-2.5" /> {group.participant_count}/{MAX_GROUP_CALL_PARTICIPANTS}
+                    <Users className="h-2.5 w-2.5" /> {group.participant_count}/
+                    {MAX_GROUP_CALL_PARTICIPANTS}
                   </span>
                   <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
                     <MessageCircle className="h-2.5 w-2.5" /> Chat
@@ -291,12 +380,16 @@ export function PrivateGroupsSection({ currentUserId, userName, userPhoto, userL
                     onClick={() => handleGoLive(group)}
                   >
                     <Radio className="h-3 w-3" />
-                    {goingLive === group.id ? '...' : 'Go Live'}
+                    {goingLive === group.id ? "..." : "Go Live"}
                   </Button>
                 ) : languageHostTaken ? (
-                  <span className="text-[10px] text-muted-foreground italic">Language host live</span>
+                  <span className="text-[10px] text-muted-foreground italic">
+                    Language host live
+                  </span>
                 ) : myActiveHostSession ? (
-                  <span className="text-[10px] text-muted-foreground italic">Hosting elsewhere</span>
+                  <span className="text-[10px] text-muted-foreground italic">
+                    Hosting elsewhere
+                  </span>
                 ) : null}
               </div>
             </div>

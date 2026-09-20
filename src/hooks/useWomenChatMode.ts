@@ -25,7 +25,10 @@ interface WomenChatModeState {
   trackFreeMinute: () => Promise<void>;
 }
 
-export const useWomenChatMode = (userId: string | null, isIndianUser?: boolean): WomenChatModeState => {
+export const useWomenChatMode = (
+  userId: string | null,
+  isIndianUser?: boolean,
+): WomenChatModeState => {
   const isIndian = isIndianUser ?? false;
   const defaultMode: WomenChatMode = isIndian ? "paid" : "free";
   const [currentMode, setCurrentMode] = useState<WomenChatMode>(defaultMode);
@@ -62,7 +65,7 @@ export const useWomenChatMode = (userId: string | null, isIndianUser?: boolean):
           const lastReset = data.last_free_reset_date;
 
           // Reset free minutes if it's a new day (optimistic lock: only update if date still stale)
-           if (lastReset !== today) {
+          if (lastReset !== today) {
             const { data: resetResult, error: resetError } = await supabase
               .from("women_chat_modes")
               .update({
@@ -71,11 +74,10 @@ export const useWomenChatMode = (userId: string | null, isIndianUser?: boolean):
                 is_force_free_active: false,
                 last_free_reset_date: today,
                 // If exclusive free lock expired, reset to default mode
-                ...(data.exclusive_free_locked_until && 
-                  new Date(data.exclusive_free_locked_until) <= new Date() 
+                ...(data.exclusive_free_locked_until &&
+                new Date(data.exclusive_free_locked_until) <= new Date()
                   ? { current_mode: defaultMode, exclusive_free_locked_until: null }
-                  : {}
-                )
+                  : {}),
               })
               .eq("user_id", userId)
               .neq("last_free_reset_date", today)
@@ -99,19 +101,21 @@ export const useWomenChatMode = (userId: string | null, isIndianUser?: boolean):
                 setForceFreeMinutesUsed(ffUsed);
                 setForceFreeMinutesLimit(ffLimit);
                 setIsForceFreeActive(ffActive && ffUsed < ffLimit);
-                setFreeMinutesLimit(isIndian ? (Number(fresh.free_minutes_limit) || 60) : Infinity);
+                setFreeMinutesLimit(isIndian ? Number(fresh.free_minutes_limit) || 60 : Infinity);
               }
               setIsLoading(false);
               return;
             }
-            
+
             setFreeMinutesUsed(0);
             setForceFreeMinutesUsed(0);
             setIsForceFreeActive(false);
-            
+
             // Check if exclusive free lock expired
-            if (data.exclusive_free_locked_until && 
-                new Date(data.exclusive_free_locked_until) <= new Date()) {
+            if (
+              data.exclusive_free_locked_until &&
+              new Date(data.exclusive_free_locked_until) <= new Date()
+            ) {
               setCurrentMode(defaultMode);
               setExclusiveFreeLockedUntil(null);
             } else {
@@ -131,16 +135,19 @@ export const useWomenChatMode = (userId: string | null, isIndianUser?: boolean):
             // Auto-deactivate if limit reached
             setIsForceFreeActive(ffActive && ffUsed < ffLimit);
           }
-          setFreeMinutesLimit(isIndian ? (Number(data.free_minutes_limit) || 60) : Infinity);
+          setFreeMinutesLimit(isIndian ? Number(data.free_minutes_limit) || 60 : Infinity);
         } else {
           // Create default record - Indian women default to paid, non-Indian to free
-          await supabase.from("women_chat_modes").upsert({
-            user_id: userId,
-            current_mode: defaultMode,
-            free_minutes_used_today: 0,
-            free_minutes_limit: 60,
-            last_free_reset_date: new Date().toISOString().split("T")[0]
-          }, { onConflict: "user_id", ignoreDuplicates: true });
+          await supabase.from("women_chat_modes").upsert(
+            {
+              user_id: userId,
+              current_mode: defaultMode,
+              free_minutes_used_today: 0,
+              free_minutes_limit: 60,
+              last_free_reset_date: new Date().toISOString().split("T")[0],
+            },
+            { onConflict: "user_id", ignoreDuplicates: true },
+          );
           setCurrentMode(defaultMode);
         }
       } catch (err) {
@@ -154,75 +161,83 @@ export const useWomenChatMode = (userId: string | null, isIndianUser?: boolean):
   }, [userId]);
 
   // Determine what modes can be switched to
-  const isExclusiveFreeLocked = exclusiveFreeLockedUntil && 
-    new Date(exclusiveFreeLockedUntil) > new Date();
+  const isExclusiveFreeLocked =
+    exclusiveFreeLockedUntil && new Date(exclusiveFreeLockedUntil) > new Date();
 
   const canSwitchToPaid = currentMode !== "paid" && !isExclusiveFreeLocked;
-  const canSwitchToFree = currentMode !== "free" && !isExclusiveFreeLocked && (!isIndian || freeMinutesUsed < freeMinutesLimit);
+  const canSwitchToFree =
+    currentMode !== "free" &&
+    !isExclusiveFreeLocked &&
+    (!isIndian || freeMinutesUsed < freeMinutesLimit);
   const canSwitchToExclusiveFree = currentMode !== "exclusive_free" && !isExclusiveFreeLocked;
 
-  const freeTimeRemaining = isIndian ? Math.max(0, (freeMinutesLimit - freeMinutesUsed) * 60) : Infinity;
+  const freeTimeRemaining = isIndian
+    ? Math.max(0, (freeMinutesLimit - freeMinutesUsed) * 60)
+    : Infinity;
 
-  const switchMode = useCallback(async (newMode: WomenChatMode): Promise<boolean> => {
-    if (!userId) return false;
+  const switchMode = useCallback(
+    async (newMode: WomenChatMode): Promise<boolean> => {
+      if (!userId) return false;
 
-    // Validate switch
-    if (newMode === "paid" && isExclusiveFreeLocked) {
-      return false;
-    }
-
-    if (newMode === "free" && freeMinutesUsed >= freeMinutesLimit) {
-      return false;
-    }
-
-    try {
-      const updateData: Record<string, any> = {
-        current_mode: newMode,
-        mode_switched_at: new Date().toISOString(),
-      };
-
-      if (newMode === "exclusive_free") {
-        // Lock for 24 hours
-        const lockUntil = new Date();
-        lockUntil.setHours(lockUntil.getHours() + 24);
-        updateData.exclusive_free_locked_until = lockUntil.toISOString();
-        setExclusiveFreeLockedUntil(lockUntil.toISOString());
-      }
-
-      if (newMode === "paid") {
-        updateData.exclusive_free_locked_until = null;
-        setExclusiveFreeLockedUntil(null);
-      }
-
-      const { error } = await supabase
-        .from("women_chat_modes")
-        .update(updateData)
-        .eq("user_id", userId);
-
-      if (error) {
-        console.error("[useWomenChatMode] Switch error:", error);
+      // Validate switch
+      if (newMode === "paid" && isExclusiveFreeLocked) {
         return false;
       }
 
-      setCurrentMode(newMode);
-
-      // If switching from free/exclusive_free to paid, end active chats with non-recharged men
-      if (newMode === "paid" && (currentMode === "free" || currentMode === "exclusive_free")) {
-        // End sessions with zero-balance men
-        await endChatsWithNonRechargedMen(userId);
+      if (newMode === "free" && freeMinutesUsed >= freeMinutesLimit) {
+        return false;
       }
 
-      // If switching to free/exclusive_free from paid, end chats with premium men
-      if ((newMode === "free" || newMode === "exclusive_free") && currentMode === "paid") {
-        await endChatsWithRechargedMen(userId);
-      }
+      try {
+        const updateData: Record<string, any> = {
+          current_mode: newMode,
+          mode_switched_at: new Date().toISOString(),
+        };
 
-      return true;
-    } catch (err) {
-      console.error("[useWomenChatMode] Error:", err);
-      return false;
-    }
-  }, [userId, currentMode, isExclusiveFreeLocked, freeMinutesUsed, freeMinutesLimit]);
+        if (newMode === "exclusive_free") {
+          // Lock for 24 hours
+          const lockUntil = new Date();
+          lockUntil.setHours(lockUntil.getHours() + 24);
+          updateData.exclusive_free_locked_until = lockUntil.toISOString();
+          setExclusiveFreeLockedUntil(lockUntil.toISOString());
+        }
+
+        if (newMode === "paid") {
+          updateData.exclusive_free_locked_until = null;
+          setExclusiveFreeLockedUntil(null);
+        }
+
+        const { error } = await supabase
+          .from("women_chat_modes")
+          .update(updateData)
+          .eq("user_id", userId);
+
+        if (error) {
+          console.error("[useWomenChatMode] Switch error:", error);
+          return false;
+        }
+
+        setCurrentMode(newMode);
+
+        // If switching from free/exclusive_free to paid, end active chats with non-recharged men
+        if (newMode === "paid" && (currentMode === "free" || currentMode === "exclusive_free")) {
+          // End sessions with zero-balance men
+          await endChatsWithNonRechargedMen(userId);
+        }
+
+        // If switching to free/exclusive_free from paid, end chats with premium men
+        if ((newMode === "free" || newMode === "exclusive_free") && currentMode === "paid") {
+          await endChatsWithRechargedMen(userId);
+        }
+
+        return true;
+      } catch (err) {
+        console.error("[useWomenChatMode] Error:", err);
+        return false;
+      }
+    },
+    [userId, currentMode, isExclusiveFreeLocked, freeMinutesUsed, freeMinutesLimit],
+  );
 
   // Track free minutes usage
   const trackFreeMinute = useCallback(async () => {
@@ -328,13 +343,13 @@ async function endChatsWithNonRechargedMen(userId: string) {
 
     if (!sessions?.length) return;
 
-    const manIds = sessions.map(s => s.man_user_id);
+    const manIds = sessions.map((s) => s.man_user_id);
     const { data: wallets } = await supabase
       .from("wallets")
       .select("user_id, balance")
       .in("user_id", manIds);
 
-    const walletMap = new Map(wallets?.map(w => [w.user_id, w.balance as number]) || []);
+    const walletMap = new Map(wallets?.map((w) => [w.user_id, w.balance as number]) || []);
 
     // End sessions with men who have zero balance
     for (const session of sessions) {
@@ -342,7 +357,11 @@ async function endChatsWithNonRechargedMen(userId: string) {
       if (balance <= 0) {
         await supabase
           .from("active_chat_sessions")
-          .update({ status: "ended", ended_at: new Date().toISOString(), end_reason: "mode_switch" })
+          .update({
+            status: "ended",
+            ended_at: new Date().toISOString(),
+            end_reason: "mode_switch",
+          })
           .eq("id", session.id);
       }
     }
@@ -362,13 +381,13 @@ async function endChatsWithRechargedMen(userId: string) {
 
     if (!sessions?.length) return;
 
-    const manIds = sessions.map(s => s.man_user_id);
+    const manIds = sessions.map((s) => s.man_user_id);
     const { data: wallets } = await supabase
       .from("wallets")
       .select("user_id, balance")
       .in("user_id", manIds);
 
-    const walletMap = new Map(wallets?.map(w => [w.user_id, w.balance as number]) || []);
+    const walletMap = new Map(wallets?.map((w) => [w.user_id, w.balance as number]) || []);
 
     // End sessions with men who have balance > 0
     for (const session of sessions) {
@@ -376,7 +395,11 @@ async function endChatsWithRechargedMen(userId: string) {
       if (balance > 0) {
         await supabase
           .from("active_chat_sessions")
-          .update({ status: "ended", ended_at: new Date().toISOString(), end_reason: "mode_switch" })
+          .update({
+            status: "ended",
+            ended_at: new Date().toISOString(),
+            end_reason: "mode_switch",
+          })
           .eq("id", session.id);
       }
     }

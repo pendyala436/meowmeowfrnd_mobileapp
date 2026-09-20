@@ -32,29 +32,35 @@ const ForgotPasswordScreen = () => {
     if (!value.trim()) return "Phone number is required";
     // Require international format: optional +, starts with 1-9, 7-14 more digits
     const phoneRegex = /^\+?[1-9]\d{6,14}$/;
-    const normalized = value.replace(/[\s\-()]/g, '');
-    if (!phoneRegex.test(normalized)) return "Please enter a valid phone number (e.g. +91XXXXXXXXXX)";
+    const normalized = value.replace(/[\s\-()]/g, "");
+    if (!phoneRegex.test(normalized))
+      return "Please enter a valid phone number (e.g. +91XXXXXXXXXX)";
     return undefined;
   };
 
   // Debounced live (AJAX-style) format validation while typing
   useEffect(() => {
-    if (!email) { setEmailError(undefined); return; }
+    if (!email) {
+      setEmailError(undefined);
+      return;
+    }
     const h = setTimeout(() => setEmailError(validateEmail(email)), 500);
     return () => clearTimeout(h);
   }, [email]);
 
   useEffect(() => {
-    if (!phone) { setPhoneError(undefined); return; }
+    if (!phone) {
+      setPhoneError(undefined);
+      return;
+    }
     const h = setTimeout(() => setPhoneError(validatePhone(phone)), 500);
     return () => clearTimeout(h);
   }, [phone]);
 
-
   const handleVerifyAccount = async () => {
     const emailErr = validateEmail(email);
     const phoneErr = validatePhone(phone);
-    
+
     setEmailError(emailErr);
     setPhoneError(phoneErr);
 
@@ -71,16 +77,13 @@ const ForgotPasswordScreen = () => {
 
     try {
       // Verify email + phone match an existing account
-      const { data, error } = await supabase.functions.invoke(
-        "reset-password",
-        {
-          body: {
-            action: "verify-account",
-            email: email.trim().toLowerCase(),
-            phone: phone.trim(),
-          },
-        }
-      );
+      const { data, error } = await supabase.functions.invoke("reset-password", {
+        body: {
+          action: "verify-account",
+          email: email.trim().toLowerCase(),
+          phone: phone.trim(),
+        },
+      });
 
       if (error) {
         throw error;
@@ -89,7 +92,9 @@ const ForgotPasswordScreen = () => {
       if (!data?.verified || !data?.token) {
         toast({
           title: "Account not found",
-          description: data?.error || "No account found with this email and phone combination. Please check and try again.",
+          description:
+            data?.error ||
+            "No account found with this email and phone combination. Please check and try again.",
           variant: "destructive",
         });
         setIsLoading(false);
@@ -98,7 +103,7 @@ const ForgotPasswordScreen = () => {
 
       // Navigate to password reset page with secure token (not userId)
       navigate(`/reset-password?token=${data.token}`);
-      
+
       toast({
         title: "Account verified!",
         description: "You can now set a new password. The link expires in 10 minutes.",
@@ -117,7 +122,7 @@ const ForgotPasswordScreen = () => {
   return (
     <div className="min-h-screen flex flex-col relative bg-background">
       <AuroraBackground />
-      
+
       {/* Header */}
       <header className="px-6 pt-8 pb-4 relative z-10">
         <div className="flex items-center gap-4">
@@ -144,9 +149,7 @@ const ForgotPasswordScreen = () => {
               <div className="w-16 h-16 mx-auto bg-white/15 rounded-2xl flex items-center justify-center mb-4">
                 <ShieldCheck className="w-8 h-8 text-white" />
               </div>
-              <h1 className="text-2xl font-bold text-white font-display">
-                Reset Password
-              </h1>
+              <h1 className="text-2xl font-bold text-white font-display">Reset Password</h1>
               <p className="text-white/80 text-sm">
                 Enter your registered email and phone number to verify your account
               </p>
@@ -169,12 +172,10 @@ const ForgotPasswordScreen = () => {
                 }}
                 className={cn(
                   "h-12 rounded-xl border-2 transition-all bg-background/50 backdrop-blur-sm",
-                  emailError ? "border-destructive" : "border-input focus:border-primary"
+                  emailError ? "border-destructive" : "border-input focus:border-primary",
                 )}
               />
-              {emailError && (
-                <p className="text-xs text-destructive">{emailError}</p>
-              )}
+              {emailError && <p className="text-xs text-destructive">{emailError}</p>}
             </div>
 
             {/* Phone Input with Country Code */}
@@ -193,9 +194,7 @@ const ForgotPasswordScreen = () => {
                 placeholder="Enter your phone number"
                 defaultCountryCode="IN"
               />
-              {phoneError && (
-                <p className="text-xs text-destructive">{phoneError}</p>
-              )}
+              {phoneError && <p className="text-xs text-destructive">{phoneError}</p>}
             </div>
 
             {/* Verify Button */}

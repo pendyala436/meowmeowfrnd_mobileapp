@@ -30,9 +30,7 @@ describe("ICE_SERVERS", () => {
     vi.stubEnv("VITE_TURN_CREDENTIAL", "pass");
     vi.resetModules();
     const { ICE_SERVERS: withTurn } = await import("./iceServers");
-    const urls = withTurn.iceServers!.flatMap((s) =>
-      Array.isArray(s.urls) ? s.urls : [s.urls],
-    );
+    const urls = withTurn.iceServers!.flatMap((s) => (Array.isArray(s.urls) ? s.urls : [s.urls]));
     expect(urls.some((u) => String(u).includes("turn.example.com"))).toBe(true);
     vi.unstubAllEnvs();
     vi.resetModules();

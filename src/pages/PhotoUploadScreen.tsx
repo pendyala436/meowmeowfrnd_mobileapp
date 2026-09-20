@@ -78,9 +78,12 @@ const PhotoUploadScreen = () => {
     }
   };
 
-  useEffect(() => () => {
-    stream?.getTracks().forEach((t) => t.stop());
-  }, [stream]);
+  useEffect(
+    () => () => {
+      stream?.getTracks().forEach((t) => t.stop());
+    },
+    [stream],
+  );
 
   const capturePhoto = () => {
     if (!videoRef.current || !canvasRef.current) return;
@@ -91,12 +94,16 @@ const PhotoUploadScreen = () => {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     ctx.drawImage(video, 0, 0);
-    canvas.toBlob((blob) => {
-      if (blob) {
-        handleSelfieCapture(new File([blob], "selfie.jpg", { type: "image/jpeg" }));
-        stopCamera();
-      }
-    }, "image/jpeg", 0.9);
+    canvas.toBlob(
+      (blob) => {
+        if (blob) {
+          handleSelfieCapture(new File([blob], "selfie.jpg", { type: "image/jpeg" }));
+          stopCamera();
+        }
+      },
+      "image/jpeg",
+      0.9,
+    );
   };
 
   const compressImage = (dataUrl: string, quality = 0.85): Promise<string> =>

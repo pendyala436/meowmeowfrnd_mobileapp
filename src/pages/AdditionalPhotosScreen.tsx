@@ -17,7 +17,7 @@ const AdditionalPhotosScreen = () => {
   // Selfie must be completed first
   useRegistrationGuard(
     [{ key: "userEmail" }, { key: "userGender" }, { key: "pendingPhotoData" }],
-    "/photo-upload"
+    "/photo-upload",
   );
   const additionalFileInputRef = useRef<HTMLInputElement>(null);
   const singlePhotoInputRef = useRef<HTMLInputElement>(null);
@@ -43,10 +43,7 @@ const AdditionalPhotosScreen = () => {
   useEffect(() => {
     if (additionalPhotos.length === 0) return;
     try {
-      sessionStorage.setItem(
-        "pendingAdditionalPhotos",
-        JSON.stringify(additionalPhotos)
-      );
+      sessionStorage.setItem("pendingAdditionalPhotos", JSON.stringify(additionalPhotos));
     } catch {
       // ignore quota errors until user taps Continue (compression runs there)
     }
@@ -112,13 +109,13 @@ const AdditionalPhotosScreen = () => {
       const fileArr = Array.from(files);
       if (fileArr.length === 0) return;
 
-      const dataUrls = (
-        await Promise.all(fileArr.map((file) => readImageFile(file)))
-      ).filter((url): url is string => Boolean(url));
+      const dataUrls = (await Promise.all(fileArr.map((file) => readImageFile(file)))).filter(
+        (url): url is string => Boolean(url),
+      );
 
       appendPhotos(dataUrls);
     },
-    [appendPhotos, readImageFile]
+    [appendPhotos, readImageFile],
   );
 
   const removeAdditionalPhoto = (index: number) => {
@@ -132,7 +129,7 @@ const AdditionalPhotosScreen = () => {
       const files = e.dataTransfer.files;
       if (files && files.length > 0) handleAdditionalPhotos(files);
     },
-    [handleAdditionalPhotos]
+    [handleAdditionalPhotos],
   );
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -150,10 +147,16 @@ const AdditionalPhotosScreen = () => {
       img.onload = () => {
         const canvas = document.createElement("canvas");
         const maxDim = 1080;
-        let w = img.width, h = img.height;
+        let w = img.width,
+          h = img.height;
         if (w > maxDim || h > maxDim) {
-          if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
-          else { w = Math.round(w * maxDim / h); h = maxDim; }
+          if (w > h) {
+            h = Math.round((h * maxDim) / w);
+            w = maxDim;
+          } else {
+            w = Math.round((w * maxDim) / h);
+            h = maxDim;
+          }
         }
         canvas.width = w;
         canvas.height = h;
@@ -169,13 +172,8 @@ const AdditionalPhotosScreen = () => {
   const handleNext = async () => {
     try {
       if (additionalPhotos.length > 0) {
-        const compressedPhotos = await Promise.all(
-          additionalPhotos.map((p) => compressImage(p))
-        );
-        sessionStorage.setItem(
-          "pendingAdditionalPhotos",
-          JSON.stringify(compressedPhotos)
-        );
+        const compressedPhotos = await Promise.all(additionalPhotos.map((p) => compressImage(p)));
+        sessionStorage.setItem("pendingAdditionalPhotos", JSON.stringify(compressedPhotos));
       } else {
         sessionStorage.setItem("pendingAdditionalPhotos", "[]");
       }
@@ -241,9 +239,7 @@ const AdditionalPhotosScreen = () => {
         <Card className="w-full max-w-2xl p-4 bg-card/70 backdrop-blur-xl border-primary/20 shadow-[0_0_40px_hsl(var(--primary)/0.1)]">
           <div className="flex items-center gap-2 mb-3">
             <Upload className="h-4 w-4 text-primary" />
-            <h2 className="font-semibold text-foreground text-sm">
-              Additional Photos
-            </h2>
+            <h2 className="font-semibold text-foreground text-sm">Additional Photos</h2>
             <span className="ml-auto text-xs text-muted-foreground">
               {additionalPhotos.length}/{MAX_ADDITIONAL_PHOTOS} · optional
             </span>
@@ -318,9 +314,10 @@ const AdditionalPhotosScreen = () => {
                   className={`
                     aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-0.5
                     cursor-pointer transition-all duration-200
-                    ${isFirstEmpty && isDragging
-                      ? "border-primary bg-primary/10"
-                      : "border-border hover:border-primary/50 hover:bg-primary/5"
+                    ${
+                      isFirstEmpty && isDragging
+                        ? "border-primary bg-primary/10"
+                        : "border-border hover:border-primary/50 hover:bg-primary/5"
                     }
                   `}
                   aria-label={`Add photo ${slotNumber}`}
@@ -343,12 +340,15 @@ const AdditionalPhotosScreen = () => {
               onClick={() => additionalFileInputRef.current?.click()}
             >
               <Plus className="h-4 w-4" />
-              Add {MAX_ADDITIONAL_PHOTOS - additionalPhotos.length} more photo{MAX_ADDITIONAL_PHOTOS - additionalPhotos.length === 1 ? "" : "s"}
+              Add {MAX_ADDITIONAL_PHOTOS - additionalPhotos.length} more photo
+              {MAX_ADDITIONAL_PHOTOS - additionalPhotos.length === 1 ? "" : "s"}
             </Button>
           )}
 
           <p className="text-xs text-muted-foreground mt-3 text-center">
-            Tap a slot to add one photo, or use the button below to select up to {MAX_ADDITIONAL_PHOTOS - additionalPhotos.length} at once. Existing photos stay in place.
+            Tap a slot to add one photo, or use the button below to select up to{" "}
+            {MAX_ADDITIONAL_PHOTOS - additionalPhotos.length} at once. Existing photos stay in
+            place.
           </p>
         </Card>
 
@@ -375,12 +375,7 @@ const AdditionalPhotosScreen = () => {
           </div>
         )}
 
-        <Button
-          variant="aurora"
-          className="w-full max-w-2xl mt-4"
-          size="lg"
-          onClick={handleNext}
-        >
+        <Button variant="aurora" className="w-full max-w-2xl mt-4" size="lg" onClick={handleNext}>
           {additionalPhotos.length === 0 ? "Skip for now" : "Continue"}
         </Button>
       </main>

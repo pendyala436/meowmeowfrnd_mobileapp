@@ -1,19 +1,14 @@
 /**
  * ForwardDialog.tsx - Dialog to forward a message to another chat partner
  */
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Input } from '@/components/ui/input';
-import { Forward, Search, Loader2 } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
+import { Forward, Search, Loader2 } from "lucide-react";
 
 interface ForwardDialogProps {
   open: boolean;
@@ -39,7 +34,7 @@ export const ForwardDialog = ({
 }: ForwardDialogProps) => {
   const { toast } = useToast();
   const [recentChats, setRecentChats] = useState<RecentChat[]>([]);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState<string | null>(null);
 
@@ -53,13 +48,16 @@ export const ForwardDialog = ({
     try {
       // Get recent distinct chat partners
       const { data: sessions } = await supabase
-        .from('active_chat_sessions')
-        .select('chat_id, man_user_id, woman_user_id')
+        .from("active_chat_sessions")
+        .select("chat_id, man_user_id, woman_user_id")
         .or(`man_user_id.eq.${currentUserId},woman_user_id.eq.${currentUserId}`)
-        .order('last_activity_at', { ascending: false })
+        .order("last_activity_at", { ascending: false })
         .limit(20);
 
-      if (!sessions) { setIsLoading(false); return; }
+      if (!sessions) {
+        setIsLoading(false);
+        return;
+      }
 
       const chats: RecentChat[] = [];
       const seen = new Set<string>();
@@ -70,21 +68,21 @@ export const ForwardDialog = ({
         seen.add(pid);
 
         const { data: profile } = await supabase
-          .from('profiles')
-          .select('full_name, photo_url')
-          .eq('user_id', pid)
+          .from("profiles")
+          .select("full_name, photo_url")
+          .eq("user_id", pid)
           .maybeSingle();
 
         chats.push({
           partnerId: pid,
-          partnerName: profile?.full_name || 'User',
+          partnerName: profile?.full_name || "User",
           partnerAvatar: profile?.photo_url || null,
           chatId: s.chat_id,
         });
       }
       setRecentChats(chats);
     } catch (err) {
-      console.error('Load recent chats error:', err);
+      console.error("Load recent chats error:", err);
     } finally {
       setIsLoading(false);
     }
@@ -93,7 +91,7 @@ export const ForwardDialog = ({
   const handleForward = async (chat: RecentChat) => {
     setIsSending(chat.partnerId);
     try {
-      await supabase.from('chat_messages').insert({
+      await supabase.from("chat_messages").insert({
         chat_id: chat.chatId,
         sender_id: currentUserId,
         receiver_id: chat.partnerId,
@@ -102,18 +100,18 @@ export const ForwardDialog = ({
         forwarded_from_id: messageId,
       } as any);
 
-      toast({ title: 'Message forwarded', description: `Sent to ${chat.partnerName}` });
+      toast({ title: "Message forwarded", description: `Sent to ${chat.partnerName}` });
       onClose();
     } catch (err) {
-      console.error('Forward error:', err);
-      toast({ title: 'Error', description: 'Failed to forward message', variant: 'destructive' });
+      console.error("Forward error:", err);
+      toast({ title: "Error", description: "Failed to forward message", variant: "destructive" });
     } finally {
       setIsSending(null);
     }
   };
 
-  const filtered = recentChats.filter(c =>
-    c.partnerName.toLowerCase().includes(search.toLowerCase())
+  const filtered = recentChats.filter((c) =>
+    c.partnerName.toLowerCase().includes(search.toLowerCase()),
   );
 
   return (
@@ -136,7 +134,7 @@ export const ForwardDialog = ({
           <Input
             placeholder="Search chats..."
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
           />
         </div>
@@ -151,7 +149,7 @@ export const ForwardDialog = ({
             <p className="text-center text-sm text-muted-foreground py-8">No chats found</p>
           ) : (
             <div className="space-y-1">
-              {filtered.map(chat => (
+              {filtered.map((chat) => (
                 <button
                   key={chat.partnerId}
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted transition-colors"
@@ -165,9 +163,7 @@ export const ForwardDialog = ({
                     </AvatarFallback>
                   </Avatar>
                   <span className="flex-1 text-left text-sm font-medium">{chat.partnerName}</span>
-                  {isSending === chat.partnerId && (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  )}
+                  {isSending === chat.partnerId && <Loader2 className="h-4 w-4 animate-spin" />}
                 </button>
               ))}
             </div>

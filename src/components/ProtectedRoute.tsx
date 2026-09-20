@@ -156,10 +156,7 @@ supabase.auth.onAuthStateChange((event) => {
   }
 });
 
-const ProtectedRoute = ({
-  children,
-  requiredRole = "authenticated",
-}: Props) => {
+const ProtectedRoute = ({ children, requiredRole = "authenticated" }: Props) => {
   const navigate = useNavigate();
   const { user, isReady } = useAuthReady();
   const [authorized, setAuthorized] = useState(false);
@@ -168,10 +165,7 @@ const ProtectedRoute = ({
   const REVALIDATE_INTERVAL_MS = 60_000;
 
   // Resolve role info — uses cache if valid
-  const resolveRoles = async (
-    userId: string,
-    forceRefresh = false,
-  ): Promise<RoleCacheEntry> => {
+  const resolveRoles = async (userId: string, forceRefresh = false): Promise<RoleCacheEntry> => {
     // Return cached result if fresh
     if (
       !forceRefresh &&
@@ -187,20 +181,10 @@ const ProtectedRoute = ({
 
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
       try {
-        const timeout = new Promise((_, rej) =>
-          setTimeout(() => rej(new Error("timeout")), 8000),
-        );
+        const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 8000));
         const queries = Promise.all([
-          supabase
-            .from("profiles")
-            .select("gender")
-            .eq("user_id", userId)
-            .maybeSingle(),
-          supabase
-            .from("female_profiles")
-            .select("user_id")
-            .eq("user_id", userId)
-            .maybeSingle(),
+          supabase.from("profiles").select("gender").eq("user_id", userId).maybeSingle(),
+          supabase.from("female_profiles").select("user_id").eq("user_id", userId).maybeSingle(),
           supabase
             .from("user_roles")
             .select("role")
@@ -208,16 +192,11 @@ const ProtectedRoute = ({
             .eq("role", "admin")
             .maybeSingle(),
         ]);
-        [profileRes, femaleRes, adminRes] = (await Promise.race([
-          queries,
-          timeout,
-        ])) as any;
+        [profileRes, femaleRes, adminRes] = (await Promise.race([queries, timeout])) as any;
         break;
       } catch (retryErr) {
         if (attempt < MAX_RETRIES) {
-          console.warn(
-            `[ProtectedRoute] Role check attempt ${attempt} failed, retrying...`,
-          );
+          console.warn(`[ProtectedRoute] Role check attempt ${attempt} failed, retrying...`);
           await new Promise((r) => setTimeout(r, 1000 * attempt));
         } else {
           throw retryErr;
@@ -227,9 +206,7 @@ const ProtectedRoute = ({
 
     const isAdmin = !!adminRes.data;
     const declaredGender = profileRes.data?.gender?.toLowerCase();
-    const isFemale =
-      declaredGender === "female" ||
-      (declaredGender !== "male" && !!femaleRes.data);
+    const isFemale = declaredGender === "female" || (declaredGender !== "male" && !!femaleRes.data);
     const isMale = !isFemale && !isAdmin;
 
     const entry: RoleCacheEntry = {
@@ -244,9 +221,7 @@ const ProtectedRoute = ({
   };
 
   // Evaluate authorization against required role
-  const evaluateAccess = (
-    roles: RoleCacheEntry,
-  ): { ok: boolean; to: string } => {
+  const evaluateAccess = (roles: RoleCacheEntry): { ok: boolean; to: string } => {
     let ok = false;
     let to = "/";
 
@@ -261,12 +236,7 @@ const ProtectedRoute = ({
         break;
       case "male":
         ok = roles.isMale && !roles.isAdmin;
-        if (!ok)
-          to = roles.isAdmin
-            ? "/admin"
-            : roles.isFemale
-              ? "/women-dashboard"
-              : "/dashboard";
+        if (!ok) to = roles.isAdmin ? "/admin" : roles.isFemale ? "/women-dashboard" : "/dashboard";
         break;
       case "authenticated":
         ok = true;
@@ -304,7 +274,7 @@ const ProtectedRoute = ({
                 ? "/dashboard"
                 : window.location.pathname + window.location.search;
 
-    // Photo gender check before CAPTCHA removed — go straight to CAPTCHA.
+        // Photo gender check before CAPTCHA removed — go straight to CAPTCHA.
         if (!isCaptchaVerified(user.id)) {
           sessionStorage.setItem("postCaptchaRedirect", target);
           navigate("/captcha", { replace: true });
@@ -347,9 +317,7 @@ const ProtectedRoute = ({
         const roles = await resolveRoles(user.id, true);
         const { ok, to } = evaluateAccess(roles);
         if (!ok) {
-          console.warn(
-            `[ProtectedRoute] Role revoked for user ${user.id}, redirecting`,
-          );
+          console.warn(`[ProtectedRoute] Role revoked for user ${user.id}, redirecting`);
           checkedForUser.current = null;
           setAuthorized(false);
           toast.error("Your access permissions have changed. Redirecting...");

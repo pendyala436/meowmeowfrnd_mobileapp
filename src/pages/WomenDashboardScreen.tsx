@@ -4,11 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  Heart, 
-  Users, 
-  Bell, 
-  MessageCircle, 
+import {
+  Heart,
+  Users,
+  Bell,
+  MessageCircle,
   Settings,
   FileCheck,
   LogOut,
@@ -23,7 +23,7 @@ import {
   Shield,
   RefreshCw,
   Phone,
-  Search
+  Search,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -69,10 +69,9 @@ import { isVisibilityStatusChange } from "@/lib/presence";
 import { WomenKYCForm } from "@/components/WomenKYCForm";
 import { CallHistoryTab } from "@/components/CallHistoryTab";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { useChatPricing } from '@/hooks/useChatPricing';
-import { StatementTab } from '@/components/StatementTab';
-import { ScrollingAnnouncementsBar } from '@/components/ScrollingAnnouncementsBar';
-
+import { useChatPricing } from "@/hooks/useChatPricing";
+import { StatementTab } from "@/components/StatementTab";
+import { ScrollingAnnouncementsBar } from "@/components/ScrollingAnnouncementsBar";
 
 interface Notification {
   id: string;
@@ -143,8 +142,22 @@ const WomenDashboardScreen = () => {
   const [appId, setAppId] = useState<string | null>(null);
   const [userPhoto, setUserPhoto] = useState<string | null>(null); // User's photo for chat validation
   const [currentWomanLanguage, setCurrentWomanLanguage] = useState<string>("");
-  const { incomingCall, clearIncomingCall } = useIncomingCallListener(currentUserId || null, "female", currentWomanLanguage);
-  const { status: callStatus, activeCall, isMuted, isCameraOff, acceptCall, declineCall, endCall, toggleMute, toggleCamera } = useAppCall(currentUserId || null, 'female', 0);
+  const { incomingCall, clearIncomingCall } = useIncomingCallListener(
+    currentUserId || null,
+    "female",
+    currentWomanLanguage,
+  );
+  const {
+    status: callStatus,
+    activeCall,
+    isMuted,
+    isCameraOff,
+    acceptCall,
+    declineCall,
+    endCall,
+    toggleMute,
+    toggleCamera,
+  } = useAppCall(currentUserId || null, "female", 0);
   const [rechargedMen, setRechargedMen] = useState<OnlineMan[]>([]);
   const [nonRechargedMen, setNonRechargedMen] = useState<OnlineMan[]>([]);
   const [sameLanguageMen, setSameLanguageMen] = useState<OnlineMan[]>([]);
@@ -159,7 +172,7 @@ const WomenDashboardScreen = () => {
     nonRechargedMen: 0,
     matchCount: 0,
     unreadNotifications: 0,
-    todayEarnings: 0
+    todayEarnings: 0,
   });
   const [myWalletBalance, setMyWalletBalance] = useState(0);
   const [biggestEarner, setBiggestEarner] = useState<BiggestEarner | null>(null);
@@ -171,11 +184,24 @@ const WomenDashboardScreen = () => {
   const { isTL } = useServiceRoles();
   const [showAdminMessages, setShowAdminMessages] = useState(false);
   const [showKYCForm, setShowKYCForm] = useState(false);
-  const { unreadMessages: unreadAdminMessages, unreadChat: unreadAdminChat } = useAdminUnreadCounts(currentUserId || null);
+  const { unreadMessages: unreadAdminMessages, unreadChat: unreadAdminChat } = useAdminUnreadCounts(
+    currentUserId || null,
+  );
   const [activeTab, setActiveTab] = useState("online");
 
   const WOMEN_DASHBOARD_TABS = new Set([
-    "online", "chats", "tl", "history", "matches", "community", "groups", "groupchat", "score", "wallet", "statement", "profile",
+    "online",
+    "chats",
+    "tl",
+    "history",
+    "matches",
+    "community",
+    "groups",
+    "groupchat",
+    "score",
+    "wallet",
+    "statement",
+    "profile",
   ]);
 
   useEffect(() => {
@@ -201,19 +227,21 @@ const WomenDashboardScreen = () => {
   const lastChatsFetchRef = useRef(0);
   const userStatusSnapshotRef = useRef<Map<string, string>>(new Map());
   const [onlineSubTab, setOnlineSubTab] = useState<"recharged" | "nobalance">("recharged");
-  const [womenActiveChats, setWomenActiveChats] = useState<Array<{
-    chatId: string;
-    partnerId: string;
-    partnerName: string;
-    partnerPhoto: string | null;
-    lastMessage: string;
-    lastMessageAt: string;
-    lastMessageSenderId: string;
-    unreadCount: number;
-    partnerIsOnline: boolean;
-    partnerStatus: string;
-    partnerActiveChatCount: number;
-  }>>([]);
+  const [womenActiveChats, setWomenActiveChats] = useState<
+    Array<{
+      chatId: string;
+      partnerId: string;
+      partnerName: string;
+      partnerPhoto: string | null;
+      lastMessage: string;
+      lastMessageAt: string;
+      lastMessageSenderId: string;
+      unreadCount: number;
+      partnerIsOnline: boolean;
+      partnerStatus: string;
+      partnerActiveChatCount: number;
+    }>
+  >([]);
   const [loadingWomenChats, setLoadingWomenChats] = useState(false);
   const [groupsRefreshKey, setGroupsRefreshKey] = useState(0);
 
@@ -222,7 +250,7 @@ const WomenDashboardScreen = () => {
   const [searchOnline, setSearchOnline] = useState("");
   const [searchChats, setSearchChats] = useState("");
   const [searchMatches, setSearchMatches] = useState("");
-  
+
   // All women are in paid mode by default - no mode switching needed
   const [matchFilters, setMatchFilters] = useState<MatchFilters>({
     ageRange: [18, 60],
@@ -256,24 +284,32 @@ const WomenDashboardScreen = () => {
 
   // Format currency display (dynamic, not hardcoded ₹)
   const formatLocalCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount);
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
   };
 
   // Fetch GESS user_code map for visible men (online / matches / chats)
   useEffect(() => {
     const ids = new Set<string>();
-    rechargedMen.forEach(m => m.userId && ids.add(m.userId));
-    nonRechargedMen.forEach(m => m.userId && ids.add(m.userId));
-    matchedMen.forEach(m => m.userId && ids.add(m.userId));
-    womenActiveChats.forEach(c => c.partnerId && ids.add(c.partnerId));
-    const missing = Array.from(ids).filter(id => !(id in userCodeMap));
+    rechargedMen.forEach((m) => m.userId && ids.add(m.userId));
+    nonRechargedMen.forEach((m) => m.userId && ids.add(m.userId));
+    matchedMen.forEach((m) => m.userId && ids.add(m.userId));
+    womenActiveChats.forEach((c) => c.partnerId && ids.add(c.partnerId));
+    const missing = Array.from(ids).filter((id) => !(id in userCodeMap));
     if (missing.length === 0) return;
     (async () => {
-      const { data } = await supabase.from('profiles').select('user_id, user_code').in('user_id', missing);
+      const { data } = await supabase
+        .from("profiles")
+        .select("user_id, user_code")
+        .in("user_id", missing);
       if (!data) return;
-      setUserCodeMap(prev => {
+      setUserCodeMap((prev) => {
         const next = { ...prev };
-        (data as Array<{ user_id: string; user_code: string | null }>).forEach(p => {
+        (data as Array<{ user_id: string; user_code: string | null }>).forEach((p) => {
           if (p.user_code) next[p.user_id] = p.user_code;
         });
         return next;
@@ -285,18 +321,22 @@ const WomenDashboardScreen = () => {
   const matchesUserSearch = (q: string, userId: string, name?: string | null) => {
     const s = q.trim().toLowerCase();
     if (!s) return true;
-    const code = (userCodeMap[userId] || '').toLowerCase();
-    return code.includes(s) || (userId || '').toLowerCase().includes(s) || (name || '').toLowerCase().includes(s);
+    const code = (userCodeMap[userId] || "").toLowerCase();
+    return (
+      code.includes(s) ||
+      (userId || "").toLowerCase().includes(s) ||
+      (name || "").toLowerCase().includes(s)
+    );
   };
 
   useEffect(() => {
     let mounted = true;
     let loadingTimeoutId: NodeJS.Timeout;
-    
+
     // Safety timeout - force loading complete after 12 seconds to prevent stuck state
     loadingTimeoutId = setTimeout(() => {
       if (mounted && isLoading) {
-        console.warn('[WomenDashboard] Loading timed out - forcing complete');
+        console.warn("[WomenDashboard] Loading timed out - forcing complete");
         setIsLoading(false);
       }
     }, 12000);
@@ -305,31 +345,37 @@ const WomenDashboardScreen = () => {
     // Use getSession() first to restore from localStorage (prevents refresh logout)
     const initDashboard = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         if (!mounted) return;
-        
-        if (!session?.user) { 
+
+        if (!session?.user) {
           // Don't redirect - ProtectedRoute handles auth.
           clearTimeout(loadingTimeoutId);
           setIsLoading(false);
-          return; 
+          return;
         }
         const user = session.user;
-        
+
         if (!mounted) return;
 
         await loadDashboardData();
         updateUserOnlineStatus(true);
         loadActiveChatCount();
       } catch (error) {
-        console.error('[WomenDashboard] Init error:', error);
-        toast({ title: 'Dashboard unavailable', description: 'Unable to load your dashboard. Please refresh the page.', variant: 'destructive' });
+        console.error("[WomenDashboard] Init error:", error);
+        toast({
+          title: "Dashboard unavailable",
+          description: "Unable to load your dashboard. Please refresh the page.",
+          variant: "destructive",
+        });
         if (mounted) setIsLoading(false);
       } finally {
         if (mounted) clearTimeout(loadingTimeoutId);
       }
     };
-    
+
     initDashboard();
 
     return () => {
@@ -347,27 +393,27 @@ const WomenDashboardScreen = () => {
   const [supportedLanguages, setSupportedLanguages] = useState<string[]>([]);
 
   // Keep refs in sync so throttled callback always has latest values
-  useEffect(() => { currentWomanLanguageRef.current = currentWomanLanguage; }, [currentWomanLanguage]);
-  useEffect(() => { currentWomanCountryRef.current = currentWomanCountry; }, [currentWomanCountry]);
+  useEffect(() => {
+    currentWomanLanguageRef.current = currentWomanLanguage;
+  }, [currentWomanLanguage]);
+  useEffect(() => {
+    currentWomanCountryRef.current = currentWomanCountry;
+  }, [currentWomanCountry]);
 
   const { playMessageSound } = useMessageSound();
 
   // Activity-based online/offline status (10 min inactivity = offline)
-  const { 
-    isOnline, 
-    isManuallyOffline,
-    toggleOnlineStatus 
-  } = useActivityBasedStatus({
+  const { isOnline, isManuallyOffline, toggleOnlineStatus } = useActivityBasedStatus({
     userId: currentUserId,
     inactivityTimeout: 10 * 60 * 1000, // 10 minutes
     onStatusChange: (online) => {
       if (!online) {
         toast({
-          title: 'Gone Offline',
-          description: 'You went offline due to inactivity',
+          title: "Gone Offline",
+          description: "You went offline due to inactivity",
         });
       }
-    }
+    },
   });
 
   // Real-time subscription for online users, chat sessions, video calls, and earnings
@@ -393,56 +439,96 @@ const WomenDashboardScreen = () => {
 
   useEffect(() => {
     if (!currentUserId) return;
-    
+
     const channel = supabase
-      .channel('women-dashboard-updates')
+      .channel("women-dashboard-updates")
+      .on("postgres_changes", { event: "*", schema: "public", table: "user_status" }, (payload) => {
+        if (
+          !isVisibilityStatusChange(
+            payload as {
+              eventType?: string;
+              new?: Record<string, unknown>;
+              old?: Record<string, unknown>;
+            },
+            userStatusSnapshotRef.current,
+          )
+        )
+          return;
+        throttledFetchOnlineMen();
+      })
       .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'user_status' },
-        (payload) => {
-          if (!isVisibilityStatusChange(payload as { eventType?: string; new?: Record<string, unknown>; old?: Record<string, unknown> }, userStatusSnapshotRef.current)) return;
-          throttledFetchOnlineMen();
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'active_chat_sessions', filter: `woman_user_id=eq.${currentUserId}` },
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "active_chat_sessions",
+          filter: `woman_user_id=eq.${currentUserId}`,
+        },
         () => {
           loadActiveChatCount();
           fetchWomenActiveChats();
           playMessageSound();
-          toast({ title: 'New Chat', description: 'Someone started a conversation with you!' });
-        }
+          toast({ title: "New Chat", description: "Someone started a conversation with you!" });
+        },
       )
       .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'active_chat_sessions', filter: `woman_user_id=eq.${currentUserId}` },
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "active_chat_sessions",
+          filter: `woman_user_id=eq.${currentUserId}`,
+        },
         () => {
           loadActiveChatCount();
           fetchWomenActiveChats();
-        }
+        },
       )
       .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'video_call_sessions' },
-        () => { loadActiveChatCount(); }
+        "postgres_changes",
+        { event: "*", schema: "public", table: "video_call_sessions" },
+        () => {
+          loadActiveChatCount();
+        },
       )
       .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: `receiver_id=eq.${currentUserId}` },
-        () => { fetchWomenActiveChats(); playMessageSound({ repeat: 3 }); }
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "chat_messages",
+          filter: `receiver_id=eq.${currentUserId}`,
+        },
+        () => {
+          fetchWomenActiveChats();
+          playMessageSound({ repeat: 3 });
+        },
       )
       .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'wallet_transactions', filter: `user_id=eq.${currentUserId}` },
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "wallet_transactions",
+          filter: `user_id=eq.${currentUserId}`,
+        },
         // Refresh wallet/earnings from single source of truth (wallet_transactions)
-        () => { if (currentUserId) { fetchWalletBalance(currentUserId); fetchTopEarnerLeaderboard(currentUserId); } }
+        () => {
+          if (currentUserId) {
+            fetchWalletBalance(currentUserId);
+            fetchTopEarnerLeaderboard(currentUserId);
+          }
+        },
       )
       .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'wallets' },
+        "postgres_changes",
+        { event: "*", schema: "public", table: "wallets" },
         // Only refresh wallet balance
-        () => { if (currentUserId) { fetchWalletBalance(currentUserId); } }
+        () => {
+          if (currentUserId) {
+            fetchWalletBalance(currentUserId);
+          }
+        },
       )
       // Note: We don't listen to all male_profiles changes as that would cause
       // cross-dashboard interference. The men list is refreshed when:
@@ -451,32 +537,46 @@ const WomenDashboardScreen = () => {
       // Men changing their language affects their visibility to women based on
       // the woman's language filter - which is recalculated on user_status changes
       .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${currentUserId}` },
-        () => { 
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${currentUserId}`,
+        },
+        () => {
           if (currentUserId) {
             fetchNotifications(currentUserId);
           }
-        }
+        },
       )
       // Listen for language changes in user_languages table (INSERT events - no filter for new records)
       .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'user_languages' },
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "user_languages" },
         async (payload) => {
-          const record = payload.new as { user_id?: string; language_name?: string; language_code?: string };
+          const record = payload.new as {
+            user_id?: string;
+            language_name?: string;
+            language_code?: string;
+          };
           // Only process if this is our user's language change
           if (record?.user_id === currentUserId && record?.language_name) {
             setCurrentWomanLanguage(record.language_name);
             setCurrentWomanLanguageCode(record.language_code || "eng_Latn");
             fetchOnlineMen(record.language_name, currentWomanCountry);
           }
-        }
+        },
       )
       // Listen for language updates in user_languages table
       .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'user_languages', filter: `user_id=eq.${currentUserId}` },
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "user_languages",
+          filter: `user_id=eq.${currentUserId}`,
+        },
         async (payload) => {
           const newLanguage = (payload.new as { language_name?: string })?.language_name;
           const newCode = (payload.new as { language_code?: string })?.language_code || "eng_Latn";
@@ -485,20 +585,28 @@ const WomenDashboardScreen = () => {
             setCurrentWomanLanguageCode(newCode);
             fetchOnlineMen(newLanguage, currentWomanCountry);
           }
-        }
+        },
       )
       // Listen for language changes in female_profiles table
       .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'female_profiles', filter: `user_id=eq.${currentUserId}` },
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "female_profiles",
+          filter: `user_id=eq.${currentUserId}`,
+        },
         async (payload) => {
-          const newProfile = payload.new as { primary_language?: string; preferred_language?: string };
+          const newProfile = payload.new as {
+            primary_language?: string;
+            preferred_language?: string;
+          };
           const newLanguage = newProfile?.primary_language || newProfile?.preferred_language;
           if (newLanguage) {
             setCurrentWomanLanguage(newLanguage);
             fetchOnlineMen(newLanguage, currentWomanCountry);
           }
-        }
+        },
       )
       .subscribe();
 
@@ -510,39 +618,50 @@ const WomenDashboardScreen = () => {
   // Refs to track current men lists (avoids side-effect-only setState peeks)
   const rechargedMenRef = useRef<OnlineMan[]>([]);
   const nonRechargedMenRef = useRef<OnlineMan[]>([]);
-  useEffect(() => { rechargedMenRef.current = rechargedMen; }, [rechargedMen]);
-  useEffect(() => { nonRechargedMenRef.current = nonRechargedMen; }, [nonRechargedMen]);
+  useEffect(() => {
+    rechargedMenRef.current = rechargedMen;
+  }, [rechargedMen]);
+  useEffect(() => {
+    nonRechargedMenRef.current = nonRechargedMen;
+  }, [nonRechargedMen]);
 
   // 10-second wallet balance refresh for online men
   useEffect(() => {
     if (!currentUserId) return;
     const intervalId = setInterval(async () => {
       const allMenIds = [
-        ...rechargedMenRef.current.map(m => m.userId),
-        ...nonRechargedMenRef.current.map(m => m.userId),
+        ...rechargedMenRef.current.map((m) => m.userId),
+        ...nonRechargedMenRef.current.map((m) => m.userId),
       ];
       if (allMenIds.length === 0) return;
       try {
         // Canonical SoT bulk balance lookup (wallet_transactions), not stale wallets.balance
-        const { data } = await supabase.rpc("get_men_wallet_balances_bulk", { p_user_ids: allMenIds });
+        const { data } = await supabase.rpc("get_men_wallet_balances_bulk", {
+          p_user_ids: allMenIds,
+        });
         if (!data || (data as any[]).length === 0) return;
         const balanceMap = new Map<string, number>(
-          (data as Array<{ user_id: string; balance: number | string }>).map(
-            (w) => [w.user_id, Number(w.balance) || 0]
-          )
+          (data as Array<{ user_id: string; balance: number | string }>).map((w) => [
+            w.user_id,
+            Number(w.balance) || 0,
+          ]),
         );
         const updateMan = (m: OnlineMan): OnlineMan => {
           const newBal = balanceMap.get(m.userId);
-          return newBal !== undefined ? { ...m, walletBalance: newBal, hasRecharged: newBal > 0 } : m;
+          return newBal !== undefined
+            ? { ...m, walletBalance: newBal, hasRecharged: newBal > 0 }
+            : m;
         };
 
         // Re-partition: combine all men, update balances, then split
         const allMen = [...rechargedMenRef.current, ...nonRechargedMenRef.current].map(updateMan);
-        setRechargedMen(allMen.filter(m => m.walletBalance > 0));
-        setNonRechargedMen(allMen.filter(m => m.walletBalance <= 0));
-        setSameLanguageMen(prev => prev.map(updateMan));
-        setOtherLanguageMen(prev => prev.map(updateMan));
-      } catch { /* silent */ }
+        setRechargedMen(allMen.filter((m) => m.walletBalance > 0));
+        setNonRechargedMen(allMen.filter((m) => m.walletBalance <= 0));
+        setSameLanguageMen((prev) => prev.map(updateMan));
+        setOtherLanguageMen((prev) => prev.map(updateMan));
+      } catch {
+        /* silent */
+      }
     }, 10000);
     return () => clearInterval(intervalId);
   }, [currentUserId]);
@@ -558,7 +677,9 @@ const WomenDashboardScreen = () => {
 
   useEffect(() => {
     if (!currentUserId) return;
-    const onRefresh = () => { fetchWalletBalance(currentUserId); };
+    const onRefresh = () => {
+      fetchWalletBalance(currentUserId);
+    };
     window.addEventListener("meow:wallet-refresh", onRefresh);
     return () => window.removeEventListener("meow:wallet-refresh", onRefresh);
   }, [currentUserId]);
@@ -610,13 +731,13 @@ const WomenDashboardScreen = () => {
 
   const loadActiveChatCount = async () => {
     if (!currentUserId) return;
-    
+
     const { count } = await supabase
       .from("active_chat_sessions")
       .select("*", { count: "exact", head: true })
       .eq("woman_user_id", currentUserId)
       .in("status", ["active", "pending"]);
-    
+
     setActiveChatCount(count || 0);
     // Only fetch chat details if chats tab has been opened
     if (chatsFetchedRef.current) {
@@ -628,33 +749,34 @@ const WomenDashboardScreen = () => {
     if (!currentUserId) return;
     const now = Date.now();
     const isFirstLoad = !chatsFetchedRef.current;
-    if (!isFirstLoad && (chatsInFlightRef.current || now - lastChatsFetchRef.current < 2500)) return;
+    if (!isFirstLoad && (chatsInFlightRef.current || now - lastChatsFetchRef.current < 2500))
+      return;
     lastChatsFetchRef.current = now;
     chatsInFlightRef.current = true;
     if (isFirstLoad) setLoadingWomenChats(true);
     try {
-      const { data, error } = await supabase.rpc('get_woman_active_chats', {
+      const { data, error } = await supabase.rpc("get_woman_active_chats", {
         p_user_id: currentUserId,
       });
       if (error) throw error;
 
-      const chats = ((data as any[]) || []).map(r => ({
+      const chats = ((data as any[]) || []).map((r) => ({
         chatId: r.chat_id as string,
         partnerId: r.partner_id as string,
         partnerName: r.partner_name as string,
         partnerPhoto: (r.partner_photo as string) || null,
-        lastMessage: (r.last_message as string) || '',
+        lastMessage: (r.last_message as string) || "",
         lastMessageAt: r.last_message_at as string,
-        lastMessageSenderId: (r.last_message_sender_id as string) || '',
+        lastMessageSenderId: (r.last_message_sender_id as string) || "",
         unreadCount: Number(r.unread_count) || 0,
         partnerIsOnline: Boolean(r.partner_is_online),
-        partnerStatus: (r.partner_status as string) || 'offline',
+        partnerStatus: (r.partner_status as string) || "offline",
         partnerActiveChatCount: Number(r.partner_active_chat_count) || 0,
       }));
       setWomenActiveChats(chats);
       chatsFetchedRef.current = true;
     } catch (error) {
-      console.error('[WomenDashboard] Error fetching active chats:', error);
+      console.error("[WomenDashboard] Error fetching active chats:", error);
     } finally {
       chatsInFlightRef.current = false;
       setLoadingWomenChats(false);
@@ -662,21 +784,23 @@ const WomenDashboardScreen = () => {
   };
 
   const getStatusText = () => {
-    if (isManuallyOffline) return 'Offline';
-    if (!isOnline) return 'Away';
-    return 'Available';
+    if (isManuallyOffline) return "Offline";
+    if (!isOnline) return "Away";
+    return "Available";
   };
 
   const getStatusColor = () => {
-    if (isManuallyOffline) return 'bg-muted-foreground';
-    if (!isOnline) return 'bg-amber-500';
-    return 'bg-online';
+    if (isManuallyOffline) return "bg-muted-foreground";
+    if (!isOnline) return "bg-amber-500";
+    return "bg-online";
   };
 
   const loadDashboardData = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
       if (!session?.user) {
         setIsLoading(false);
         return;
@@ -688,22 +812,34 @@ const WomenDashboardScreen = () => {
       // Fetch profile and user languages in PARALLEL
       const profilePromise = supabase
         .from("profiles")
-        .select("gender, approval_status, full_name, date_of_birth, primary_language, preferred_language, country, photo_url, is_indian")
+        .select(
+          "gender, approval_status, full_name, date_of_birth, primary_language, preferred_language, country, photo_url, is_indian",
+        )
         .eq("user_id", user.id)
         .maybeSingle();
-      
+
       const languagePromise = supabase
         .from("user_languages")
         .select("language_name, language_code")
         .eq("user_id", user.id);
 
-      const profileTimeout = new Promise<{ data: null, error: Error }>((resolve) =>
-        setTimeout(() => resolve({ data: null, error: new Error('Profile fetch timeout') }), 5000)
+      const profileTimeout = new Promise<{ data: null; error: Error }>((resolve) =>
+        setTimeout(() => resolve({ data: null, error: new Error("Profile fetch timeout") }), 5000),
       );
-      
-      let mainProfile: { gender?: string | null; approval_status?: string | null; full_name?: string | null; date_of_birth?: string | null; primary_language?: string | null; preferred_language?: string | null; country?: string | null; photo_url?: string | null; is_indian?: boolean | null } | null = null;
+
+      let mainProfile: {
+        gender?: string | null;
+        approval_status?: string | null;
+        full_name?: string | null;
+        date_of_birth?: string | null;
+        primary_language?: string | null;
+        preferred_language?: string | null;
+        country?: string | null;
+        photo_url?: string | null;
+        is_indian?: boolean | null;
+      } | null = null;
       let womanLanguages: { language_name: string; language_code: string }[] | null = null;
-      
+
       try {
         const [profileResult, langResult] = await Promise.all([
           Promise.race([profilePromise, profileTimeout]),
@@ -712,14 +848,14 @@ const WomenDashboardScreen = () => {
         mainProfile = profileResult.data;
         womanLanguages = langResult.data;
       } catch {
-        console.warn('[WomenDashboard] Profile/language fetch failed');
+        console.warn("[WomenDashboard] Profile/language fetch failed");
       }
-        
+
       setUserPhoto(mainProfile?.photo_url || null);
-      
-      const isIndian = mainProfile?.is_indian === true || 
-        mainProfile?.country?.toLowerCase().includes('india');
-      setIsIndianWoman(isIndian && mainProfile?.gender?.toLowerCase() === 'female');
+
+      const isIndian =
+        mainProfile?.is_indian === true || mainProfile?.country?.toLowerCase().includes("india");
+      setIsIndianWoman(isIndian && mainProfile?.gender?.toLowerCase() === "female");
 
       const fullName = mainProfile?.full_name;
       if (fullName) {
@@ -736,25 +872,27 @@ const WomenDashboardScreen = () => {
           if ((data as any)?.app_id) setAppId((data as any).app_id);
         });
 
-      const womanLanguage = pickCallLanguage(
-        mainProfile?.primary_language,
-        ...((womanLanguages || []) as { language_name?: string | null }[]).map((l) => l.language_name),
-        mainProfile?.preferred_language,
-      ) || "English";
-      const womanLanguageCode = womanLanguages?.find((l) => l.language_name === womanLanguage)?.language_code
-        || womanLanguages?.[0]?.language_code
-        || "eng_Latn";
+      const womanLanguage =
+        pickCallLanguage(
+          mainProfile?.primary_language,
+          ...((womanLanguages || []) as { language_name?: string | null }[]).map(
+            (l) => l.language_name,
+          ),
+          mainProfile?.preferred_language,
+        ) || "English";
+      const womanLanguageCode =
+        womanLanguages?.find((l) => l.language_name === womanLanguage)?.language_code ||
+        womanLanguages?.[0]?.language_code ||
+        "eng_Latn";
       setCurrentWomanLanguage(womanLanguage);
       setCurrentWomanLanguageCode(womanLanguageCode);
-      
+
       const userCountryValue = mainProfile?.country || "";
       setCurrentWomanCountry(userCountryValue);
-      
+
       // Load supported languages and dashboard data in parallel
-      const [langModule] = await Promise.all([
-        import("@/data/supportedLanguages"),
-      ]);
-      setSupportedLanguages(langModule.ALL_SUPPORTED_LANGUAGES.map(l => l.name));
+      const [langModule] = await Promise.all([import("@/data/supportedLanguages")]);
+      setSupportedLanguages(langModule.ALL_SUPPORTED_LANGUAGES.map((l) => l.name));
 
       // Fetch all data with woman's language context - using allSettled for resilience
       await Promise.allSettled([
@@ -762,12 +900,15 @@ const WomenDashboardScreen = () => {
         fetchMatchCount(user.id),
         fetchNotifications(user.id),
         fetchTopEarnerLeaderboard(user.id),
-        fetchWalletBalance(user.id)
+        fetchWalletBalance(user.id),
       ]);
-
     } catch (error) {
-      console.error('[WomenDashboard] Error loading dashboard:', error);
-      toast({ title: 'Dashboard unavailable', description: 'Unable to load your dashboard. Please refresh.', variant: 'destructive' });
+      console.error("[WomenDashboard] Error loading dashboard:", error);
+      toast({
+        title: "Dashboard unavailable",
+        description: "Unable to load your dashboard. Please refresh.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -778,14 +919,14 @@ const WomenDashboardScreen = () => {
       const effectiveWomanLanguage = womanLanguage || currentWomanLanguage;
 
       // Use secure RPC function that bypasses RLS to get wallet balances
-      const { data: onlineMenData, error } = await supabase.rpc('get_online_men_dashboard');
+      const { data: onlineMenData, error } = await supabase.rpc("get_online_men_dashboard");
 
       if (error) {
         console.error("[WomenDashboard] RPC error:", error);
         // Non-critical RPC error in stats calculation
         setRechargedMen([]);
         setNonRechargedMen([]);
-        setStats(prev => ({ ...prev, totalOnlineMen: 0, rechargedMen: 0, nonRechargedMen: 0 }));
+        setStats((prev) => ({ ...prev, totalOnlineMen: 0, rechargedMen: 0, nonRechargedMen: 0 }));
         return;
       }
 
@@ -800,51 +941,54 @@ const WomenDashboardScreen = () => {
       if (freshOnlineMen.length === 0) {
         setRechargedMen([]);
         setNonRechargedMen([]);
-        setStats(prev => ({ ...prev, totalOnlineMen: 0, rechargedMen: 0, nonRechargedMen: 0 }));
+        setStats((prev) => ({ ...prev, totalOnlineMen: 0, rechargedMen: 0, nonRechargedMen: 0 }));
         return;
       }
 
       // Process the RPC results
-      const onlineMen: OnlineMan[] = freshOnlineMen.map((man: {
-        user_id: string;
-        full_name: string;
-        photo_url: string | null;
-        country: string | null;
-        state: string | null;
-        preferred_language: string | null;
-        primary_language: string | null;
-        age: number | null;
-        mother_tongue: string;
-        wallet_balance: number;
-        last_seen: string;
-        active_chat_count: number;
-      }) => {
-        const manLanguage = man.primary_language || man.mother_tongue || man.preferred_language || "Unknown";
-        const isSameLanguage = effectiveWomanLanguage.toLowerCase() === manLanguage.toLowerCase();
-        const walletBalance = Number(man.wallet_balance) || 0;
-        // Premium users have wallet balance > 0 (recharged), regular users have 0
-        const hasRecharged = walletBalance > 0;
+      const onlineMen: OnlineMan[] = freshOnlineMen.map(
+        (man: {
+          user_id: string;
+          full_name: string;
+          photo_url: string | null;
+          country: string | null;
+          state: string | null;
+          preferred_language: string | null;
+          primary_language: string | null;
+          age: number | null;
+          mother_tongue: string;
+          wallet_balance: number;
+          last_seen: string;
+          active_chat_count: number;
+        }) => {
+          const manLanguage =
+            man.primary_language || man.mother_tongue || man.preferred_language || "Unknown";
+          const isSameLanguage = effectiveWomanLanguage.toLowerCase() === manLanguage.toLowerCase();
+          const walletBalance = Number(man.wallet_balance) || 0;
+          // Premium users have wallet balance > 0 (recharged), regular users have 0
+          const hasRecharged = walletBalance > 0;
 
-        return {
-          userId: man.user_id,
-          fullName: man.full_name || "Anonymous",
-          age: man.age,
-          photoUrl: man.photo_url,
-          country: man.country,
-          state: man.state,
-          motherTongue: manLanguage,
-          preferredLanguage: man.preferred_language,
-          walletBalance,
-          hasRecharged,
-          lastSeen: man.last_seen || new Date().toISOString(),
-          isSameLanguage,
-          isLanguageSupported: true, // All languages supported with translation
-          activeChatCount: man.active_chat_count || 0
-        };
-      });
+          return {
+            userId: man.user_id,
+            fullName: man.full_name || "Anonymous",
+            age: man.age,
+            photoUrl: man.photo_url,
+            country: man.country,
+            state: man.state,
+            motherTongue: manLanguage,
+            preferredLanguage: man.preferred_language,
+            walletBalance,
+            hasRecharged,
+            lastSeen: man.last_seen || new Date().toISOString(),
+            isSameLanguage,
+            isLanguageSupported: true, // All languages supported with translation
+            activeChatCount: man.active_chat_count || 0,
+          };
+        },
+      );
 
       // Apply match filters client-side
-      const filteredMen = onlineMen.filter(m => {
+      const filteredMen = onlineMen.filter((m) => {
         if (matchFilters.ageRange && m.age != null) {
           if (m.age < matchFilters.ageRange[0] || m.age > matchFilters.ageRange[1]) return false;
         }
@@ -872,29 +1016,27 @@ const WomenDashboardScreen = () => {
       });
 
       // Only show men with wallet balance > 0 to women
-      const menWithBalance = sortedMen.filter(m => m.walletBalance > 0);
-      const menWithoutBalance = sortedMen.filter(m => m.walletBalance <= 0);
+      const menWithBalance = sortedMen.filter((m) => m.walletBalance > 0);
+      const menWithoutBalance = sortedMen.filter((m) => m.walletBalance <= 0);
 
       // Sort by wallet balance descending (highest balance first)
       const sortedRecharged = menWithBalance.sort((a, b) => b.walletBalance - a.walletBalance);
 
       // Split by same language / other language (like men's dashboard)
       // Only men with balance are visible to women
-      const sameLanguage = menWithBalance.filter(m => m.isSameLanguage);
-      const otherLanguage = menWithBalance.filter(m => !m.isSameLanguage);
-
+      const sameLanguage = menWithBalance.filter((m) => m.isSameLanguage);
+      const otherLanguage = menWithBalance.filter((m) => !m.isSameLanguage);
 
       setRechargedMen(sortedRecharged);
       setNonRechargedMen(menWithoutBalance); // Show men without balance in separate tab
       setSameLanguageMen(sameLanguage);
       setOtherLanguageMen(otherLanguage);
-      setStats(prev => ({
+      setStats((prev) => ({
         ...prev,
         totalOnlineMen: sortedMen.length,
         rechargedMen: sortedRecharged.length,
-        nonRechargedMen: menWithoutBalance.length
+        nonRechargedMen: menWithoutBalance.length,
       }));
-
     } catch (error) {
       console.error("[WomenDashboard] Error fetching online men:", error);
       // Non-critical - online users list
@@ -902,7 +1044,7 @@ const WomenDashboardScreen = () => {
       setNonRechargedMen([]);
       setSameLanguageMen([]);
       setOtherLanguageMen([]);
-      setStats(prev => ({ ...prev, totalOnlineMen: 0, rechargedMen: 0, nonRechargedMen: 0 }));
+      setStats((prev) => ({ ...prev, totalOnlineMen: 0, rechargedMen: 0, nonRechargedMen: 0 }));
     }
   };
 
@@ -914,10 +1056,10 @@ const WomenDashboardScreen = () => {
         .or(`user_id.eq.${userId},matched_user_id.eq.${userId}`)
         .eq("status", "accepted");
 
-      setStats(prev => ({ ...prev, matchCount: count || 0 }));
+      setStats((prev) => ({ ...prev, matchCount: count || 0 }));
       // Matches profiles loaded lazily when Matches tab is opened
     } catch (error) {
-      console.error('[WomenDashboard] fetchMatchCount error:', error);
+      console.error("[WomenDashboard] fetchMatchCount error:", error);
     }
   };
 
@@ -937,34 +1079,33 @@ const WomenDashboardScreen = () => {
         return;
       }
 
-      const otherUserIds = [...new Set(matches.map(m => 
-        m.user_id === userId ? m.matched_user_id : m.user_id
-      ))] as string[];
+      const otherUserIds = [
+        ...new Set(matches.map((m) => (m.user_id === userId ? m.matched_user_id : m.user_id))),
+      ] as string[];
 
       const { fetchPublicProfiles } = await import("@/lib/profile-queries");
       const [profiles, statusesRes] = await Promise.all([
         fetchPublicProfiles(otherUserIds),
-        supabase
-          .from("user_status")
-          .select("user_id, is_online")
-          .in("user_id", otherUserIds)
+        supabase.from("user_status").select("user_id, is_online").in("user_id", otherUserIds),
       ]);
 
-      const statusMap = new Map((statusesRes.data as any[] || []).map(s => [s.user_id, s.is_online]));
-      const profileMap = new Map((profiles as any[] || []).map(p => [p.user_id, p]));
+      const statusMap = new Map(
+        ((statusesRes.data as any[]) || []).map((s) => [s.user_id, s.is_online]),
+      );
+      const profileMap = new Map(((profiles as any[]) || []).map((p) => [p.user_id, p]));
 
       const seenUserIds = new Set<string>();
       const matched: MatchedMan[] = matches
-        .map(m => {
+        .map((m) => {
           const otherId = m.user_id === userId ? m.matched_user_id : m.user_id;
           if (seenUserIds.has(otherId)) return null;
           seenUserIds.add(otherId);
           const profile = profileMap.get(otherId);
-          if (!profile || profile.gender?.toLowerCase() !== 'male') return null;
+          if (!profile || profile.gender?.toLowerCase() !== "male") return null;
           return {
             matchId: m.id,
             userId: otherId,
-            fullName: profile.full_name || 'Anonymous',
+            fullName: profile.full_name || "Anonymous",
             photoUrl: profile.photo_url,
             age: profile.age,
             country: profile.country,
@@ -996,27 +1137,24 @@ const WomenDashboardScreen = () => {
         .limit(5);
 
       setNotifications(data || []);
-      setStats(prev => ({ ...prev, unreadNotifications: count || 0 }));
+      setStats((prev) => ({ ...prev, unreadNotifications: count || 0 }));
     } catch (error) {
-      console.error('[WomenDashboard] fetchNotifications error:', error);
+      console.error("[WomenDashboard] fetchNotifications error:", error);
     }
   };
 
   const markNotificationRead = async (notificationId: string) => {
     try {
-      await supabase
-        .from("notifications")
-        .update({ is_read: true })
-        .eq("id", notificationId);
-      setNotifications(prev =>
-        prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
+      await supabase.from("notifications").update({ is_read: true }).eq("id", notificationId);
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === notificationId ? { ...n, is_read: true } : n)),
       );
-      setStats(prev => ({
+      setStats((prev) => ({
         ...prev,
         unreadNotifications: Math.max(0, prev.unreadNotifications - 1),
       }));
     } catch (err) {
-      console.warn('[WomenDashboard] Failed to mark notification read:', err);
+      console.warn("[WomenDashboard] Failed to mark notification read:", err);
     }
   };
 
@@ -1025,8 +1163,8 @@ const WomenDashboardScreen = () => {
       // Use server-side RPC to avoid Supabase 1000-row limit on client queries.
       // This single call returns both available_balance AND today_earnings — no need
       // for a separate fetchTodayEarnings call that would hit the same RPC twice.
-      const { data, error } = await supabase.rpc('get_women_wallet_balance', {
-        p_user_id: userId
+      const { data, error } = await supabase.rpc("get_women_wallet_balance", {
+        p_user_id: userId,
       });
 
       if (error) {
@@ -1040,7 +1178,7 @@ const WomenDashboardScreen = () => {
         setMyWalletBalance(Number(balanceData.available_balance) || 0);
         // Set today's earnings from the same response
         const todayEarnings = Number(balanceData.today_earnings) || 0;
-        setStats(prev => ({ ...prev, todayEarnings }));
+        setStats((prev) => ({ ...prev, todayEarnings }));
       }
     } catch (error) {
       console.error("Error fetching wallet balance:", error);
@@ -1053,11 +1191,10 @@ const WomenDashboardScreen = () => {
     // Wallet balance + today_earnings are handled by fetchWalletBalance via a single RPC call.
 
     // Use secure RPC function to get top earner (bypasses RLS safely)
-    const { data: topEarnerData, error: topError } = await supabase
-      .rpc('get_top_earner_today');
-    
+    const { data: topEarnerData, error: topError } = await supabase.rpc("get_top_earner_today");
+
     if (topError) {
-      console.error('[WomenDashboard] Top earner RPC error:', topError);
+      console.error("[WomenDashboard] Top earner RPC error:", topError);
       // Non-critical - leaderboard simply won't show
     }
 
@@ -1065,7 +1202,7 @@ const WomenDashboardScreen = () => {
       const topEarner = topEarnerData[0];
       setBiggestEarner({
         name: topEarner.full_name || "Top Earner",
-        amount: Number(topEarner.total_amount) || 0
+        amount: Number(topEarner.total_amount) || 0,
       });
     } else {
       setBiggestEarner(null);
@@ -1074,22 +1211,22 @@ const WomenDashboardScreen = () => {
 
   const updateUserOnlineStatus = async (online: boolean) => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session?.user) return;
       const user = session.user;
 
       // Use upsert so that new users get a row inserted and existing users get updated.
       // update() returns no error when 0 rows are matched, so insert would never fire.
-      const { error } = await supabase
-        .from("user_status")
-        .upsert(
-          {
-            user_id: user.id,
-            is_online: online,
-            last_seen: new Date().toISOString(),
-          },
-          { onConflict: "user_id" }
-        );
+      const { error } = await supabase.from("user_status").upsert(
+        {
+          user_id: user.id,
+          is_online: online,
+          last_seen: new Date().toISOString(),
+        },
+        { onConflict: "user_id" },
+      );
 
       if (error) {
         console.error("Error upserting user status:", error);
@@ -1101,28 +1238,33 @@ const WomenDashboardScreen = () => {
 
   const handleLogout = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const uid = currentUserId || session?.user?.id || '';
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const uid = currentUserId || session?.user?.id || "";
       if (uid) {
-        const { cleanupAllUserSessions } = await import('@/services/session-cleanup.service');
+        const { cleanupAllUserSessions } = await import("@/services/session-cleanup.service");
         await cleanupAllUserSessions(uid);
       }
     } catch (err) {
-      console.warn('[Logout] Session cleanup failed (continuing):', err);
+      console.warn("[Logout] Session cleanup failed (continuing):", err);
     }
     await supabase.auth.signOut();
     toast({
-      title: 'Logged out',
-      description: 'See you soon!',
+      title: "Logged out",
+      description: "See you soon!",
     });
-    navigate('/', { replace: true });
+    navigate("/", { replace: true });
   };
-
 
   // Women can initiate chats freely
   const handleStartChatWithUser = async (userId: string) => {
     if (appSettings.chatEnabled === false) {
-      toast({ title: "Chat temporarily unavailable", description: "Chat is paused due to high system load. Please try again shortly.", variant: "destructive" });
+      toast({
+        title: "Chat temporarily unavailable",
+        description: "Chat is paused due to high system load. Please try again shortly.",
+        variant: "destructive",
+      });
       return;
     }
     // Navigate immediately so the chat window opens on single click
@@ -1135,7 +1277,7 @@ const WomenDashboardScreen = () => {
           action: "start_chat",
           man_user_id: userId,
           woman_user_id: currentUserId,
-        }
+        },
       });
 
       if (error) {
@@ -1151,7 +1293,7 @@ const WomenDashboardScreen = () => {
 
       if (!data?.success) {
         toast({
-          title: 'Chat Notice',
+          title: "Chat Notice",
           description: data?.message || "Chat session may not have started properly",
           variant: "destructive",
         });
@@ -1164,7 +1306,7 @@ const WomenDashboardScreen = () => {
           chat_id: data.chat_id,
           sender_id: currentUserId,
           receiver_id: userId,
-          message: "👋 Hi!"
+          message: "👋 Hi!",
         });
       }
     } catch (err: any) {
@@ -1183,7 +1325,16 @@ const WomenDashboardScreen = () => {
   const onlineMenCount = sameLanguageMen.length + otherLanguageMen.length;
   const totalUnreadCount = womenActiveChats.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
   const showCallGroups = appSettings.privateGroupsEnabledWomen !== false;
-  const womenTabs = getWomenTabs(onlineMenCount || undefined, totalUnreadCount || activeChatCount || undefined, matchedMen.length || undefined, !!appSettings.statementsTabVisible, appSettings.chatEnabled !== false, showCallGroups, isTL, appSettings.historyTabVisible !== false);
+  const womenTabs = getWomenTabs(
+    onlineMenCount || undefined,
+    totalUnreadCount || activeChatCount || undefined,
+    matchedMen.length || undefined,
+    !!appSettings.statementsTabVisible,
+    appSettings.chatEnabled !== false,
+    showCallGroups,
+    isTL,
+    appSettings.historyTabVisible !== false,
+  );
 
   useEffect(() => {
     if (appSettings.historyTabVisible === false && activeTab === "history") {
@@ -1214,11 +1365,22 @@ const WomenDashboardScreen = () => {
           <Badge className={cn("text-[10px] text-primary-foreground", getStatusColor())}>
             {getStatusText()}
           </Badge>
-          <span className="text-xs text-muted-foreground">{formatLocalCurrency(myWalletBalance)}</span>
+          <span className="text-xs text-muted-foreground">
+            {formatLocalCurrency(myWalletBalance)}
+          </span>
         </div>
         <div className="flex items-center gap-1.5">
-          <MatchFiltersPanel filters={matchFilters} onFiltersChange={setMatchFilters} userCountry={currentWomanCountry} />
-          <Button variant="ghost" size="sm" onClick={() => fetchOnlineMen(currentWomanLanguage, currentWomanCountry)} className="h-7 w-7 p-0">
+          <MatchFiltersPanel
+            filters={matchFilters}
+            onFiltersChange={setMatchFilters}
+            userCountry={currentWomanCountry}
+          />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => fetchOnlineMen(currentWomanLanguage, currentWomanCountry)}
+            className="h-7 w-7 p-0"
+          >
             <RefreshCw className="w-3.5 h-3.5" />
           </Button>
         </div>
@@ -1227,13 +1389,23 @@ const WomenDashboardScreen = () => {
       {/* Sub-tabs: Recharged / No Balance */}
       <div className="flex border-b border-border/30">
         <button
-          className={cn("flex-1 py-2 text-xs font-semibold text-center transition-colors", onlineSubTab === "recharged" ? "text-primary border-b-2 border-primary" : "text-muted-foreground")}
+          className={cn(
+            "flex-1 py-2 text-xs font-semibold text-center transition-colors",
+            onlineSubTab === "recharged"
+              ? "text-primary border-b-2 border-primary"
+              : "text-muted-foreground",
+          )}
           onClick={() => setOnlineSubTab("recharged")}
         >
           💰 Recharged ({rechargedMen.length})
         </button>
         <button
-          className={cn("flex-1 py-2 text-xs font-semibold text-center transition-colors", onlineSubTab === "nobalance" ? "text-primary border-b-2 border-primary" : "text-muted-foreground")}
+          className={cn(
+            "flex-1 py-2 text-xs font-semibold text-center transition-colors",
+            onlineSubTab === "nobalance"
+              ? "text-primary border-b-2 border-primary"
+              : "text-muted-foreground",
+          )}
           onClick={() => setOnlineSubTab("nobalance")}
         >
           Free Users ({nonRechargedMen.length})
@@ -1244,10 +1416,14 @@ const WomenDashboardScreen = () => {
       <div className="px-3 py-2 border-b border-border/30">
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-          <Input value={searchOnline} onChange={(e) => setSearchOnline(e.target.value)} placeholder="Search GESS ID, User ID, or name…" className="h-8 pl-8 text-xs" />
+          <Input
+            value={searchOnline}
+            onChange={(e) => setSearchOnline(e.target.value)}
+            placeholder="Search GESS ID, User ID, or name…"
+            className="h-8 pl-8 text-xs"
+          />
         </div>
       </div>
-
 
       {/* Notifications */}
       {notifications.length > 0 && (
@@ -1258,21 +1434,36 @@ const WomenDashboardScreen = () => {
               className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 active:bg-muted/70 transition-colors cursor-pointer border-b border-border/30"
               onClick={() => markNotificationRead(notification.id)}
             >
-              <div className={cn("w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 bg-primary/10 text-primary")}>
-                {notification.type === "match" ? <Heart className="w-5 h-5" /> :
-                 notification.type === "message" ? <MessageCircle className="w-5 h-5" /> :
-                 <Bell className="w-5 h-5" />}
+              <div
+                className={cn(
+                  "w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 bg-primary/10 text-primary",
+                )}
+              >
+                {notification.type === "match" ? (
+                  <Heart className="w-5 h-5" />
+                ) : notification.type === "message" ? (
+                  <MessageCircle className="w-5 h-5" />
+                ) : (
+                  <Bell className="w-5 h-5" />
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold text-sm text-foreground truncate">{notification.title}</span>
+                  <span className="font-semibold text-sm text-foreground truncate">
+                    {notification.title}
+                  </span>
                   <span className="text-[10px] text-muted-foreground flex-shrink-0 ml-2">
-                    {new Date(notification.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    {new Date(notification.created_at).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
                   </span>
                 </div>
                 <div className="flex items-center justify-between mt-0.5">
                   <p className="text-xs text-muted-foreground truncate">{notification.message}</p>
-                  {!notification.is_read && <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0 ml-2" />}
+                  {!notification.is_read && (
+                    <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0 ml-2" />
+                  )}
                 </div>
               </div>
             </div>
@@ -1281,123 +1472,174 @@ const WomenDashboardScreen = () => {
       )}
 
       {/* Recharged sub-tab content */}
-      {onlineSubTab === "recharged" && (() => {
-        const filteredSame = sameLanguageMen.filter(u => matchesUserSearch(searchOnline, u.userId, u.fullName));
-        const filteredOther = otherLanguageMen.filter(u => matchesUserSearch(searchOnline, u.userId, u.fullName));
-        return (
-          <>
-            {filteredSame.length > 0 && (
-              <>
-                <div className="px-4 py-2 bg-primary/5 border-b border-border/30">
-                  <span className="text-xs font-semibold text-primary">{currentWomanLanguage}</span>
-                  <span className="text-[10px] text-muted-foreground ml-1">({filteredSame.length})</span>
-                </div>
-                {filteredSame.map((user) => (
-                  <UserContactCard
-                    key={user.userId}
-            userId={user.userId}
-                    name={user.fullName}
-                    subtitle={userCodeMap[user.userId] || undefined}
-                    photoUrl={user.photoUrl}
-                    age={user.age}
-                    language={user.motherTongue}
-                    country={user.country}
-                    state={user.state}
-                    isPremium={user.hasRecharged}
-                    walletBalance={user.walletBalance}
-                    activeChatCount={user.activeChatCount}
-                    onClick={() => handleStartChatWithUser(user.userId)}
-                    actions={
-                      <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={(e) => { e.stopPropagation(); navigate(`/profile/${user.userId}`); }}>
-                          <Eye className="w-3.5 h-3.5 text-primary" />
-                        </Button>
-                      </div>
-                    }
-                  />
-                ))}
-              </>
-            )}
+      {onlineSubTab === "recharged" &&
+        (() => {
+          const filteredSame = sameLanguageMen.filter((u) =>
+            matchesUserSearch(searchOnline, u.userId, u.fullName),
+          );
+          const filteredOther = otherLanguageMen.filter((u) =>
+            matchesUserSearch(searchOnline, u.userId, u.fullName),
+          );
+          return (
+            <>
+              {filteredSame.length > 0 && (
+                <>
+                  <div className="px-4 py-2 bg-primary/5 border-b border-border/30">
+                    <span className="text-xs font-semibold text-primary">
+                      {currentWomanLanguage}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground ml-1">
+                      ({filteredSame.length})
+                    </span>
+                  </div>
+                  {filteredSame.map((user) => (
+                    <UserContactCard
+                      key={user.userId}
+                      userId={user.userId}
+                      name={user.fullName}
+                      subtitle={userCodeMap[user.userId] || undefined}
+                      photoUrl={user.photoUrl}
+                      age={user.age}
+                      language={user.motherTongue}
+                      country={user.country}
+                      state={user.state}
+                      isPremium={user.hasRecharged}
+                      walletBalance={user.walletBalance}
+                      activeChatCount={user.activeChatCount}
+                      onClick={() => handleStartChatWithUser(user.userId)}
+                      actions={
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/profile/${user.userId}`);
+                            }}
+                          >
+                            <Eye className="w-3.5 h-3.5 text-primary" />
+                          </Button>
+                        </div>
+                      }
+                    />
+                  ))}
+                </>
+              )}
 
-            {filteredOther.length > 0 && (
-              <>
-                <div className="px-4 py-2 bg-muted/30 border-b border-border/30">
-                  <span className="text-xs font-semibold text-muted-foreground">Other Languages</span>
-                  <span className="text-[10px] text-muted-foreground ml-1">({filteredOther.length})</span>
-                </div>
-                {filteredOther.map((user) => (
-                  <UserContactCard
-                    key={user.userId}
-            userId={user.userId}
-                    name={user.fullName}
-                    photoUrl={user.photoUrl}
-                    age={user.age}
-                    language={user.motherTongue}
-                    country={user.country}
-                    state={user.state}
-                    isPremium={user.hasRecharged}
-                    walletBalance={user.walletBalance}
-                    activeChatCount={user.activeChatCount}
-                    subtitle={userCodeMap[user.userId] ? `${userCodeMap[user.userId]} • ${user.motherTongue} → ${currentWomanLanguage}` : `${user.motherTongue} → ${currentWomanLanguage}`}
-                    onClick={() => handleStartChatWithUser(user.userId)}
-                    actions={
-                      <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={(e) => { e.stopPropagation(); navigate(`/profile/${user.userId}`); }}>
-                          <Eye className="w-3.5 h-3.5 text-primary" />
-                        </Button>
-                      </div>
-                    }
-                  />
-                ))}
-              </>
-            )}
+              {filteredOther.length > 0 && (
+                <>
+                  <div className="px-4 py-2 bg-muted/30 border-b border-border/30">
+                    <span className="text-xs font-semibold text-muted-foreground">
+                      Other Languages
+                    </span>
+                    <span className="text-[10px] text-muted-foreground ml-1">
+                      ({filteredOther.length})
+                    </span>
+                  </div>
+                  {filteredOther.map((user) => (
+                    <UserContactCard
+                      key={user.userId}
+                      userId={user.userId}
+                      name={user.fullName}
+                      photoUrl={user.photoUrl}
+                      age={user.age}
+                      language={user.motherTongue}
+                      country={user.country}
+                      state={user.state}
+                      isPremium={user.hasRecharged}
+                      walletBalance={user.walletBalance}
+                      activeChatCount={user.activeChatCount}
+                      subtitle={
+                        userCodeMap[user.userId]
+                          ? `${userCodeMap[user.userId]} • ${user.motherTongue} → ${currentWomanLanguage}`
+                          : `${user.motherTongue} → ${currentWomanLanguage}`
+                      }
+                      onClick={() => handleStartChatWithUser(user.userId)}
+                      actions={
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/profile/${user.userId}`);
+                            }}
+                          >
+                            <Eye className="w-3.5 h-3.5 text-primary" />
+                          </Button>
+                        </div>
+                      }
+                    />
+                  ))}
+                </>
+              )}
 
-            {filteredSame.length === 0 && filteredOther.length === 0 && (
-              <div className="text-center py-16">
-                <Users className="w-16 h-16 text-muted-foreground/20 mx-auto mb-4" />
-                <p className="text-muted-foreground text-sm">{searchOnline ? 'No matches found' : 'No recharged men online'}</p>
-                <p className="text-muted-foreground/60 text-xs mt-1">{searchOnline ? 'Try a different search' : 'Only men with wallet balance are shown here'}</p>
-              </div>
-            )}
-          </>
-        );
-      })()}
+              {filteredSame.length === 0 && filteredOther.length === 0 && (
+                <div className="text-center py-16">
+                  <Users className="w-16 h-16 text-muted-foreground/20 mx-auto mb-4" />
+                  <p className="text-muted-foreground text-sm">
+                    {searchOnline ? "No matches found" : "No recharged men online"}
+                  </p>
+                  <p className="text-muted-foreground/60 text-xs mt-1">
+                    {searchOnline
+                      ? "Try a different search"
+                      : "Only men with wallet balance are shown here"}
+                  </p>
+                </div>
+              )}
+            </>
+          );
+        })()}
 
       {/* No Balance sub-tab content */}
-      {onlineSubTab === "nobalance" && (() => {
-        const filteredFree = nonRechargedMen.filter(u => matchesUserSearch(searchOnline, u.userId, u.fullName));
-        if (filteredFree.length === 0) {
-          return (
-            <div className="text-center py-16">
-              <Users className="w-16 h-16 text-muted-foreground/20 mx-auto mb-4" />
-              <p className="text-muted-foreground text-sm">{searchOnline ? 'No matches found' : 'No men without balance online'}</p>
-            </div>
+      {onlineSubTab === "nobalance" &&
+        (() => {
+          const filteredFree = nonRechargedMen.filter((u) =>
+            matchesUserSearch(searchOnline, u.userId, u.fullName),
           );
-        }
-        return filteredFree.map((user) => (
-          <UserContactCard
-            key={user.userId}
-            userId={user.userId}
-            name={user.fullName}
-            subtitle={userCodeMap[user.userId] || undefined}
-            photoUrl={user.photoUrl}
-            age={user.age}
-            language={user.motherTongue}
-            country={user.country}
-            state={user.state}
-            walletBalance={user.walletBalance}
-            activeChatCount={user.activeChatCount}
-            actions={
-              <div className="flex items-center gap-1">
-                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={(e) => { e.stopPropagation(); navigate(`/profile/${user.userId}`); }}>
-                  <Eye className="w-3.5 h-3.5 text-primary" />
-                </Button>
+          if (filteredFree.length === 0) {
+            return (
+              <div className="text-center py-16">
+                <Users className="w-16 h-16 text-muted-foreground/20 mx-auto mb-4" />
+                <p className="text-muted-foreground text-sm">
+                  {searchOnline ? "No matches found" : "No men without balance online"}
+                </p>
               </div>
-            }
-          />
-        ));
-      })()}
-
+            );
+          }
+          return filteredFree.map((user) => (
+            <UserContactCard
+              key={user.userId}
+              userId={user.userId}
+              name={user.fullName}
+              subtitle={userCodeMap[user.userId] || undefined}
+              photoUrl={user.photoUrl}
+              age={user.age}
+              language={user.motherTongue}
+              country={user.country}
+              state={user.state}
+              walletBalance={user.walletBalance}
+              activeChatCount={user.activeChatCount}
+              actions={
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 p-0"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/profile/${user.userId}`);
+                    }}
+                  >
+                    <Eye className="w-3.5 h-3.5 text-primary" />
+                  </Button>
+                </div>
+              }
+            />
+          ));
+        })()}
     </div>
   );
 
@@ -1408,112 +1650,178 @@ const WomenDashboardScreen = () => {
           <MessageCircle className="h-4 w-4 text-primary" />
           Active Chats ({womenActiveChats.length})
         </span>
-        <Button variant="ghost" size="sm" onClick={() => fetchWomenActiveChats()} disabled={loadingWomenChats} className="h-7 w-7 p-0" aria-label="Refresh chats">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => fetchWomenActiveChats()}
+          disabled={loadingWomenChats}
+          className="h-7 w-7 p-0"
+          aria-label="Refresh chats"
+        >
           <RefreshCw className={cn("w-3.5 h-3.5", loadingWomenChats && "animate-spin")} />
         </Button>
       </div>
       <div className="px-3 py-2 border-b border-border/30">
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-          <Input value={searchChats} onChange={(e) => setSearchChats(e.target.value)} placeholder="Search GESS ID, User ID, or name…" className="h-8 pl-8 text-xs" />
+          <Input
+            value={searchChats}
+            onChange={(e) => setSearchChats(e.target.value)}
+            placeholder="Search GESS ID, User ID, or name…"
+            className="h-8 pl-8 text-xs"
+          />
         </div>
       </div>
       {loadingWomenChats && womenActiveChats.length === 0 ? (
         <div className="flex items-center justify-center py-16">
           <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
         </div>
-      ) : (() => {
-        const q = searchChats.trim().toLowerCase();
-        const showAdminPin = !q || "admin".includes(q);
-        const filteredChats = womenActiveChats.filter(c => matchesUserSearch(searchChats, c.partnerId, c.partnerName));
-        if (!showAdminPin && filteredChats.length === 0) {
-          return (
-            <div className="text-center py-16">
-              <MessageCircle className="w-16 h-16 text-muted-foreground/20 mx-auto mb-4" />
-              <p className="text-muted-foreground text-sm">{searchChats ? 'No matches found' : 'No active chats'}</p>
-              <p className="text-muted-foreground/60 text-xs mt-1">{searchChats ? 'Try a different search' : 'Start a chat from the Online tab'}</p>
-            </div>
+      ) : (
+        (() => {
+          const q = searchChats.trim().toLowerCase();
+          const showAdminPin = !q || "admin".includes(q);
+          const filteredChats = womenActiveChats.filter((c) =>
+            matchesUserSearch(searchChats, c.partnerId, c.partnerName),
           );
-        }
-        return (
-          <>
-            {showAdminPin && (
-              <AdminPinnedChatRow unread={unreadAdminChat} onClick={() => setShowAdminChat(true)} />
-            )}
-            {filteredChats.length === 0 && !searchChats ? (
-              <p className="text-center text-xs text-muted-foreground py-6">Start a user chat from the Online tab</p>
-            ) : null}
-            {filteredChats.map((chat) => (
-          <div
-            key={chat.chatId}
-            className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 active:bg-muted/70 transition-colors cursor-pointer border-b border-border/30"
-            onClick={() => navigate(`/chat/${chat.partnerId}`)}
-          >
-            <div className="relative flex-shrink-0">
-              <Avatar className="h-12 w-12 border-2 border-background shadow-sm">
-                <AvatarImage src={chat.partnerPhoto || undefined} />
-                <AvatarFallback className="bg-gradient-to-br from-primary to-primary/60 text-primary-foreground">
-                  {chat.partnerName?.charAt(0) || <User className="w-5 h-5" />}
-                </AvatarFallback>
-              </Avatar>
-              <span
-                className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-background"
-                style={{
-                  background: chat.partnerIsOnline
-                    ? (chat.partnerStatus === 'busy' ? '#FFA726' : '#4CAF50')
-                    : '#9E9E9E',
-                }}
-              />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <span className={cn("text-sm truncate", chat.unreadCount > 0 ? "font-bold text-foreground" : "font-semibold text-foreground")}>{chat.partnerName}</span>
-                  {userCodeMap[chat.partnerId] && (
-                    <span className="text-[9px] px-1 py-0.5 rounded bg-muted text-muted-foreground font-mono flex-shrink-0">{userCodeMap[chat.partnerId]}</span>
-                  )}
-                  {(() => {
-                    const ageMs = Date.now() - new Date(chat.lastMessageAt).getTime();
-                    if (chat.partnerIsOnline && ageMs < 60000) {
-                      return (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-red-500 text-white flex items-center gap-1 flex-shrink-0 animate-pulse">
-                          <span className="w-1.5 h-1.5 rounded-full bg-white" />
-                          LIVE
-                        </span>
-                      );
-                    }
-                    if (chat.partnerIsOnline && chat.partnerActiveChatCount > 0) {
-                      return <span className="text-[9px] px-1 py-0.5 rounded bg-amber-100 text-amber-700 flex-shrink-0">In Chat</span>;
-                    }
-                    if (chat.partnerIsOnline) {
-                      return <span className="text-[9px] px-1 py-0.5 rounded bg-online/20 text-online flex-shrink-0">Online</span>;
-                    }
-                    return <span className="text-[9px] px-1 py-0.5 rounded bg-muted text-muted-foreground flex-shrink-0">Offline</span>;
-                  })()}
-                </div>
-                <span className={cn("text-[10px] flex-shrink-0 ml-2", chat.unreadCount > 0 ? "text-primary font-semibold" : "text-muted-foreground")}>
-                  {formatChatTime(chat.lastMessageAt)}
-                </span>
-              </div>
-              <div className="flex items-center justify-between mt-0.5">
-                <p className={cn("text-xs truncate flex items-center gap-1", chat.unreadCount > 0 ? "text-foreground font-medium" : "text-muted-foreground")}>
-                  {chat.lastMessageSenderId === currentUserId && chat.lastMessage && (
-                    <span className="text-[#4FC3F7] flex-shrink-0">✓✓</span>
-                  )}
-                  {chat.lastMessageSenderId === currentUserId ? `You: ${chat.lastMessage}` : chat.lastMessage || "No messages yet"}
+          if (!showAdminPin && filteredChats.length === 0) {
+            return (
+              <div className="text-center py-16">
+                <MessageCircle className="w-16 h-16 text-muted-foreground/20 mx-auto mb-4" />
+                <p className="text-muted-foreground text-sm">
+                  {searchChats ? "No matches found" : "No active chats"}
                 </p>
-                {chat.unreadCount > 0 && (
-                  <span className="min-w-[20px] h-[20px] rounded-full bg-primary text-primary-foreground text-[11px] font-bold flex items-center justify-center px-1.5 flex-shrink-0 ml-2">
-                    {chat.unreadCount > 99 ? "99+" : chat.unreadCount}
-                  </span>
-                )}
+                <p className="text-muted-foreground/60 text-xs mt-1">
+                  {searchChats ? "Try a different search" : "Start a chat from the Online tab"}
+                </p>
               </div>
-            </div>
-          </div>
-        ))}
-          </>
-        );
-      })()}
+            );
+          }
+          return (
+            <>
+              {showAdminPin && (
+                <AdminPinnedChatRow
+                  unread={unreadAdminChat}
+                  onClick={() => setShowAdminChat(true)}
+                />
+              )}
+              {filteredChats.length === 0 && !searchChats ? (
+                <p className="text-center text-xs text-muted-foreground py-6">
+                  Start a user chat from the Online tab
+                </p>
+              ) : null}
+              {filteredChats.map((chat) => (
+                <div
+                  key={chat.chatId}
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 active:bg-muted/70 transition-colors cursor-pointer border-b border-border/30"
+                  onClick={() => navigate(`/chat/${chat.partnerId}`)}
+                >
+                  <div className="relative flex-shrink-0">
+                    <Avatar className="h-12 w-12 border-2 border-background shadow-sm">
+                      <AvatarImage src={chat.partnerPhoto || undefined} />
+                      <AvatarFallback className="bg-gradient-to-br from-primary to-primary/60 text-primary-foreground">
+                        {chat.partnerName?.charAt(0) || <User className="w-5 h-5" />}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span
+                      className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-background"
+                      style={{
+                        background: chat.partnerIsOnline
+                          ? chat.partnerStatus === "busy"
+                            ? "#FFA726"
+                            : "#4CAF50"
+                          : "#9E9E9E",
+                      }}
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span
+                          className={cn(
+                            "text-sm truncate",
+                            chat.unreadCount > 0
+                              ? "font-bold text-foreground"
+                              : "font-semibold text-foreground",
+                          )}
+                        >
+                          {chat.partnerName}
+                        </span>
+                        {userCodeMap[chat.partnerId] && (
+                          <span className="text-[9px] px-1 py-0.5 rounded bg-muted text-muted-foreground font-mono flex-shrink-0">
+                            {userCodeMap[chat.partnerId]}
+                          </span>
+                        )}
+                        {(() => {
+                          const ageMs = Date.now() - new Date(chat.lastMessageAt).getTime();
+                          if (chat.partnerIsOnline && ageMs < 60000) {
+                            return (
+                              <span className="text-[9px] px-1.5 py-0.5 rounded bg-red-500 text-white flex items-center gap-1 flex-shrink-0 animate-pulse">
+                                <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                                LIVE
+                              </span>
+                            );
+                          }
+                          if (chat.partnerIsOnline && chat.partnerActiveChatCount > 0) {
+                            return (
+                              <span className="text-[9px] px-1 py-0.5 rounded bg-amber-100 text-amber-700 flex-shrink-0">
+                                In Chat
+                              </span>
+                            );
+                          }
+                          if (chat.partnerIsOnline) {
+                            return (
+                              <span className="text-[9px] px-1 py-0.5 rounded bg-online/20 text-online flex-shrink-0">
+                                Online
+                              </span>
+                            );
+                          }
+                          return (
+                            <span className="text-[9px] px-1 py-0.5 rounded bg-muted text-muted-foreground flex-shrink-0">
+                              Offline
+                            </span>
+                          );
+                        })()}
+                      </div>
+                      <span
+                        className={cn(
+                          "text-[10px] flex-shrink-0 ml-2",
+                          chat.unreadCount > 0
+                            ? "text-primary font-semibold"
+                            : "text-muted-foreground",
+                        )}
+                      >
+                        {formatChatTime(chat.lastMessageAt)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between mt-0.5">
+                      <p
+                        className={cn(
+                          "text-xs truncate flex items-center gap-1",
+                          chat.unreadCount > 0
+                            ? "text-foreground font-medium"
+                            : "text-muted-foreground",
+                        )}
+                      >
+                        {chat.lastMessageSenderId === currentUserId && chat.lastMessage && (
+                          <span className="text-[#4FC3F7] flex-shrink-0">✓✓</span>
+                        )}
+                        {chat.lastMessageSenderId === currentUserId
+                          ? `You: ${chat.lastMessage}`
+                          : chat.lastMessage || "No messages yet"}
+                      </p>
+                      {chat.unreadCount > 0 && (
+                        <span className="min-w-[20px] h-[20px] rounded-full bg-primary text-primary-foreground text-[11px] font-bold flex items-center justify-center px-1.5 flex-shrink-0 ml-2">
+                          {chat.unreadCount > 99 ? "99+" : chat.unreadCount}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </>
+          );
+        })()
+      )}
     </div>
   );
 
@@ -1524,13 +1832,25 @@ const WomenDashboardScreen = () => {
           <Video className="h-4 w-4 text-primary" />
           Private Groups
         </span>
-        <Button variant="ghost" size="sm" onClick={() => setGroupsRefreshKey(k => k + 1)} className="h-7 w-7 p-0" aria-label="Refresh groups">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setGroupsRefreshKey((k) => k + 1)}
+          className="h-7 w-7 p-0"
+          aria-label="Refresh groups"
+        >
           <RefreshCw className="w-3.5 h-3.5" />
         </Button>
       </div>
       {currentUserId ? (
         <div className="px-4 py-3">
-          <PrivateGroupsSection key={groupsRefreshKey} currentUserId={currentUserId} userName={userName || 'User'} userPhoto={userPhoto} userLanguage={currentWomanLanguage} />
+          <PrivateGroupsSection
+            key={groupsRefreshKey}
+            currentUserId={currentUserId}
+            userName={userName || "User"}
+            userPhoto={userPhoto}
+            userLanguage={currentWomanLanguage}
+          />
         </div>
       ) : (
         <div className="text-center py-10">
@@ -1548,54 +1868,83 @@ const WomenDashboardScreen = () => {
           <Heart className="h-4 w-4 text-primary" />
           Your Matches ({matchedMen.length})
         </span>
-        <Button variant="ghost" size="sm" onClick={() => currentUserId && fetchMatchedMen(currentUserId)} disabled={loadingMatches} className="h-7 w-7 p-0">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => currentUserId && fetchMatchedMen(currentUserId)}
+          disabled={loadingMatches}
+          className="h-7 w-7 p-0"
+        >
           <RefreshCw className={cn("w-3.5 h-3.5", loadingMatches && "animate-spin")} />
         </Button>
       </div>
       <div className="px-3 py-2 border-b border-border/30">
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-          <Input value={searchMatches} onChange={(e) => setSearchMatches(e.target.value)} placeholder="Search GESS ID, User ID, or name…" className="h-8 pl-8 text-xs" />
+          <Input
+            value={searchMatches}
+            onChange={(e) => setSearchMatches(e.target.value)}
+            placeholder="Search GESS ID, User ID, or name…"
+            className="h-8 pl-8 text-xs"
+          />
         </div>
       </div>
       {loadingMatches ? (
         <div className="flex items-center justify-center py-16">
           <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
         </div>
-      ) : (() => {
-        const filteredMatches = matchedMen.filter(m => matchesUserSearch(searchMatches, m.userId, m.fullName));
-        if (filteredMatches.length === 0) {
-          return (
-            <div className="text-center py-16">
-              <Heart className="w-16 h-16 text-muted-foreground/20 mx-auto mb-4" />
-              <p className="text-muted-foreground text-sm">{searchMatches ? 'No matches found' : 'No matches yet'}</p>
-              <p className="text-muted-foreground/60 text-xs mt-1">{searchMatches ? 'Try a different search' : 'Matches will appear here when men connect with you'}</p>
-            </div>
+      ) : (
+        (() => {
+          const filteredMatches = matchedMen.filter((m) =>
+            matchesUserSearch(searchMatches, m.userId, m.fullName),
           );
-        }
-        return filteredMatches.map((man) => (
-          <UserContactCard
-            key={man.matchId}
-            userId={man.userId}
-            name={man.fullName || "User"}
-            subtitle={userCodeMap[man.userId] || undefined}
-            photoUrl={man.photoUrl}
-            age={man.age}
-            language={man.primaryLanguage}
-            state={man.state}
-            country={man.country}
-            isOnline={man.isOnline}
-            onClick={() => handleStartChatWithUser(man.userId)}
-            actions={
-              <div className="flex items-center gap-1">
-                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={(e) => { e.stopPropagation(); navigate(`/profile/${man.userId}`); }}>
-                  <Eye className="w-3.5 h-3.5 text-primary" />
-                </Button>
+          if (filteredMatches.length === 0) {
+            return (
+              <div className="text-center py-16">
+                <Heart className="w-16 h-16 text-muted-foreground/20 mx-auto mb-4" />
+                <p className="text-muted-foreground text-sm">
+                  {searchMatches ? "No matches found" : "No matches yet"}
+                </p>
+                <p className="text-muted-foreground/60 text-xs mt-1">
+                  {searchMatches
+                    ? "Try a different search"
+                    : "Matches will appear here when men connect with you"}
+                </p>
               </div>
-            }
-          />
-        ));
-      })()}
+            );
+          }
+          return filteredMatches.map((man) => (
+            <UserContactCard
+              key={man.matchId}
+              userId={man.userId}
+              name={man.fullName || "User"}
+              subtitle={userCodeMap[man.userId] || undefined}
+              photoUrl={man.photoUrl}
+              age={man.age}
+              language={man.primaryLanguage}
+              state={man.state}
+              country={man.country}
+              isOnline={man.isOnline}
+              onClick={() => handleStartChatWithUser(man.userId)}
+              actions={
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 p-0"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/profile/${man.userId}`);
+                    }}
+                  >
+                    <Eye className="w-3.5 h-3.5 text-primary" />
+                  </Button>
+                </div>
+              }
+            />
+          ));
+        })()
+      )}
     </div>
   );
 
@@ -1607,7 +1956,7 @@ const WomenDashboardScreen = () => {
             currentUserId={currentUserId}
             languageCode={currentWomanLanguageCode || "eng_Latn"}
             languageName={currentWomanLanguage}
-            userName={userName || 'User'}
+            userName={userName || "User"}
             userPhoto={userPhoto}
           />
         </div>
@@ -1623,17 +1972,30 @@ const WomenDashboardScreen = () => {
   const renderWalletTab = () => (
     <div className="min-h-0 h-full overflow-y-auto overscroll-contain scroll-smooth">
       {/* Wallet Balance */}
-      <div className="px-4 py-4 border-b border-border/30 bg-gradient-to-br from-primary/5 to-transparent" onClick={() => navigate("/women-wallet")}>
+      <div
+        className="px-4 py-4 border-b border-border/30 bg-gradient-to-br from-primary/5 to-transparent"
+        onClick={() => navigate("/women-wallet")}
+      >
         <div className="flex items-center gap-3">
           <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
             <Wallet className="w-7 h-7 text-primary" />
           </div>
           <div className="flex-1">
             <p className="text-xs text-muted-foreground">Wallet Balance</p>
-            <p className="text-2xl font-bold text-primary">{formatLocalCurrency(myWalletBalance)}</p>
+            <p className="text-2xl font-bold text-primary">
+              {formatLocalCurrency(myWalletBalance)}
+            </p>
           </div>
-          <Button variant="outline" size="sm" disabled aria-disabled="true" className="gap-1 text-primary border-primary/30 opacity-50 cursor-not-allowed" onClick={(e) => e.stopPropagation()}>
-            <IndianRupee className="w-3.5 h-3.5" />Withdraw
+          <Button
+            variant="outline"
+            size="sm"
+            disabled
+            aria-disabled="true"
+            className="gap-1 text-primary border-primary/30 opacity-50 cursor-not-allowed"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <IndianRupee className="w-3.5 h-3.5" />
+            Withdraw
           </Button>
         </div>
         <p className="text-[10px] text-muted-foreground mt-2 leading-snug">
@@ -1645,17 +2007,39 @@ const WomenDashboardScreen = () => {
       <div className="px-4 py-3 border-b border-border/30">
         <p className="text-xs font-semibold text-muted-foreground mb-2">Your Earning Rates</p>
         <div className="grid grid-cols-2 gap-2 text-xs">
-          <div className="flex justify-between bg-muted/50 rounded px-2 py-1"><span>Chat</span><span className="font-semibold">{formatLocalCurrency(pricing.womenEarningRate)}/min</span></div>
-          <div className="flex justify-between bg-muted/50 rounded px-2 py-1"><span>Audio</span><span className="font-semibold">{formatLocalCurrency(pricing.audioWomenEarningRate)}/min</span></div>
-          <div className="flex justify-between bg-muted/50 rounded px-2 py-1"><span>Video</span><span className="font-semibold">{formatLocalCurrency(pricing.videoWomenEarningRate)}/min</span></div>
-          <div className="flex justify-between bg-muted/50 rounded px-2 py-1"><span>Group</span><span className="font-semibold">{formatLocalCurrency(pricing.groupCallWomenEarningRate)}/min</span></div>
+          <div className="flex justify-between bg-muted/50 rounded px-2 py-1">
+            <span>Chat</span>
+            <span className="font-semibold">
+              {formatLocalCurrency(pricing.womenEarningRate)}/min
+            </span>
+          </div>
+          <div className="flex justify-between bg-muted/50 rounded px-2 py-1">
+            <span>Audio</span>
+            <span className="font-semibold">
+              {formatLocalCurrency(pricing.audioWomenEarningRate)}/min
+            </span>
+          </div>
+          <div className="flex justify-between bg-muted/50 rounded px-2 py-1">
+            <span>Video</span>
+            <span className="font-semibold">
+              {formatLocalCurrency(pricing.videoWomenEarningRate)}/min
+            </span>
+          </div>
+          <div className="flex justify-between bg-muted/50 rounded px-2 py-1">
+            <span>Group</span>
+            <span className="font-semibold">
+              {formatLocalCurrency(pricing.groupCallWomenEarningRate)}/min
+            </span>
+          </div>
         </div>
       </div>
 
       {/* Today's Earnings */}
       <div className="grid grid-cols-2 gap-0 border-b border-border/30">
         <div className="text-center py-4 border-r border-border/30">
-          <p className="text-xl font-bold text-primary">{formatLocalCurrency(stats.todayEarnings)}</p>
+          <p className="text-xl font-bold text-primary">
+            {formatLocalCurrency(stats.todayEarnings)}
+          </p>
           <p className="text-[10px] text-muted-foreground">Today's Earnings</p>
         </div>
         <div className="text-center py-4">
@@ -1674,10 +2058,11 @@ const WomenDashboardScreen = () => {
             <p className="text-xs text-muted-foreground">Top Earner Today</p>
             <p className="text-sm font-semibold text-foreground">{biggestEarner.name}</p>
           </div>
-          <span className="text-lg font-bold text-primary">{formatLocalCurrency(biggestEarner.amount)}</span>
+          <span className="text-lg font-bold text-primary">
+            {formatLocalCurrency(biggestEarner.amount)}
+          </span>
         </div>
       )}
-
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-0 border-b border-border/30">
@@ -1686,7 +2071,9 @@ const WomenDashboardScreen = () => {
           <p className="text-[10px] text-muted-foreground">Matches</p>
         </div>
         <div className="text-center py-4 border-r border-border/30">
-          <p className="text-xl font-bold text-foreground">{sameLanguageMen.length + otherLanguageMen.length}</p>
+          <p className="text-xl font-bold text-foreground">
+            {sameLanguageMen.length + otherLanguageMen.length}
+          </p>
           <p className="text-[10px] text-muted-foreground">Online Men</p>
         </div>
         <div className="text-center py-4">
@@ -1697,11 +2084,25 @@ const WomenDashboardScreen = () => {
 
       {/* Quick links */}
       {[
-        { icon: <Wallet className="w-5 h-5 text-primary" />, label: "Wallet & Withdrawals", onClick: () => navigate("/women-wallet") },
-        { icon: <Heart className="w-5 h-5 text-primary" />, label: "Discover Matches", onClick: () => navigate("/match-discovery") },
+        {
+          icon: <Wallet className="w-5 h-5 text-primary" />,
+          label: "Wallet & Withdrawals",
+          onClick: () => navigate("/women-wallet"),
+        },
+        {
+          icon: <Heart className="w-5 h-5 text-primary" />,
+          label: "Discover Matches",
+          onClick: () => navigate("/match-discovery"),
+        },
       ].map((item, i) => (
-        <div key={i} className="px-4 py-3 flex items-center gap-3 border-b border-border/30 hover:bg-muted/50 cursor-pointer" onClick={item.onClick}>
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">{item.icon}</div>
+        <div
+          key={i}
+          className="px-4 py-3 flex items-center gap-3 border-b border-border/30 hover:bg-muted/50 cursor-pointer"
+          onClick={item.onClick}
+        >
+          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+            {item.icon}
+          </div>
           <span className="text-sm font-medium text-foreground">{item.label}</span>
           <ChevronRight className="w-4 h-4 text-muted-foreground ml-auto" />
         </div>
@@ -1720,27 +2121,65 @@ const WomenDashboardScreen = () => {
         </Avatar>
         <h2 className="text-lg font-bold text-foreground">{userName || "User"}</h2>
         {appId && (
-          <Badge variant="outline" className="mt-1 font-mono text-[11px] border-primary/40 text-primary">
+          <Badge
+            variant="outline"
+            className="mt-1 font-mono text-[11px] border-primary/40 text-primary"
+          >
             App ID: {appId}
           </Badge>
         )}
-        <p className="text-xs text-muted-foreground mt-1">{currentWomanLanguage} • {currentWomanCountry}</p>
+        <p className="text-xs text-muted-foreground mt-1">
+          {currentWomanLanguage} • {currentWomanCountry}
+        </p>
         <Badge className={cn("mt-2 text-[10px] text-primary-foreground", getStatusColor())}>
           {getStatusText()}
         </Badge>
-        
       </div>
 
       {[
-        { icon: <User className="w-5 h-5 text-primary" />, label: "Edit Profile", onClick: () => setProfileEditOpen(true) },
-        { icon: <Wallet className="w-5 h-5 text-primary" />, label: "Earnings & Wallet", onClick: () => navigate("/women-wallet") },
-        { icon: <Heart className="w-5 h-5 text-primary" />, label: "Discover Matches", onClick: () => navigate("/match-discovery") },
-        { icon: <Eye className="w-5 h-5 text-primary" />, label: "Online Users", onClick: () => navigate("/online-users") },
-        ...(isIndianWoman ? [{ icon: <FileCheck className="w-5 h-5 text-primary" />, label: "Bank KYC", onClick: () => setShowKYCForm(true) }] : []),
-        { icon: <Settings className="w-5 h-5 text-primary" />, label: "Settings", onClick: () => navigate("/settings") },
+        {
+          icon: <User className="w-5 h-5 text-primary" />,
+          label: "Edit Profile",
+          onClick: () => setProfileEditOpen(true),
+        },
+        {
+          icon: <Wallet className="w-5 h-5 text-primary" />,
+          label: "Earnings & Wallet",
+          onClick: () => navigate("/women-wallet"),
+        },
+        {
+          icon: <Heart className="w-5 h-5 text-primary" />,
+          label: "Discover Matches",
+          onClick: () => navigate("/match-discovery"),
+        },
+        {
+          icon: <Eye className="w-5 h-5 text-primary" />,
+          label: "Online Users",
+          onClick: () => navigate("/online-users"),
+        },
+        ...(isIndianWoman
+          ? [
+              {
+                icon: <FileCheck className="w-5 h-5 text-primary" />,
+                label: "Bank KYC",
+                onClick: () => setShowKYCForm(true),
+              },
+            ]
+          : []),
+        {
+          icon: <Settings className="w-5 h-5 text-primary" />,
+          label: "Settings",
+          onClick: () => navigate("/settings"),
+        },
       ].map((item, i) => (
-        <div key={i} className="px-4 py-3 flex items-center gap-3 border-b border-border/30 hover:bg-muted/50 cursor-pointer" onClick={item.onClick}>
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">{item.icon}</div>
+        <div
+          key={i}
+          className="px-4 py-3 flex items-center gap-3 border-b border-border/30 hover:bg-muted/50 cursor-pointer"
+          onClick={item.onClick}
+        >
+          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+            {item.icon}
+          </div>
           <span className="text-sm font-medium text-foreground">{item.label}</span>
           <ChevronRight className="w-4 h-4 text-muted-foreground ml-auto" />
         </div>
@@ -1749,20 +2188,23 @@ const WomenDashboardScreen = () => {
   );
 
   return (
-    <div className="flex flex-col bg-background overflow-hidden" style={{ height: '100dvh', maxHeight: '100dvh' }}>
+    <div
+      className="flex flex-col bg-background overflow-hidden"
+      style={{ height: "100dvh", maxHeight: "100dvh" }}
+    >
       <AppHeader
         isOnline={isOnline}
         onToggleOnline={(checked) => {
           toggleOnlineStatus(checked);
           toast({
-            title: checked ? 'You are now Online' : 'You are now Offline',
-            description: checked ? 'Men can see you' : 'You are hidden from others',
+            title: checked ? "You are now Online" : "You are now Offline",
+            description: checked ? "Men can see you" : "You are hidden from others",
           });
         }}
         onAdminMessages={() => setShowAdminMessages(true)}
         onAdminChat={() => setShowAdminChat(true)}
         onFriends={() => setShowFriendsPanel(true)}
-        onSettings={() => navigate('/settings')}
+        onSettings={() => navigate("/settings")}
         onLogout={handleLogout}
         unreadAdminMessages={unreadAdminMessages}
         unreadAdminChat={unreadAdminChat}
@@ -1796,13 +2238,21 @@ const WomenDashboardScreen = () => {
         {activeTab === "groups" && renderGroupsTab()}
         {activeTab === "groupchat" && (
           <div className="min-h-0 h-full">
-            <GroupChatTab currentUserId={currentUserId} viewerGender="female" viewerName={userName} />
+            <GroupChatTab
+              currentUserId={currentUserId}
+              viewerGender="female"
+              viewerName={userName}
+            />
           </div>
         )}
         {activeTab === "tl" && currentUserId && (
           <div className="min-h-0 h-full">
             {isTL ? (
-              <TLCommunicationTab currentUserId={currentUserId} userName={userName || "User"} userPhoto={userPhoto} />
+              <TLCommunicationTab
+                currentUserId={currentUserId}
+                userName={userName || "User"}
+                userPhoto={userPhoto}
+              />
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-center px-6">
                 <Shield className="w-12 h-12 text-muted-foreground/30 mb-3" />
@@ -1821,19 +2271,27 @@ const WomenDashboardScreen = () => {
         )}
 
         {activeTab === "wallet" && renderWalletTab()}
-        {activeTab === "statement" && <div className="min-h-0 h-full overflow-y-auto overscroll-contain scroll-smooth"><StatementTab userId={currentUserId} gender="female" /></div>}
+        {activeTab === "statement" && (
+          <div className="min-h-0 h-full overflow-y-auto overscroll-contain scroll-smooth">
+            <StatementTab userId={currentUserId} gender="female" />
+          </div>
+        )}
         {activeTab === "profile" && renderProfileTab()}
       </div>
 
       <AppBottomTabs tabs={womenTabs} activeTab={activeTab} onTabChange={handleTabChange} />
 
       {/* Profile Edit Dialog */}
-      <ProfileEditDialog open={profileEditOpen} onOpenChange={setProfileEditOpen} onProfileUpdated={() => loadDashboardData()} />
+      <ProfileEditDialog
+        open={profileEditOpen}
+        onOpenChange={setProfileEditOpen}
+        onProfileUpdated={() => loadDashboardData()}
+      />
 
       {/* Chat windows removed — chats are async (WhatsApp-style), accessed via Chats tab */}
 
       {/* Incoming Call Banner */}
-      {incomingCall && callStatus === 'idle' && (
+      {incomingCall && callStatus === "idle" && (
         <IncomingCallBanner
           callerName={incomingCall.callerName}
           callerPhoto={incomingCall.callerPhoto}
@@ -1844,12 +2302,16 @@ const WomenDashboardScreen = () => {
                 .from("user_blocks")
                 .select("id")
                 .or(
-                  `and(blocked_by.eq.${currentUserId},blocked_user_id.eq.${incomingCall.callerUserId}),and(blocked_by.eq.${incomingCall.callerUserId},blocked_user_id.eq.${currentUserId})`
+                  `and(blocked_by.eq.${currentUserId},blocked_user_id.eq.${incomingCall.callerUserId}),and(blocked_by.eq.${incomingCall.callerUserId},blocked_user_id.eq.${currentUserId})`,
                 )
                 .limit(1)
                 .maybeSingle();
               if (blockHit) {
-                toast({ title: "Call blocked", description: "You cannot accept calls from blocked users.", variant: "destructive" });
+                toast({
+                  title: "Call blocked",
+                  description: "You cannot accept calls from blocked users.",
+                  variant: "destructive",
+                });
                 declineCall(incomingCall.callId);
                 clearIncomingCall();
                 return;
@@ -1857,7 +2319,13 @@ const WomenDashboardScreen = () => {
             } catch {
               /* proceed */
             }
-            acceptCall(incomingCall.callId, incomingCall.callType, incomingCall.callerUserId, incomingCall.callerName, incomingCall.callerPhoto);
+            acceptCall(
+              incomingCall.callId,
+              incomingCall.callType,
+              incomingCall.callerUserId,
+              incomingCall.callerName,
+              incomingCall.callerPhoto,
+            );
             clearIncomingCall();
           }}
           onDecline={() => {
@@ -1868,7 +2336,7 @@ const WomenDashboardScreen = () => {
       )}
 
       {/* WhatsApp Call Screen */}
-      {(callStatus === 'connecting' || callStatus === 'active') && (
+      {(callStatus === "connecting" || callStatus === "active") && (
         <CallScreen
           status={callStatus}
           activeCall={activeCall}
@@ -1883,29 +2351,65 @@ const WomenDashboardScreen = () => {
 
       {/* Friends & Blocked Panel */}
       {showFriendsPanel && currentUserId && (
-        <FriendsBlockedPanel currentUserId={currentUserId} userGender="female" onClose={() => setShowFriendsPanel(false)} />
+        <FriendsBlockedPanel
+          currentUserId={currentUserId}
+          userGender="female"
+          onClose={() => setShowFriendsPanel(false)}
+        />
       )}
 
       {/* Admin Messages Sheet */}
       <Sheet open={showAdminMessages} onOpenChange={setShowAdminMessages}>
-        <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto rounded-t-2xl pb-[env(safe-area-inset-bottom)]">
-          <SheetHeader><SheetTitle className="flex items-center gap-2"><Mail className="w-5 h-5 text-primary" />Admin Messages</SheetTitle></SheetHeader>
-          {currentUserId && <div className="mt-4"><AdminMessagesWidget currentUserId={currentUserId} /></div>}
+        <SheetContent
+          side="bottom"
+          className="max-h-[85vh] overflow-y-auto rounded-t-2xl pb-[env(safe-area-inset-bottom)]"
+        >
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2">
+              <Mail className="w-5 h-5 text-primary" />
+              Admin Messages
+            </SheetTitle>
+          </SheetHeader>
+          {currentUserId && (
+            <div className="mt-4">
+              <AdminMessagesWidget currentUserId={currentUserId} />
+            </div>
+          )}
         </SheetContent>
       </Sheet>
 
       {/* Admin Chat Sheet */}
       <Sheet open={showAdminChat} onOpenChange={setShowAdminChat}>
-        <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto rounded-t-2xl pb-[env(safe-area-inset-bottom)]">
-          <SheetHeader><SheetTitle className="flex items-center gap-2"><Shield className="w-5 h-5 text-primary" />Chat with Admin</SheetTitle></SheetHeader>
-          {currentUserId && <div className="mt-4"><UserAdminChat currentUserId={currentUserId} userName={userName || 'User'} embedded /></div>}
+        <SheetContent
+          side="bottom"
+          className="max-h-[85vh] overflow-y-auto rounded-t-2xl pb-[env(safe-area-inset-bottom)]"
+        >
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2">
+              <Shield className="w-5 h-5 text-primary" />
+              Chat with Admin
+            </SheetTitle>
+          </SheetHeader>
+          {currentUserId && (
+            <div className="mt-4">
+              <UserAdminChat currentUserId={currentUserId} userName={userName || "User"} embedded />
+            </div>
+          )}
         </SheetContent>
       </Sheet>
 
       {/* KYC Form Sheet */}
       <Sheet open={showKYCForm} onOpenChange={setShowKYCForm}>
-        <SheetContent side="bottom" className="max-h-[90vh] overflow-y-auto rounded-t-2xl pb-[env(safe-area-inset-bottom)]">
-          <SheetHeader><SheetTitle className="flex items-center gap-2"><FileCheck className="w-5 h-5 text-primary" />Bank KYC — Payout Verification</SheetTitle></SheetHeader>
+        <SheetContent
+          side="bottom"
+          className="max-h-[90vh] overflow-y-auto rounded-t-2xl pb-[env(safe-area-inset-bottom)]"
+        >
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2">
+              <FileCheck className="w-5 h-5 text-primary" />
+              Bank KYC — Payout Verification
+            </SheetTitle>
+          </SheetHeader>
           <div className="mt-4 pb-8">
             {showKYCForm ? <WomenKYCForm key="women-kyc-form" /> : null}
           </div>

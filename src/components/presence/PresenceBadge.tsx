@@ -1,11 +1,7 @@
 import { memo } from "react";
 import { cn } from "@/lib/utils";
 import { usePresence } from "@/hooks/usePresence";
-import {
-  PRESENCE_DOT_CLASS,
-  PRESENCE_TEXT_CLASS,
-  type PresenceStatus,
-} from "@/lib/presence";
+import { PRESENCE_DOT_CLASS, PRESENCE_TEXT_CLASS, type PresenceStatus } from "@/lib/presence";
 
 interface PresenceDotProps {
   userId: string;
@@ -28,7 +24,7 @@ export const PresenceDot = memo<PresenceDotProps>(({ userId, status, className, 
         "inline-block h-2.5 w-2.5 rounded-full ring-2 ring-background",
         dotClass,
         animate && "animate-pulse",
-        className
+        className,
       )}
       aria-label={p.label}
       title={s === "offline" ? p.lastSeenLabel : p.label}
@@ -53,13 +49,13 @@ export const PresenceBadge = memo<PresenceBadgeProps>(
     const p = usePresence(userId);
     const s = status ?? p.status;
     const label =
-      s === "offline" && showLastSeen ? p.lastSeenLabel : (s === status ? labelFor(s) : p.label);
+      s === "offline" && showLastSeen ? p.lastSeenLabel : s === status ? labelFor(s) : p.label;
     return (
       <span
         className={cn(
           "inline-flex items-center gap-1.5 text-xs",
           PRESENCE_TEXT_CLASS[s],
-          className
+          className,
         )}
         aria-live="polite"
       >
@@ -68,25 +64,32 @@ export const PresenceBadge = memo<PresenceBadgeProps>(
             className={cn(
               "h-1.5 w-1.5 rounded-full",
               PRESENCE_DOT_CLASS[s],
-              (s === "online" || s === "active" || s === "typing") && "animate-pulse"
+              (s === "online" || s === "active" || s === "typing") && "animate-pulse",
             )}
           />
         )}
         <span className="truncate">{label}</span>
       </span>
     );
-  }
+  },
 );
 PresenceBadge.displayName = "PresenceBadge";
 
 function labelFor(s: PresenceStatus): string {
   switch (s) {
-    case "online": return "Online";
-    case "active": return "Active now";
-    case "typing": return "Typing…";
-    case "away": return "Away";
-    case "busy": return "Busy";
-    case "in_call": return "In call";
-    case "offline": return "Offline";
+    case "online":
+      return "Online";
+    case "active":
+      return "Active now";
+    case "typing":
+      return "Typing…";
+    case "away":
+      return "Away";
+    case "busy":
+      return "Busy";
+    case "in_call":
+      return "In call";
+    case "offline":
+      return "Offline";
   }
 }

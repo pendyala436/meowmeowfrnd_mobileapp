@@ -8,7 +8,8 @@ import {
   type UserStatusRow,
 } from "@/lib/presence";
 
-const COLUMNS = "user_id,is_online,last_seen,status,status_text,active_call_count,active_chat_count";
+const COLUMNS =
+  "user_id,is_online,last_seen,status,status_text,active_call_count,active_chat_count";
 
 interface PresenceResult {
   status: PresenceStatus;
@@ -37,14 +38,17 @@ function uniqueTopic(prefix: string): string {
 export function usePresence(
   userId: string | null | undefined,
   isTyping = false,
-  options?: UsePresenceOptions
+  options?: UsePresenceOptions,
 ): PresenceResult {
   const realtime = options?.realtime !== false;
   const [row, setRow] = useState<UserStatusRow | null>(null);
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
-    if (!userId) { setRow(null); return; }
+    if (!userId) {
+      setRow(null);
+      return;
+    }
     let cancelled = false;
     let channel: ReturnType<typeof supabase.channel> | null = null;
 
@@ -53,7 +57,9 @@ export function usePresence(
       .select(COLUMNS)
       .eq("user_id", userId)
       .maybeSingle()
-      .then(({ data }) => { if (!cancelled) setRow((data as UserStatusRow) ?? null); });
+      .then(({ data }) => {
+        if (!cancelled) setRow((data as UserStatusRow) ?? null);
+      });
 
     if (realtime) {
       try {
@@ -66,7 +72,7 @@ export function usePresence(
               if (cancelled) return;
               if (payload.eventType === "DELETE") setRow(null);
               else setRow((payload.new as UserStatusRow) ?? null);
-            }
+            },
           );
         channel.subscribe();
       } catch (err) {
@@ -108,7 +114,10 @@ export function usePresenceMap(userIds: string[]): Record<string, PresenceResult
 
   useEffect(() => {
     const ids = key ? key.split(",").filter(Boolean) : [];
-    if (ids.length === 0) { setRows({}); return; }
+    if (ids.length === 0) {
+      setRows({});
+      return;
+    }
     let cancelled = false;
     let channel: ReturnType<typeof supabase.channel> | null = null;
 
@@ -135,11 +144,13 @@ export function usePresenceMap(userIds: string[]): Record<string, PresenceResult
             if (!next || !ids.includes(next.user_id)) return;
             setRows((prev) => {
               if (payload.eventType === "DELETE") {
-                const copy = { ...prev }; delete copy[next.user_id]; return copy;
+                const copy = { ...prev };
+                delete copy[next.user_id];
+                return copy;
               }
               return { ...prev, [next.user_id]: next };
             });
-          }
+          },
         );
       channel.subscribe();
     } catch (err) {
@@ -160,7 +171,8 @@ export function usePresenceMap(userIds: string[]): Record<string, PresenceResult
     for (const [uid, row] of Object.entries(rows)) {
       const { status, lastSeen } = derivePresence(row);
       out[uid] = {
-        status, lastSeen,
+        status,
+        lastSeen,
         label: PRESENCE_LABEL[status],
         lastSeenLabel: formatLastSeen(lastSeen),
         row,

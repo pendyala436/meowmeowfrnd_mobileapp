@@ -22,7 +22,7 @@ const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error) => {
       if (import.meta.env.DEV) {
-        console.error('[ReactQuery] Query error:', error);
+        console.error("[ReactQuery] Query error:", error);
       }
     },
   }),
@@ -56,8 +56,8 @@ const ConfigError = () => (
     <div className="max-w-md w-full text-center space-y-4">
       <h1 className="text-2xl font-bold text-foreground">Configuration Error</h1>
       <p className="text-muted-foreground">
-        The app is missing required Supabase configuration. Please ensure
-        VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY are set.
+        The app is missing required Supabase configuration. Please ensure VITE_SUPABASE_URL and
+        VITE_SUPABASE_PUBLISHABLE_KEY are set.
       </p>
       <button
         onClick={() => window.location.reload()}
@@ -72,11 +72,12 @@ const ConfigError = () => (
 // Resilient lazy imports — retry once on chunk failure
 function lazyRetry(factory: () => Promise<{ default: React.ComponentType<any> }>) {
   return lazy(() =>
-    factory().catch(() =>
-      new Promise<{ default: React.ComponentType<any> }>((resolve) => {
-        setTimeout(() => resolve(factory()), 1500);
-      })
-    )
+    factory().catch(
+      () =>
+        new Promise<{ default: React.ComponentType<any> }>((resolve) => {
+          setTimeout(() => resolve(factory()), 1500);
+        }),
+    ),
   );
 }
 
@@ -158,82 +159,467 @@ const AppShell = () => {
   return (
     <SecurityProvider>
       <ScreenCaptureGuard>
-      <UserActivityProvider>
-        <AutoLogoutWrapper>
-          <Routes>
-          {/* Auth */}
-          <Route path="/" element={<RouteSuspense><AuthScreen /></RouteSuspense>} />
-          <Route path="/auth" element={<RouteSuspense><AuthScreen /></RouteSuspense>} />
-          <Route path="/captcha" element={<RouteSuspense><CaptchaScreen /></RouteSuspense>} />
-          <Route path="/gender-verify" element={<RouteSuspense><GenderVerifyScreen /></RouteSuspense>} />
-            <Route path="/forgot-password" element={<RouteSuspense><ForgotPasswordScreen /></RouteSuspense>} />
-            <Route path="/reset-password" element={<RouteSuspense><PasswordResetScreen /></RouteSuspense>} />
-            <Route path="/password-reset-success" element={<RouteSuspense><PasswordResetSuccessScreen /></RouteSuspense>} />
+        <UserActivityProvider>
+          <AutoLogoutWrapper>
+            <Routes>
+              {/* Auth */}
+              <Route
+                path="/"
+                element={
+                  <RouteSuspense>
+                    <AuthScreen />
+                  </RouteSuspense>
+                }
+              />
+              <Route
+                path="/auth"
+                element={
+                  <RouteSuspense>
+                    <AuthScreen />
+                  </RouteSuspense>
+                }
+              />
+              <Route
+                path="/captcha"
+                element={
+                  <RouteSuspense>
+                    <CaptchaScreen />
+                  </RouteSuspense>
+                }
+              />
+              <Route
+                path="/gender-verify"
+                element={
+                  <RouteSuspense>
+                    <GenderVerifyScreen />
+                  </RouteSuspense>
+                }
+              />
+              <Route
+                path="/forgot-password"
+                element={
+                  <RouteSuspense>
+                    <ForgotPasswordScreen />
+                  </RouteSuspense>
+                }
+              />
+              <Route
+                path="/reset-password"
+                element={
+                  <RouteSuspense>
+                    <PasswordResetScreen />
+                  </RouteSuspense>
+                }
+              />
+              <Route
+                path="/password-reset-success"
+                element={
+                  <RouteSuspense>
+                    <PasswordResetSuccessScreen />
+                  </RouteSuspense>
+                }
+              />
 
-            {/* Registration */}
-            <Route path="/register" element={<RouteSuspense><LanguageCountryScreen /></RouteSuspense>} />
-            <Route path="/basic-info" element={<RouteSuspense><BasicInfoScreen /></RouteSuspense>} />
-            <Route path="/personal-details" element={<RouteSuspense><PersonalDetailsScreen /></RouteSuspense>} />
-            <Route path="/voice-gender-verify" element={<RouteSuspense><VoiceGenderVerifyScreen /></RouteSuspense>} />
-            <Route path="/photo-upload" element={<RouteSuspense><PhotoUploadScreen /></RouteSuspense>} />
-            <Route path="/additional-photos" element={<RouteSuspense><AdditionalPhotosScreen /></RouteSuspense>} />
-            <Route path="/location-setup" element={<RouteSuspense><LocationSetupScreen /></RouteSuspense>} />
-            <Route path="/language-preferences" element={<RouteSuspense><LanguagePreferencesScreen /></RouteSuspense>} />
-            <Route path="/password-setup" element={<RouteSuspense><PasswordSetupScreen /></RouteSuspense>} />
-            <Route path="/terms-agreement" element={<RouteSuspense><TermsAgreementScreen /></RouteSuspense>} />
-            <Route path="/ai-processing" element={<RouteSuspense><AIProcessingScreen /></RouteSuspense>} />
-            <Route path="/registration-complete" element={<RouteSuspense><RegistrationCompleteScreen /></RouteSuspense>} />
-            <Route path="/approval-pending" element={<RouteSuspense><ApprovalPendingScreen /></RouteSuspense>} />
-            <Route path="/welcome" element={<RouteSuspense><WelcomeTutorialScreen /></RouteSuspense>} />
+              {/* Registration */}
+              <Route
+                path="/register"
+                element={
+                  <RouteSuspense>
+                    <LanguageCountryScreen />
+                  </RouteSuspense>
+                }
+              />
+              <Route
+                path="/basic-info"
+                element={
+                  <RouteSuspense>
+                    <BasicInfoScreen />
+                  </RouteSuspense>
+                }
+              />
+              <Route
+                path="/personal-details"
+                element={
+                  <RouteSuspense>
+                    <PersonalDetailsScreen />
+                  </RouteSuspense>
+                }
+              />
+              <Route
+                path="/voice-gender-verify"
+                element={
+                  <RouteSuspense>
+                    <VoiceGenderVerifyScreen />
+                  </RouteSuspense>
+                }
+              />
+              <Route
+                path="/photo-upload"
+                element={
+                  <RouteSuspense>
+                    <PhotoUploadScreen />
+                  </RouteSuspense>
+                }
+              />
+              <Route
+                path="/additional-photos"
+                element={
+                  <RouteSuspense>
+                    <AdditionalPhotosScreen />
+                  </RouteSuspense>
+                }
+              />
+              <Route
+                path="/location-setup"
+                element={
+                  <RouteSuspense>
+                    <LocationSetupScreen />
+                  </RouteSuspense>
+                }
+              />
+              <Route
+                path="/language-preferences"
+                element={
+                  <RouteSuspense>
+                    <LanguagePreferencesScreen />
+                  </RouteSuspense>
+                }
+              />
+              <Route
+                path="/password-setup"
+                element={
+                  <RouteSuspense>
+                    <PasswordSetupScreen />
+                  </RouteSuspense>
+                }
+              />
+              <Route
+                path="/terms-agreement"
+                element={
+                  <RouteSuspense>
+                    <TermsAgreementScreen />
+                  </RouteSuspense>
+                }
+              />
+              <Route
+                path="/ai-processing"
+                element={
+                  <RouteSuspense>
+                    <AIProcessingScreen />
+                  </RouteSuspense>
+                }
+              />
+              <Route
+                path="/registration-complete"
+                element={
+                  <RouteSuspense>
+                    <RegistrationCompleteScreen />
+                  </RouteSuspense>
+                }
+              />
+              <Route
+                path="/approval-pending"
+                element={
+                  <RouteSuspense>
+                    <ApprovalPendingScreen />
+                  </RouteSuspense>
+                }
+              />
+              <Route
+                path="/welcome"
+                element={
+                  <RouteSuspense>
+                    <WelcomeTutorialScreen />
+                  </RouteSuspense>
+                }
+              />
 
-            {/* Men Dashboard */}
-            <Route path="/dashboard" element={<ProtectedRoute requiredRole="male"><DashboardScreen /></ProtectedRoute>} />
+              {/* Men Dashboard */}
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute requiredRole="male">
+                    <DashboardScreen />
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* Women Dashboard */}
-            <Route path="/women-dashboard" element={<ProtectedRoute requiredRole="female"><WomenDashboardScreen /></ProtectedRoute>} />
+              {/* Women Dashboard */}
+              <Route
+                path="/women-dashboard"
+                element={
+                  <ProtectedRoute requiredRole="female">
+                    <WomenDashboardScreen />
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* Shared Features */}
-            <Route path="/chat/:partnerId" element={<ProtectedRoute><ChatScreen /></ProtectedRoute>} />
-            <Route path="/matching" element={<ProtectedRoute><MatchingScreen /></ProtectedRoute>} />
-            <Route path="/match-discovery" element={<ProtectedRoute><MatchDiscoveryScreen /></ProtectedRoute>} />
-            <Route path="/online-users" element={<ProtectedRoute><OnlineUsersScreen /></ProtectedRoute>} />
-            <Route path="/profile/:userId" element={<ProtectedRoute><ProfileDetailScreen /></ProtectedRoute>} />
-            <Route path="/settings" element={<ProtectedRoute><SettingsScreen /></ProtectedRoute>} />
-            <Route path="/private-groups" element={<ProtectedRoute><PrivateGroupsScreen /></ProtectedRoute>} />
-            <Route path="/wallet" element={<ProtectedRoute requiredRole="male"><WalletScreen /></ProtectedRoute>} />
-            <Route path="/women-wallet" element={<ProtectedRoute requiredRole="female"><WomenWalletScreen /></ProtectedRoute>} />
-            <Route path="/install" element={<RouteSuspense><InstallApp /></RouteSuspense>} />
+              {/* Shared Features */}
+              <Route
+                path="/chat/:partnerId"
+                element={
+                  <ProtectedRoute>
+                    <ChatScreen />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/matching"
+                element={
+                  <ProtectedRoute>
+                    <MatchingScreen />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/match-discovery"
+                element={
+                  <ProtectedRoute>
+                    <MatchDiscoveryScreen />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/online-users"
+                element={
+                  <ProtectedRoute>
+                    <OnlineUsersScreen />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile/:userId"
+                element={
+                  <ProtectedRoute>
+                    <ProfileDetailScreen />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/settings"
+                element={
+                  <ProtectedRoute>
+                    <SettingsScreen />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/private-groups"
+                element={
+                  <ProtectedRoute>
+                    <PrivateGroupsScreen />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/wallet"
+                element={
+                  <ProtectedRoute requiredRole="male">
+                    <WalletScreen />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/women-wallet"
+                element={
+                  <ProtectedRoute requiredRole="female">
+                    <WomenWalletScreen />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/install"
+                element={
+                  <RouteSuspense>
+                    <InstallApp />
+                  </RouteSuspense>
+                }
+              />
 
-            {/* Admin */}
-            <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
-            <Route path="/admin/users" element={<ProtectedRoute requiredRole="admin"><AdminUserManagement /></ProtectedRoute>} />
-            <Route path="/admin/analytics" element={<ProtectedRoute requiredRole="admin"><AdminAnalyticsDashboard /></ProtectedRoute>} />
-            <Route path="/admin/chat-monitoring" element={<ProtectedRoute requiredRole="admin"><AdminChatMonitoring /></ProtectedRoute>} />
-            <Route path="/admin/languages" element={<ProtectedRoute requiredRole="admin"><AdminLanguageGroups /></ProtectedRoute>} />
-            <Route path="/admin/language-limits" element={<ProtectedRoute requiredRole="admin"><AdminLanguageLimits /></ProtectedRoute>} />
-            <Route path="/admin/kyc" element={<ProtectedRoute requiredRole="admin"><AdminKYCManagement /></ProtectedRoute>} />
-            <Route path="/admin/user-lookup" element={<ProtectedRoute requiredRole="admin"><AdminUserLookup /></ProtectedRoute>} />
-            <Route path="/admin/moderation" element={<ProtectedRoute requiredRole="admin"><AdminModerationScreen /></ProtectedRoute>} />
-            <Route path="/admin/policy-alerts" element={<ProtectedRoute requiredRole="admin"><AdminPolicyAlerts /></ProtectedRoute>} />
-            <Route path="/admin/performance" element={<ProtectedRoute requiredRole="admin"><AdminPerformanceMonitoring /></ProtectedRoute>} />
-            <Route path="/admin/legal-documents" element={<ProtectedRoute requiredRole="admin"><AdminLegalDocuments /></ProtectedRoute>} />
-            <Route path="/admin/backups" element={<ProtectedRoute requiredRole="admin"><AdminBackupManagement /></ProtectedRoute>} />
-            <Route path="/admin/audit-logs" element={<ProtectedRoute requiredRole="admin"><AdminAuditLogs /></ProtectedRoute>} />
-           <Route path="/admin/messaging" element={<ProtectedRoute requiredRole="admin"><AdminMessaging /></ProtectedRoute>} />
-           <Route path="/admin/messenger" element={<ProtectedRoute requiredRole="admin"><AdminLiveMessenger /></ProtectedRoute>} />
-           <Route path="/admin/tl" element={<ProtectedRoute requiredRole="admin"><AdminTLScreen /></ProtectedRoute>} />
-            <Route path="/admin/settings" element={<ProtectedRoute requiredRole="admin"><AdminSettings /></ProtectedRoute>} />
-            <Route path="/admin/enable_disable" element={<ProtectedRoute requiredRole="admin"><AdminEnableDisable /></ProtectedRoute>} />
-            <Route path="/admin/enable-disable" element={<ProtectedRoute requiredRole="admin"><AdminEnableDisable /></ProtectedRoute>} />
-            <Route path="/admin/payout-statements" element={<ProtectedRoute requiredRole="admin"><AdminPayoutStatements /></ProtectedRoute>} />
+              {/* Admin */}
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/users"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminUserManagement />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/analytics"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminAnalyticsDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/chat-monitoring"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminChatMonitoring />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/languages"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminLanguageGroups />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/language-limits"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminLanguageLimits />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/kyc"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminKYCManagement />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/user-lookup"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminUserLookup />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/moderation"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminModerationScreen />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/policy-alerts"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminPolicyAlerts />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/performance"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminPerformanceMonitoring />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/legal-documents"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminLegalDocuments />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/backups"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminBackupManagement />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/audit-logs"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminAuditLogs />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/messaging"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminMessaging />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/messenger"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminLiveMessenger />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/tl"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminTLScreen />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/settings"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminSettings />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/enable_disable"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminEnableDisable />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/enable-disable"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminEnableDisable />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/payout-statements"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminPayoutStatements />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route path="*" element={<RouteSuspense><NotFound /></RouteSuspense>} />
-          </Routes>
-          <Toaster />
-          <NetworkStatusIndicator />
-          {showInstallPrompt && <PWAInstallPrompt />}
-        </AutoLogoutWrapper>
-      </UserActivityProvider>
+              <Route
+                path="*"
+                element={
+                  <RouteSuspense>
+                    <NotFound />
+                  </RouteSuspense>
+                }
+              />
+            </Routes>
+            <Toaster />
+            <NetworkStatusIndicator />
+            {showInstallPrompt && <PWAInstallPrompt />}
+          </AutoLogoutWrapper>
+        </UserActivityProvider>
       </ScreenCaptureGuard>
     </SecurityProvider>
   );

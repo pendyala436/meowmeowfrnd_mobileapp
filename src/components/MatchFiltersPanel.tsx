@@ -28,11 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Command,
   CommandEmpty,
@@ -65,11 +61,11 @@ import {
   Navigation,
 } from "lucide-react";
 import { countries } from "@/data/countries";
-import { 
-  ALL_SUPPORTED_LANGUAGES, 
-  INDIAN_LANGUAGES, 
+import {
+  ALL_SUPPORTED_LANGUAGES,
+  INDIAN_LANGUAGES,
   NON_INDIAN_LANGUAGES,
-  type SupportedLanguage 
+  type SupportedLanguage,
 } from "@/data/supportedLanguages";
 import { cn } from "@/lib/utils";
 
@@ -83,12 +79,12 @@ export interface MatchFilters {
   religion: string;
   maritalStatus: string;
   hasChildren: string;
-  
+
   // Location & Language
   country: string;
   language: string;
   distanceRange: [number, number];
-  
+
   // Lifestyle
   smokingHabit: string;
   drinkingHabit: string;
@@ -96,11 +92,11 @@ export interface MatchFilters {
   fitnessLevel: string;
   petPreference: string;
   travelFrequency: string;
-  
+
   // Personality
   zodiacSign: string;
   personalityType: string;
-  
+
   // App Behavior
   onlineNow: boolean;
   verifiedOnly: boolean;
@@ -140,16 +136,65 @@ const DEFAULT_FILTERS: MatchFilters = {
 
 const BODY_TYPES = ["Slim", "Athletic", "Average", "Curvy", "Muscular", "Plus Size"];
 const EDUCATION_LEVELS = ["High School", "Diploma", "Bachelor's", "Master's", "PhD", "Other"];
-const RELIGIONS = ["Hindu", "Muslim", "Christian", "Sikh", "Buddhist", "Jain", "Jewish", "Atheist", "Other"];
+const RELIGIONS = [
+  "Hindu",
+  "Muslim",
+  "Christian",
+  "Sikh",
+  "Buddhist",
+  "Jain",
+  "Jewish",
+  "Atheist",
+  "Other",
+];
 const MARITAL_STATUSES = ["Single", "Divorced", "Widowed", "Separated"];
 const SMOKING_HABITS = ["Never", "Occasionally", "Regularly"];
 const DRINKING_HABITS = ["Never", "Socially", "Occasionally", "Regularly"];
-const DIETARY_PREFERENCES = ["No Preference", "Vegetarian", "Vegan", "Non-Vegetarian", "Pescatarian", "Keto", "Halal", "Kosher"];
+const DIETARY_PREFERENCES = [
+  "No Preference",
+  "Vegetarian",
+  "Vegan",
+  "Non-Vegetarian",
+  "Pescatarian",
+  "Keto",
+  "Halal",
+  "Kosher",
+];
 const FITNESS_LEVELS = ["Sedentary", "Light", "Moderate", "Active", "Very Active"];
 const PET_PREFERENCES = ["Dogs", "Cats", "Both", "Other Pets", "No Pets", "Allergic"];
 const TRAVEL_FREQUENCIES = ["Rarely", "Occasionally", "Frequently", "Digital Nomad"];
-const ZODIAC_SIGNS = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"];
-const PERSONALITY_TYPES = ["INTJ", "INTP", "ENTJ", "ENTP", "INFJ", "INFP", "ENFJ", "ENFP", "ISTJ", "ISFJ", "ESTJ", "ESFJ", "ISTP", "ISFP", "ESTP", "ESFP"];
+const ZODIAC_SIGNS = [
+  "Aries",
+  "Taurus",
+  "Gemini",
+  "Cancer",
+  "Leo",
+  "Virgo",
+  "Libra",
+  "Scorpio",
+  "Sagittarius",
+  "Capricorn",
+  "Aquarius",
+  "Pisces",
+];
+const PERSONALITY_TYPES = [
+  "INTJ",
+  "INTP",
+  "ENTJ",
+  "ENTP",
+  "INFJ",
+  "INFP",
+  "ENFJ",
+  "ENFP",
+  "ISTJ",
+  "ISFJ",
+  "ESTJ",
+  "ESFJ",
+  "ISTP",
+  "ISFP",
+  "ESTP",
+  "ESFP",
+];
 
 interface MatchFiltersPanelProps {
   filters: MatchFilters;
@@ -172,20 +217,20 @@ export function MatchFiltersPanel({
   const [languageSearch, setLanguageSearch] = useState("");
 
   // All countries
-  const allCountries = countries.map(c => ({ name: c.name, flag: c.flag }));
+  const allCountries = countries.map((c) => ({ name: c.name, flag: c.flag }));
 
   // Supported languages (grouped by Indian/Non-Indian)
   const allSupportedLanguages = ALL_SUPPORTED_LANGUAGES;
 
   // Filter based on search
-  const filteredCountries = allCountries.filter(c =>
-    c.name.toLowerCase().includes(countrySearch.toLowerCase())
+  const filteredCountries = allCountries.filter((c) =>
+    c.name.toLowerCase().includes(countrySearch.toLowerCase()),
   );
-  const filteredIndianLanguages = INDIAN_LANGUAGES.filter(l =>
-    l.name.toLowerCase().includes(languageSearch.toLowerCase())
+  const filteredIndianLanguages = INDIAN_LANGUAGES.filter((l) =>
+    l.name.toLowerCase().includes(languageSearch.toLowerCase()),
   );
-  const filteredNonIndianLanguages = NON_INDIAN_LANGUAGES.filter(l =>
-    l.name.toLowerCase().includes(languageSearch.toLowerCase())
+  const filteredNonIndianLanguages = NON_INDIAN_LANGUAGES.filter((l) =>
+    l.name.toLowerCase().includes(languageSearch.toLowerCase()),
   );
 
   const activeFilterCount = Object.entries(localFilters).filter(([key, value]) => {
@@ -208,7 +253,7 @@ export function MatchFiltersPanel({
   };
 
   const updateFilter = <K extends keyof MatchFilters>(key: K, value: MatchFilters[K]) => {
-    setLocalFilters(prev => ({ ...prev, [key]: value }));
+    setLocalFilters((prev) => ({ ...prev, [key]: value }));
   };
 
   return (
@@ -218,7 +263,10 @@ export function MatchFiltersPanel({
           <Filter className="w-4 h-4" />
           Filters
           {activeFilterCount > 0 && (
-            <Badge variant="default" className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-[10px]">
+            <Badge
+              variant="default"
+              className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-[10px]"
+            >
               {activeFilterCount}
             </Badge>
           )}
@@ -232,7 +280,12 @@ export function MatchFiltersPanel({
               Match Filters
             </SheetTitle>
             {activeFilterCount > 0 && (
-              <Button variant="ghost" size="sm" onClick={handleReset} className="text-muted-foreground">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleReset}
+                className="text-muted-foreground"
+              >
                 <X className="w-4 h-4 mr-1" />
                 Reset All
               </Button>
@@ -241,8 +294,11 @@ export function MatchFiltersPanel({
         </SheetHeader>
 
         <ScrollArea className="flex-1 px-6">
-          <Accordion type="multiple" defaultValue={["demographic", "lifestyle", "behavior"]} className="w-full py-4">
-            
+          <Accordion
+            type="multiple"
+            defaultValue={["demographic", "lifestyle", "behavior"]}
+            className="w-full py-4"
+          >
             {/* 1. Demographic Filters */}
             <AccordionItem value="demographic">
               <AccordionTrigger className="text-sm font-semibold">
@@ -280,7 +336,9 @@ export function MatchFiltersPanel({
                   </div>
                   <Slider
                     value={localFilters.heightRange}
-                    onValueChange={(value) => updateFilter("heightRange", value as [number, number])}
+                    onValueChange={(value) =>
+                      updateFilter("heightRange", value as [number, number])
+                    }
                     min={140}
                     max={200}
                     step={1}
@@ -291,12 +349,19 @@ export function MatchFiltersPanel({
                 {/* Body Type */}
                 <div className="space-y-2">
                   <Label className="text-sm">Body Type</Label>
-                  <Select value={localFilters.bodyType} onValueChange={(v) => updateFilter("bodyType", v)}>
-                    <SelectTrigger><SelectValue placeholder="Any" /></SelectTrigger>
+                  <Select
+                    value={localFilters.bodyType}
+                    onValueChange={(v) => updateFilter("bodyType", v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Any" />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Any</SelectItem>
-                      {BODY_TYPES.map(type => (
-                        <SelectItem key={type} value={type.toLowerCase()}>{type}</SelectItem>
+                      {BODY_TYPES.map((type) => (
+                        <SelectItem key={type} value={type.toLowerCase()}>
+                          {type}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -308,12 +373,19 @@ export function MatchFiltersPanel({
                     <GraduationCap className="w-4 h-4" />
                     Education Level
                   </Label>
-                  <Select value={localFilters.educationLevel} onValueChange={(v) => updateFilter("educationLevel", v)}>
-                    <SelectTrigger><SelectValue placeholder="Any" /></SelectTrigger>
+                  <Select
+                    value={localFilters.educationLevel}
+                    onValueChange={(v) => updateFilter("educationLevel", v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Any" />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Any</SelectItem>
-                      {EDUCATION_LEVELS.map(level => (
-                        <SelectItem key={level} value={level.toLowerCase()}>{level}</SelectItem>
+                      {EDUCATION_LEVELS.map((level) => (
+                        <SelectItem key={level} value={level.toLowerCase()}>
+                          {level}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -325,8 +397,13 @@ export function MatchFiltersPanel({
                     <Briefcase className="w-4 h-4" />
                     Occupation
                   </Label>
-                  <Select value={localFilters.occupation} onValueChange={(v) => updateFilter("occupation", v)}>
-                    <SelectTrigger><SelectValue placeholder="Any" /></SelectTrigger>
+                  <Select
+                    value={localFilters.occupation}
+                    onValueChange={(v) => updateFilter("occupation", v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Any" />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Any</SelectItem>
                       <SelectItem value="tech">Technology</SelectItem>
@@ -344,12 +421,19 @@ export function MatchFiltersPanel({
                 {/* Religion */}
                 <div className="space-y-2">
                   <Label className="text-sm">Religion</Label>
-                  <Select value={localFilters.religion} onValueChange={(v) => updateFilter("religion", v)}>
-                    <SelectTrigger><SelectValue placeholder="Any" /></SelectTrigger>
+                  <Select
+                    value={localFilters.religion}
+                    onValueChange={(v) => updateFilter("religion", v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Any" />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Any</SelectItem>
-                      {RELIGIONS.map(r => (
-                        <SelectItem key={r} value={r.toLowerCase()}>{r}</SelectItem>
+                      {RELIGIONS.map((r) => (
+                        <SelectItem key={r} value={r.toLowerCase()}>
+                          {r}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -358,12 +442,19 @@ export function MatchFiltersPanel({
                 {/* Marital Status */}
                 <div className="space-y-2">
                   <Label className="text-sm">Marital Status</Label>
-                  <Select value={localFilters.maritalStatus} onValueChange={(v) => updateFilter("maritalStatus", v)}>
-                    <SelectTrigger><SelectValue placeholder="Any" /></SelectTrigger>
+                  <Select
+                    value={localFilters.maritalStatus}
+                    onValueChange={(v) => updateFilter("maritalStatus", v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Any" />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Any</SelectItem>
-                      {MARITAL_STATUSES.map(status => (
-                        <SelectItem key={status} value={status.toLowerCase()}>{status}</SelectItem>
+                      {MARITAL_STATUSES.map((status) => (
+                        <SelectItem key={status} value={status.toLowerCase()}>
+                          {status}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -372,8 +463,13 @@ export function MatchFiltersPanel({
                 {/* Has Children */}
                 <div className="space-y-2">
                   <Label className="text-sm">Children</Label>
-                  <Select value={localFilters.hasChildren} onValueChange={(v) => updateFilter("hasChildren", v)}>
-                    <SelectTrigger><SelectValue placeholder="Any" /></SelectTrigger>
+                  <Select
+                    value={localFilters.hasChildren}
+                    onValueChange={(v) => updateFilter("hasChildren", v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Any" />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Any</SelectItem>
                       <SelectItem value="no">No Children</SelectItem>
@@ -401,12 +497,15 @@ export function MatchFiltersPanel({
                       Distance Range
                     </Label>
                     <span className="text-sm text-muted-foreground">
-                      {localFilters.distanceRange[0].toLocaleString()} - {localFilters.distanceRange[1].toLocaleString()} km
+                      {localFilters.distanceRange[0].toLocaleString()} -{" "}
+                      {localFilters.distanceRange[1].toLocaleString()} km
                     </span>
                   </div>
                   <Slider
                     value={localFilters.distanceRange}
-                    onValueChange={(value) => updateFilter("distanceRange", value as [number, number])}
+                    onValueChange={(value) =>
+                      updateFilter("distanceRange", value as [number, number])
+                    }
                     min={0}
                     max={15000}
                     step={100}
@@ -432,18 +531,18 @@ export function MatchFiltersPanel({
                         aria-expanded={countryOpen}
                         className="w-full justify-between bg-background"
                       >
-                        {localFilters.country === "all" 
-                          ? "All Countries" 
-                          : allCountries.find(c => c.name === localFilters.country)
-                            ? `${allCountries.find(c => c.name === localFilters.country)?.flag} ${localFilters.country}`
+                        {localFilters.country === "all"
+                          ? "All Countries"
+                          : allCountries.find((c) => c.name === localFilters.country)
+                            ? `${allCountries.find((c) => c.name === localFilters.country)?.flag} ${localFilters.country}`
                             : localFilters.country}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-full p-0 bg-popover z-50" align="start">
                       <Command className="bg-popover">
-                        <CommandInput 
-                          placeholder="Search country..." 
+                        <CommandInput
+                          placeholder="Search country..."
                           value={countrySearch}
                           onValueChange={setCountrySearch}
                         />
@@ -458,7 +557,12 @@ export function MatchFiltersPanel({
                                 setCountrySearch("");
                               }}
                             >
-                              <Check className={cn("mr-2 h-4 w-4", localFilters.country === "all" ? "opacity-100" : "opacity-0")} />
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  localFilters.country === "all" ? "opacity-100" : "opacity-0",
+                                )}
+                              />
                               🌍 All Countries
                             </CommandItem>
                             {filteredCountries.slice(0, 50).map((country) => (
@@ -471,7 +575,14 @@ export function MatchFiltersPanel({
                                   setCountrySearch("");
                                 }}
                               >
-                                <Check className={cn("mr-2 h-4 w-4", localFilters.country === country.name ? "opacity-100" : "opacity-0")} />
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    localFilters.country === country.name
+                                      ? "opacity-100"
+                                      : "opacity-0",
+                                  )}
+                                />
                                 {country.flag} {country.name}
                               </CommandItem>
                             ))}
@@ -501,12 +612,19 @@ export function MatchFiltersPanel({
                     <Cigarette className="w-4 h-4" />
                     Smoking
                   </Label>
-                  <Select value={localFilters.smokingHabit} onValueChange={(v) => updateFilter("smokingHabit", v)}>
-                    <SelectTrigger><SelectValue placeholder="Any" /></SelectTrigger>
+                  <Select
+                    value={localFilters.smokingHabit}
+                    onValueChange={(v) => updateFilter("smokingHabit", v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Any" />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Any</SelectItem>
-                      {SMOKING_HABITS.map(h => (
-                        <SelectItem key={h} value={h.toLowerCase()}>{h}</SelectItem>
+                      {SMOKING_HABITS.map((h) => (
+                        <SelectItem key={h} value={h.toLowerCase()}>
+                          {h}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -518,12 +636,19 @@ export function MatchFiltersPanel({
                     <Wine className="w-4 h-4" />
                     Drinking
                   </Label>
-                  <Select value={localFilters.drinkingHabit} onValueChange={(v) => updateFilter("drinkingHabit", v)}>
-                    <SelectTrigger><SelectValue placeholder="Any" /></SelectTrigger>
+                  <Select
+                    value={localFilters.drinkingHabit}
+                    onValueChange={(v) => updateFilter("drinkingHabit", v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Any" />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Any</SelectItem>
-                      {DRINKING_HABITS.map(h => (
-                        <SelectItem key={h} value={h.toLowerCase()}>{h}</SelectItem>
+                      {DRINKING_HABITS.map((h) => (
+                        <SelectItem key={h} value={h.toLowerCase()}>
+                          {h}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -535,12 +660,19 @@ export function MatchFiltersPanel({
                     <Utensils className="w-4 h-4" />
                     Dietary Preference
                   </Label>
-                  <Select value={localFilters.dietaryPreference} onValueChange={(v) => updateFilter("dietaryPreference", v)}>
-                    <SelectTrigger><SelectValue placeholder="Any" /></SelectTrigger>
+                  <Select
+                    value={localFilters.dietaryPreference}
+                    onValueChange={(v) => updateFilter("dietaryPreference", v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Any" />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Any</SelectItem>
-                      {DIETARY_PREFERENCES.map(d => (
-                        <SelectItem key={d} value={d.toLowerCase().replace(' ', '_')}>{d}</SelectItem>
+                      {DIETARY_PREFERENCES.map((d) => (
+                        <SelectItem key={d} value={d.toLowerCase().replace(" ", "_")}>
+                          {d}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -552,12 +684,19 @@ export function MatchFiltersPanel({
                     <Dumbbell className="w-4 h-4" />
                     Fitness Level
                   </Label>
-                  <Select value={localFilters.fitnessLevel} onValueChange={(v) => updateFilter("fitnessLevel", v)}>
-                    <SelectTrigger><SelectValue placeholder="Any" /></SelectTrigger>
+                  <Select
+                    value={localFilters.fitnessLevel}
+                    onValueChange={(v) => updateFilter("fitnessLevel", v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Any" />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Any</SelectItem>
-                      {FITNESS_LEVELS.map(f => (
-                        <SelectItem key={f} value={f.toLowerCase()}>{f}</SelectItem>
+                      {FITNESS_LEVELS.map((f) => (
+                        <SelectItem key={f} value={f.toLowerCase()}>
+                          {f}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -569,12 +708,19 @@ export function MatchFiltersPanel({
                     <PawPrint className="w-4 h-4" />
                     Pet Preference
                   </Label>
-                  <Select value={localFilters.petPreference} onValueChange={(v) => updateFilter("petPreference", v)}>
-                    <SelectTrigger><SelectValue placeholder="Any" /></SelectTrigger>
+                  <Select
+                    value={localFilters.petPreference}
+                    onValueChange={(v) => updateFilter("petPreference", v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Any" />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Any</SelectItem>
-                      {PET_PREFERENCES.map(p => (
-                        <SelectItem key={p} value={p.toLowerCase().replace(' ', '_')}>{p}</SelectItem>
+                      {PET_PREFERENCES.map((p) => (
+                        <SelectItem key={p} value={p.toLowerCase().replace(" ", "_")}>
+                          {p}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -586,12 +732,19 @@ export function MatchFiltersPanel({
                     <Plane className="w-4 h-4" />
                     Travel Frequency
                   </Label>
-                  <Select value={localFilters.travelFrequency} onValueChange={(v) => updateFilter("travelFrequency", v)}>
-                    <SelectTrigger><SelectValue placeholder="Any" /></SelectTrigger>
+                  <Select
+                    value={localFilters.travelFrequency}
+                    onValueChange={(v) => updateFilter("travelFrequency", v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Any" />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Any</SelectItem>
-                      {TRAVEL_FREQUENCIES.map(t => (
-                        <SelectItem key={t} value={t.toLowerCase().replace(' ', '_')}>{t}</SelectItem>
+                      {TRAVEL_FREQUENCIES.map((t) => (
+                        <SelectItem key={t} value={t.toLowerCase().replace(" ", "_")}>
+                          {t}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -614,12 +767,19 @@ export function MatchFiltersPanel({
                     <Star className="w-4 h-4" />
                     Zodiac Sign
                   </Label>
-                  <Select value={localFilters.zodiacSign} onValueChange={(v) => updateFilter("zodiacSign", v)}>
-                    <SelectTrigger><SelectValue placeholder="Any" /></SelectTrigger>
+                  <Select
+                    value={localFilters.zodiacSign}
+                    onValueChange={(v) => updateFilter("zodiacSign", v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Any" />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Any</SelectItem>
-                      {ZODIAC_SIGNS.map(z => (
-                        <SelectItem key={z} value={z.toLowerCase()}>{z}</SelectItem>
+                      {ZODIAC_SIGNS.map((z) => (
+                        <SelectItem key={z} value={z.toLowerCase()}>
+                          {z}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -628,12 +788,19 @@ export function MatchFiltersPanel({
                 {/* Personality Type */}
                 <div className="space-y-2">
                   <Label className="text-sm">Personality Type (MBTI)</Label>
-                  <Select value={localFilters.personalityType} onValueChange={(v) => updateFilter("personalityType", v)}>
-                    <SelectTrigger><SelectValue placeholder="Any" /></SelectTrigger>
+                  <Select
+                    value={localFilters.personalityType}
+                    onValueChange={(v) => updateFilter("personalityType", v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Any" />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Any</SelectItem>
-                      {PERSONALITY_TYPES.map(p => (
-                        <SelectItem key={p} value={p.toLowerCase()}>{p}</SelectItem>
+                      {PERSONALITY_TYPES.map((p) => (
+                        <SelectItem key={p} value={p.toLowerCase()}>
+                          {p}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -715,9 +882,7 @@ export function MatchFiltersPanel({
                 <Separator />
 
                 <div className="flex items-center justify-between">
-                  <Label className="text-sm flex items-center gap-2 cursor-pointer">
-                    With Bio
-                  </Label>
+                  <Label className="text-sm flex items-center gap-2 cursor-pointer">With Bio</Label>
                   <Switch
                     checked={localFilters.hasBio}
                     onCheckedChange={(v) => updateFilter("hasBio", v)}
@@ -725,7 +890,6 @@ export function MatchFiltersPanel({
                 </div>
               </AccordionContent>
             </AccordionItem>
-
           </Accordion>
         </ScrollArea>
 

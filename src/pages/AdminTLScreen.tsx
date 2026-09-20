@@ -1,9 +1,9 @@
-import AdminNav from '@/components/AdminNav';
-import { useAdminAccess } from '@/hooks/useAdminAccess';
-import { TLCommunicationTab } from '@/components/TLCommunicationTab';
-import { supabase } from '@/integrations/supabase/client';
-import { Shield, Loader2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import AdminNav from "@/components/AdminNav";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
+import { TLCommunicationTab } from "@/components/TLCommunicationTab";
+import { supabase } from "@/integrations/supabase/client";
+import { Shield, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export default function AdminTLScreen() {
   const { isLoading, adminEmail } = useAdminAccess();

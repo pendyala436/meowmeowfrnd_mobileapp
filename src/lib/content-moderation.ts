@@ -1,6 +1,6 @@
 /**
  * Content Moderation Utility
- * 
+ *
  * Blocks:
  * 1. Sexual/explicit content (all languages)
  * 2. Contact information sharing (phone, email, social media)
@@ -148,28 +148,84 @@ const HATE_SPEECH_PATTERNS = [
 
 // Number words in multiple languages
 const NUMBER_WORDS_EN = [
-  'zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten',
-  'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen',
-  'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety', 'hundred',
+  "zero",
+  "one",
+  "two",
+  "three",
+  "four",
+  "five",
+  "six",
+  "seven",
+  "eight",
+  "nine",
+  "ten",
+  "eleven",
+  "twelve",
+  "thirteen",
+  "fourteen",
+  "fifteen",
+  "sixteen",
+  "seventeen",
+  "eighteen",
+  "nineteen",
+  "twenty",
+  "thirty",
+  "forty",
+  "fifty",
+  "sixty",
+  "seventy",
+  "eighty",
+  "ninety",
+  "hundred",
 ];
 
 const NUMBER_WORDS_HINDI = [
-  'ek', 'do', 'teen', 'char', 'paanch', 'panch', 'chhe', 'saat', 'aath', 'nau', 'das',
-  'gyarah', 'barah', 'terah', 'chaudah', 'pandrah', 'solah', 'satrah', 'athaarah', 'unnis', 'bees',
-  'nol', 'nil', 'shunya',
+  "ek",
+  "do",
+  "teen",
+  "char",
+  "paanch",
+  "panch",
+  "chhe",
+  "saat",
+  "aath",
+  "nau",
+  "das",
+  "gyarah",
+  "barah",
+  "terah",
+  "chaudah",
+  "pandrah",
+  "solah",
+  "satrah",
+  "athaarah",
+  "unnis",
+  "bees",
+  "nol",
+  "nil",
+  "shunya",
 ];
 
 const NUMBER_WORDS_ARABIC = [
-  'wahid', 'ithnayn', 'thalatha', 'arba', 'khamsa', 'sitta', 'saba', 'thamaniya', 'tisa', 'ashara',
-  'sifr',
+  "wahid",
+  "ithnayn",
+  "thalatha",
+  "arba",
+  "khamsa",
+  "sitta",
+  "saba",
+  "thamaniya",
+  "tisa",
+  "ashara",
+  "sifr",
 ];
 
 const ALL_NUMBER_WORDS = [...NUMBER_WORDS_EN, ...NUMBER_WORDS_HINDI, ...NUMBER_WORDS_ARABIC];
 
 // 4+ number words in sequence = likely phone number
 const numberWordsPattern = new RegExp(
-  `\\b(${ALL_NUMBER_WORDS.join('|')})(\\s*[-,./\\s]?\\s*(${ALL_NUMBER_WORDS.join('|')})){3,}\\b`,
-  'gi'
+  `\\b(${ALL_NUMBER_WORDS.join("|")})(\\s*[-,./\\s]?\\s*(${ALL_NUMBER_WORDS.join("|")})){3,}\\b`,
+  "gi",
 );
 
 // Symbol-encoded numbers: z3r0, 0ne, tw0, thr33, f0ur, f1ve, s1x, etc.
@@ -209,48 +265,72 @@ const EMAIL_PATTERNS = [
 // ========================================
 
 const SOCIAL_MEDIA_APPS = [
-  'whatsapp', 'whats\\s*app', 'watsapp', 'wapp', 'wa',
-  'instagram', 'insta', 'ig',
-  'facebook', 'fb', 'messenger',
-  'telegram', 'tg', 'telgram',
-  'snapchat', 'snap', 'sc',
-  'tiktok', 'tik\\s*tok',
-  'wechat', 'we\\s*chat',
-  'discord', 'dc',
-  'skype',
-  'twitter', 'x\\.com',
-  'signal',
-  'viber',
-  'line',
-  'imo',
-  'kik',
-  'hike',
-  'kakaotalk', 'kakao',
-  'zalo',
-  'threads',
-  'linkedin',
-  'pinterest',
-  'reddit',
-  'tumblr',
-  'youtube', 'yt',
-  'twitch',
+  "whatsapp",
+  "whats\\s*app",
+  "watsapp",
+  "wapp",
+  "wa",
+  "instagram",
+  "insta",
+  "ig",
+  "facebook",
+  "fb",
+  "messenger",
+  "telegram",
+  "tg",
+  "telgram",
+  "snapchat",
+  "snap",
+  "sc",
+  "tiktok",
+  "tik\\s*tok",
+  "wechat",
+  "we\\s*chat",
+  "discord",
+  "dc",
+  "skype",
+  "twitter",
+  "x\\.com",
+  "signal",
+  "viber",
+  "line",
+  "imo",
+  "kik",
+  "hike",
+  "kakaotalk",
+  "kakao",
+  "zalo",
+  "threads",
+  "linkedin",
+  "pinterest",
+  "reddit",
+  "tumblr",
+  "youtube",
+  "yt",
+  "twitch",
 ];
 
-const socialAppsJoined = SOCIAL_MEDIA_APPS.join('|');
+const socialAppsJoined = SOCIAL_MEDIA_APPS.join("|");
 
 const SOCIAL_MEDIA_PATTERNS = [
   // App name followed by handle/id/number
-  new RegExp(`\\b(${socialAppsJoined})\\s*[:\\-#@]?\\s*[\\w.+-]+`, 'gi'),
+  new RegExp(`\\b(${socialAppsJoined})\\s*[:\\-#@]?\\s*[\\w.+-]+`, "gi"),
   // "add/contact/reach me on [app]"
-  new RegExp(`\\b(add|contact|reach|text|message|dm|msg|ping|hit\\s*me|find\\s*me|follow)\\s+(me\\s+)?(on|at|via|in)\\s+(${socialAppsJoined})\\b`, 'gi'),
+  new RegExp(
+    `\\b(add|contact|reach|text|message|dm|msg|ping|hit\\s*me|find\\s*me|follow)\\s+(me\\s+)?(on|at|via|in)\\s+(${socialAppsJoined})\\b`,
+    "gi",
+  ),
   // "[app] id/username/handle/number is..."
-  new RegExp(`\\b(${socialAppsJoined})\\s+(id|username|handle|number|no|num|account|profile)\\s*(is|:|-|=)\\s*[\\w.@+-]+`, 'gi'),
+  new RegExp(
+    `\\b(${socialAppsJoined})\\s+(id|username|handle|number|no|num|account|profile)\\s*(is|:|-|=)\\s*[\\w.@+-]+`,
+    "gi",
+  ),
   // "my [app] is..."
-  new RegExp(`\\b(my|mera|meri)\\s+(${socialAppsJoined})\\s*(is|hai|:|-|=)\\s*[\\w.@+-]+`, 'gi'),
+  new RegExp(`\\b(my|mera|meri)\\s+(${socialAppsJoined})\\s*(is|hai|:|-|=)\\s*[\\w.@+-]+`, "gi"),
   // Direct links
   /\b(wa\.me|t\.me|m\.me|bit\.ly|tinyurl\.com|goo\.gl)\/\S+/gi,
   // Standalone social media app names (block even mentioning them)
-  new RegExp(`\\b(${socialAppsJoined})\\b`, 'gi'),
+  new RegExp(`\\b(${socialAppsJoined})\\b`, "gi"),
 ];
 
 const CONTACT_INTENT_PATTERNS = [
@@ -273,13 +353,23 @@ const CONTACT_INTENT_PATTERNS = [
  */
 const BLOCKED_ATTACHMENT_EXTENSIONS = [
   // Documents that can contain text with contact info
-  '.pdf', '.doc', '.docx', '.txt', '.rtf', '.odt',
-  '.xls', '.xlsx', '.csv',
-  '.ppt', '.pptx',
+  ".pdf",
+  ".doc",
+  ".docx",
+  ".txt",
+  ".rtf",
+  ".odt",
+  ".xls",
+  ".xlsx",
+  ".csv",
+  ".ppt",
+  ".pptx",
   // vCards / contacts
-  '.vcf', '.vcard',
+  ".vcf",
+  ".vcard",
   // Web files
-  '.html', '.htm',
+  ".html",
+  ".htm",
 ];
 
 /**
@@ -304,7 +394,16 @@ const CONTACT_FILENAME_PATTERNS = [
 // TYPES
 // ========================================
 
-export type ViolationType = 'phone' | 'email' | 'social_media' | 'contact_intent' | 'sexual_content' | 'harmful_content' | 'hate_speech' | 'blocked_attachment' | 'number_words';
+export type ViolationType =
+  | "phone"
+  | "email"
+  | "social_media"
+  | "contact_intent"
+  | "sexual_content"
+  | "harmful_content"
+  | "hate_speech"
+  | "blocked_attachment"
+  | "number_words";
 
 export interface ModerationResult {
   isBlocked: boolean;
@@ -319,16 +418,13 @@ export interface ModerationResult {
  * Combined export for downstream consumers (audio/video moderation hooks).
  * The audio hook uses these to decide which words to beep over a transcript.
  */
-export const SPEECH_BLOCKLIST_PATTERNS = [
-  ...SEXUAL_CONTENT_PATTERNS,
-  ...HATE_SPEECH_PATTERNS,
-];
+export const SPEECH_BLOCKLIST_PATTERNS = [...SEXUAL_CONTENT_PATTERNS, ...HATE_SPEECH_PATTERNS];
 
 /**
  * Check if message contains prohibited content (for 1-to-1 chats, skips sexual content restriction)
  */
 export function moderateMessage1to1(message: string): ModerationResult {
-  if (!message || typeof message !== 'string') {
+  if (!message || typeof message !== "string") {
     return { isBlocked: false };
   }
 
@@ -336,18 +432,18 @@ export function moderateMessage1to1(message: string): ModerationResult {
     return { isBlocked: false };
   }
 
-  const normalizedMessage = message.toLowerCase().replace(/\s+/g, ' ').trim();
+  const normalizedMessage = message.toLowerCase().replace(/\s+/g, " ").trim();
 
   // Define patterns for prohibited content (excluding sexual)
   // Re-use existing patterns defined elsewhere in the file
-  
+
   // 1. Harmful content
   for (const pattern of HARMFUL_CONTENT_PATTERNS) {
     if (pattern.test(message)) {
       return {
         isBlocked: true,
-        reason: 'Harmful or abusive content is strictly prohibited.',
-        detectedType: 'harmful_content',
+        reason: "Harmful or abusive content is strictly prohibited.",
+        detectedType: "harmful_content",
       };
     }
   }
@@ -357,8 +453,8 @@ export function moderateMessage1to1(message: string): ModerationResult {
     if (pattern.test(message)) {
       return {
         isBlocked: true,
-        reason: 'Hate speech is strictly prohibited.',
-        detectedType: 'hate_speech',
+        reason: "Hate speech is strictly prohibited.",
+        detectedType: "hate_speech",
       };
     }
   }
@@ -369,8 +465,8 @@ export function moderateMessage1to1(message: string): ModerationResult {
     if (pattern.test(message) || pattern.test(normalizedMessage)) {
       return {
         isBlocked: true,
-        reason: 'Sharing phone numbers is not allowed for your safety.',
-        detectedType: 'phone',
+        reason: "Sharing phone numbers is not allowed for your safety.",
+        detectedType: "phone",
       };
     }
   }
@@ -381,8 +477,8 @@ export function moderateMessage1to1(message: string): ModerationResult {
     if (pattern.test(message) || pattern.test(normalizedMessage)) {
       return {
         isBlocked: true,
-        reason: 'Sharing email addresses is not allowed for your safety.',
-        detectedType: 'email',
+        reason: "Sharing email addresses is not allowed for your safety.",
+        detectedType: "email",
       };
     }
   }
@@ -393,8 +489,8 @@ export function moderateMessage1to1(message: string): ModerationResult {
     if (pattern.test(message) || pattern.test(normalizedMessage)) {
       return {
         isBlocked: true,
-        reason: 'Mentioning social media apps or sharing accounts is not allowed.',
-        detectedType: 'social_media',
+        reason: "Mentioning social media apps or sharing accounts is not allowed.",
+        detectedType: "social_media",
       };
     }
   }
@@ -405,8 +501,8 @@ export function moderateMessage1to1(message: string): ModerationResult {
     if (pattern.test(message) || pattern.test(normalizedMessage)) {
       return {
         isBlocked: true,
-        reason: 'Sharing contact information outside the app is not allowed.',
-        detectedType: 'contact_intent',
+        reason: "Sharing contact information outside the app is not allowed.",
+        detectedType: "contact_intent",
       };
     }
   }
@@ -422,7 +518,7 @@ export function moderateMessage1to1(message: string): ModerationResult {
  * Check if message contains prohibited content
  */
 export function moderateMessage(message: string): ModerationResult {
-  if (!message || typeof message !== 'string') {
+  if (!message || typeof message !== "string") {
     return { isBlocked: false };
   }
 
@@ -430,7 +526,7 @@ export function moderateMessage(message: string): ModerationResult {
     return { isBlocked: false };
   }
 
-  const normalizedMessage = message.toLowerCase().replace(/\s+/g, ' ').trim();
+  const normalizedMessage = message.toLowerCase().replace(/\s+/g, " ").trim();
   const collectMatches = (pattern: RegExp): string[] => {
     pattern.lastIndex = 0;
     const found = message.match(pattern) || normalizedMessage.match(pattern) || [];
@@ -443,8 +539,8 @@ export function moderateMessage(message: string): ModerationResult {
     if (matches.length) {
       return {
         isBlocked: true,
-        reason: 'Sexual or explicit content is strictly prohibited.',
-        detectedType: 'sexual_content',
+        reason: "Sexual or explicit content is strictly prohibited.",
+        detectedType: "sexual_content",
         matches,
       };
     }
@@ -456,8 +552,8 @@ export function moderateMessage(message: string): ModerationResult {
     if (matches.length) {
       return {
         isBlocked: true,
-        reason: 'Hate speech, slurs, and discriminatory language are not allowed.',
-        detectedType: 'hate_speech',
+        reason: "Hate speech, slurs, and discriminatory language are not allowed.",
+        detectedType: "hate_speech",
         matches,
       };
     }
@@ -469,8 +565,8 @@ export function moderateMessage(message: string): ModerationResult {
     if (matches.length) {
       return {
         isBlocked: true,
-        reason: 'Threatening or harmful content is not allowed.',
-        detectedType: 'harmful_content',
+        reason: "Threatening or harmful content is not allowed.",
+        detectedType: "harmful_content",
         matches,
       };
     }
@@ -482,8 +578,8 @@ export function moderateMessage(message: string): ModerationResult {
     if (pattern.test(message) || pattern.test(normalizedMessage)) {
       return {
         isBlocked: true,
-        reason: 'Sharing phone numbers is not allowed for your safety.',
-        detectedType: 'phone',
+        reason: "Sharing phone numbers is not allowed for your safety.",
+        detectedType: "phone",
       };
     }
   }
@@ -494,8 +590,8 @@ export function moderateMessage(message: string): ModerationResult {
     if (pattern.test(message) || pattern.test(normalizedMessage)) {
       return {
         isBlocked: true,
-        reason: 'Sharing email addresses is not allowed for your safety.',
-        detectedType: 'email',
+        reason: "Sharing email addresses is not allowed for your safety.",
+        detectedType: "email",
       };
     }
   }
@@ -506,8 +602,8 @@ export function moderateMessage(message: string): ModerationResult {
     if (pattern.test(message) || pattern.test(normalizedMessage)) {
       return {
         isBlocked: true,
-        reason: 'Mentioning social media apps or sharing accounts is not allowed.',
-        detectedType: 'social_media',
+        reason: "Mentioning social media apps or sharing accounts is not allowed.",
+        detectedType: "social_media",
       };
     }
   }
@@ -518,8 +614,8 @@ export function moderateMessage(message: string): ModerationResult {
     if (pattern.test(message) || pattern.test(normalizedMessage)) {
       return {
         isBlocked: true,
-        reason: 'Sharing contact information outside the app is not allowed.',
-        detectedType: 'contact_intent',
+        reason: "Sharing contact information outside the app is not allowed.",
+        detectedType: "contact_intent",
       };
     }
   }
@@ -543,20 +639,20 @@ export function moderateAttachment(fileName: string, fileType?: string): Moderat
   const lowerName = fileName.toLowerCase();
 
   // Block vCard files (direct contact sharing)
-  if (lowerName.endsWith('.vcf') || lowerName.endsWith('.vcard')) {
+  if (lowerName.endsWith(".vcf") || lowerName.endsWith(".vcard")) {
     return {
       isBlocked: true,
-      reason: 'Sharing contact files is not allowed.',
-      detectedType: 'blocked_attachment',
+      reason: "Sharing contact files is not allowed.",
+      detectedType: "blocked_attachment",
     };
   }
 
   // Block suspicious MIME types for contacts
-  if (fileType && (fileType === 'text/vcard' || fileType === 'text/x-vcard')) {
+  if (fileType && (fileType === "text/vcard" || fileType === "text/x-vcard")) {
     return {
       isBlocked: true,
-      reason: 'Sharing contact files is not allowed.',
-      detectedType: 'blocked_attachment',
+      reason: "Sharing contact files is not allowed.",
+      detectedType: "blocked_attachment",
     };
   }
 
@@ -574,7 +670,14 @@ export function moderateImageText(extractedText: string): ModerationResult {
   const result = moderateMessage(extractedText);
   // Phone/contact-info detection is disabled for attachments — only block
   // sexual/harmful/hate content found in extracted image text.
-  if (result.isBlocked && (result.detectedType === 'phone' || result.detectedType === 'number_words' || result.detectedType === 'contact_intent' || result.detectedType === 'email' || result.detectedType === 'social_media')) {
+  if (
+    result.isBlocked &&
+    (result.detectedType === "phone" ||
+      result.detectedType === "number_words" ||
+      result.detectedType === "contact_intent" ||
+      result.detectedType === "email" ||
+      result.detectedType === "social_media")
+  ) {
     return { isBlocked: false };
   }
   return result;
@@ -602,5 +705,5 @@ export function isAttachmentBlocked(fileName: string, fileType?: string): boolea
  * Get user-friendly error message
  */
 export function getBlockedMessageError(result: ModerationResult): string {
-  return result.reason || 'This message contains prohibited content.';
+  return result.reason || "This message contains prohibited content.";
 }

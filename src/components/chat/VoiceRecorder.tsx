@@ -1,18 +1,23 @@
 /**
  * VoiceRecorder.tsx - WhatsApp-style push-to-talk voice message recorder
  */
-import { useState, useRef, useCallback } from 'react';
-import { Button } from '@/components/ui/button';
-import { Mic, Square, Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useRef, useCallback } from "react";
+import { Button } from "@/components/ui/button";
+import { Mic, Square, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 interface VoiceRecorderProps {
   chatId: string;
   currentUserId: string;
   receiverId: string;
   disabled?: boolean;
-  onVoiceSent?: (msg?: { id: string; sender_id: string; message: string; created_at: string }) => void;
+  onVoiceSent?: (msg?: {
+    id: string;
+    sender_id: string;
+    message: string;
+    created_at: string;
+  }) => void;
   onError?: (msg: string) => void;
 }
 
@@ -31,7 +36,10 @@ export const VoiceRecorder = ({
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const mimeRef = useRef<{ mimeType: string; ext: string }>({ mimeType: "audio/webm", ext: "webm" });
+  const mimeRef = useRef<{ mimeType: string; ext: string }>({
+    mimeType: "audio/webm",
+    ext: "webm",
+  });
 
   const startRecording = useCallback(async () => {
     try {
@@ -73,16 +81,16 @@ export const VoiceRecorder = ({
       setIsRecording(true);
 
       timerRef.current = setInterval(() => {
-        setDuration(prev => prev + 1);
+        setDuration((prev) => prev + 1);
       }, 1000);
     } catch (err) {
-      console.error('Microphone access error:', err);
-      onError?.('Microphone permission denied or unavailable');
+      console.error("Microphone access error:", err);
+      onError?.("Microphone permission denied or unavailable");
     }
   }, []);
 
   const stopAndSend = useCallback(async () => {
-    if (!mediaRecorderRef.current || mediaRecorderRef.current.state === 'inactive') return;
+    if (!mediaRecorderRef.current || mediaRecorderRef.current.state === "inactive") return;
 
     if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -96,11 +104,15 @@ export const VoiceRecorder = ({
     await new Promise<void>((resolve) => {
       const recorder = mediaRecorderRef.current!;
       recorder.onstop = () => {
-        streamRef.current?.getTracks().forEach(t => t.stop());
+        streamRef.current?.getTracks().forEach((t) => t.stop());
         streamRef.current = null;
         resolve();
       };
-      try { recorder.requestData(); } catch { /* some browsers throw if inactive */ }
+      try {
+        recorder.requestData();
+      } catch {
+        /* some browsers throw if inactive */
+      }
       recorder.stop();
     });
 
@@ -108,10 +120,10 @@ export const VoiceRecorder = ({
       const mimeType = mimeRef.current.mimeType || "audio/webm";
       const ext = mimeRef.current.ext || "webm";
       const blob = new Blob(chunksRef.current, { type: mimeType.split(";")[0] || "audio/webm" });
-      console.log('VoiceRecorder: Blob created', { size: blob.size, type: blob.type });
-      
+      console.log("VoiceRecorder: Blob created", { size: blob.size, type: blob.type });
+
       if (blob.size < 500) {
-        console.warn('VoiceRecorder: Blob too small, discarding');
+        console.warn("VoiceRecorder: Blob too small, discarding");
         onError?.("Recording was too short. Hold a bit longer.");
         setIsSending(false);
         return;
@@ -125,55 +137,59 @@ export const VoiceRecorder = ({
 
       const fileName = `voice_${crypto.randomUUID().replace(/-/g, "")}.${ext}`;
       const filePath = `meowmeow/app/attachment/${currentUserId}/${chatId}/${fileName}`;
-      console.log('VoiceRecorder: Uploading to', filePath);
+      console.log("VoiceRecorder: Uploading to", filePath);
 
-      const blobType = blob.type || (ext === "m4a" ? "audio/mp4" : ext === "ogg" ? "audio/ogg" : "audio/webm");
+      const blobType =
+        blob.type || (ext === "m4a" ? "audio/mp4" : ext === "ogg" ? "audio/ogg" : "audio/webm");
       let uploadedPath = filePath;
       let { error: uploadError } = await supabase.storage
-        .from('meowmeow-app-attachment')
+        .from("meowmeow-app-attachment")
         .upload(filePath, blob, { contentType: blobType, upsert: false });
 
       if (uploadError) {
-        console.warn('VoiceRecorder: primary bucket failed, trying chat-attachments', uploadError.message);
+        console.warn(
+          "VoiceRecorder: primary bucket failed, trying chat-attachments",
+          uploadError.message,
+        );
         const fallbackPath = `${currentUserId}/${chatId}/${fileName}`;
         const fallback = await supabase.storage
-          .from('chat-attachments')
+          .from("chat-attachments")
           .upload(fallbackPath, blob, { contentType: "application/octet-stream", upsert: false });
         if (fallback.error) {
-          console.error('VoiceRecorder: Upload error:', fallback.error);
+          console.error("VoiceRecorder: Upload error:", fallback.error);
           onError?.(`Voice upload failed: ${fallback.error.message}`);
           setIsSending(false);
           return;
         }
         uploadedPath = fallbackPath;
       }
-      console.log('VoiceRecorder: Upload successful');
+      console.log("VoiceRecorder: Upload successful");
 
       const voiceMarker = `[VOICE:chat-attachment://${uploadedPath}]`;
-      console.log('VoiceRecorder: Inserting message', voiceMarker);
-      
+      console.log("VoiceRecorder: Inserting message", voiceMarker);
+
       const { data: inserted, error: insertErr } = await supabase
-        .from('chat_messages')
+        .from("chat_messages")
         .insert({
           chat_id: chatId,
           sender_id: currentUserId,
           receiver_id: receiverId,
           message: voiceMarker,
         })
-        .select('id, sender_id, message, created_at')
+        .select("id, sender_id, message, created_at")
         .single();
 
       if (insertErr) {
-        console.error('VoiceRecorder: Voice insert error:', insertErr);
+        console.error("VoiceRecorder: Voice insert error:", insertErr);
         onError?.(`Voice send failed: ${insertErr.message}`);
         setIsSending(false);
         return;
       }
-      console.log('VoiceRecorder: Message insert successful', inserted);
+      console.log("VoiceRecorder: Message insert successful", inserted);
 
       onVoiceSent?.(inserted as any);
     } catch (err) {
-      console.error('VoiceRecorder: Voice send error:', err);
+      console.error("VoiceRecorder: Voice send error:", err);
       onError?.(`Voice send failed: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setIsSending(false);
@@ -186,10 +202,10 @@ export const VoiceRecorder = ({
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
       mediaRecorderRef.current.stop();
     }
-    streamRef.current?.getTracks().forEach(t => t.stop());
+    streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
     chunksRef.current = [];
     setIsRecording(false);
@@ -199,7 +215,7 @@ export const VoiceRecorder = ({
   const formatDuration = (s: number) => {
     const m = Math.floor(s / 60);
     const sec = s % 60;
-    return `${m}:${sec.toString().padStart(2, '0')}`;
+    return `${m}:${sec.toString().padStart(2, "0")}`;
   };
 
   if (isSending) {

@@ -47,7 +47,7 @@ interface HistoryItem {
 
 /** Pricing rates – men pay, women earn (must mirror DB get_unified_pricing()) */
 const RATES = {
-  chat:  { man: 4, woman: 2 },
+  chat: { man: 4, woman: 2 },
   audio: { man: 6, woman: 3 },
   video: { man: 8, woman: 4 },
   group: { man: 4, woman: 1 },
@@ -81,7 +81,11 @@ const billedMinutes = (minutes: number): number => {
   return Math.ceil(totalSecs / 60);
 };
 
-const sessionMinutes = (s: { total_minutes?: unknown; started_at?: string | null; ended_at?: string | null }) => {
+const sessionMinutes = (s: {
+  total_minutes?: unknown;
+  started_at?: string | null;
+  ended_at?: string | null;
+}) => {
   const stored = asNum(s.total_minutes);
   if (stored > 0) return billedMinutes(stored);
   if (s.started_at && s.ended_at) {
@@ -112,10 +116,7 @@ interface CallHistoryTabProps {
   userGender: "male" | "female";
 }
 
-export const CallHistoryTab: React.FC<CallHistoryTabProps> = ({
-  currentUserId,
-  userGender,
-}) => {
+export const CallHistoryTab: React.FC<CallHistoryTabProps> = ({ currentUserId, userGender }) => {
   const navigate = useNavigate();
   const [filter, setFilter] = useState<HistoryType>("all");
   const [history, setHistory] = useState<HistoryItem[]>([]);
@@ -146,21 +147,38 @@ export const CallHistoryTab: React.FC<CallHistoryTabProps> = ({
 
       // 3. Group call participation — unified from wallet_transactions + archive
       //    (>3 month old records live in wallet_transactions_archive)
-      const { data: groupTxs } = await supabase.rpc(
-        "get_user_group_call_history" as any,
-        { p_user_id: currentUserId, p_is_male: isMale, p_limit: 50 }
-      );
+      const { data: groupTxs } = await supabase.rpc("get_user_group_call_history" as any, {
+        p_user_id: currentUserId,
+        p_is_male: isMale,
+        p_limit: 50,
+      });
 
       // 4. Group chat participation — include host earning from session
       const { data: gcRows } = await supabase
         .from("group_chat_participants")
-        .select("id, session_id, joined_at, left_at, total_seconds, total_billed, group_chat_sessions!inner(id, room_id, host_id, started_at, ended_at, total_host_earning, group_chat_rooms!inner(id, name, tree_type))")
+        .select(
+          "id, session_id, joined_at, left_at, total_seconds, total_billed, group_chat_sessions!inner(id, room_id, host_id, started_at, ended_at, total_host_earning, group_chat_rooms!inner(id, name, tree_type))",
+        )
         .eq("user_id", currentUserId)
         .order("joined_at", { ascending: false })
         .limit(50);
 
-      const chats = asList(chatSessions);
-      const videos = asList(videoSessions);
+      type SessionRow = {
+        id: string;
+        man_user_id: string;
+        woman_user_id: string;
+        rate_per_minute?: number;
+        total_earned?: number;
+        status?: string;
+        started_at?: string;
+        created_at?: string;
+        ended_at?: string | null;
+        end_reason?: string | null;
+        call_type?: string;
+      };
+      type TxRow = { session_id: string | null; amount: number | null };
+      const chats = asList(chatSessions as SessionRow[] | null);
+      const videos = asList(videoSessions as SessionRow[] | null);
       const groupRows = asList(groupTxs as any[]);
       const groupChats = asList(gcRows as any[]);
 
@@ -175,9 +193,12 @@ export const CallHistoryTab: React.FC<CallHistoryTabProps> = ({
           .select("session_id, amount")
           .eq("user_id", currentUserId)
           .in("session_id", sessionIds);
-        for (const tx of asList(txs)) {
+        for (const tx of asList(txs as TxRow[] | null)) {
           if (!tx.session_id) continue;
-          amountBySession.set(tx.session_id, (amountBySession.get(tx.session_id) || 0) + asNum(tx.amount));
+          amountBySession.set(
+            tx.session_id,
+            (amountBySession.get(tx.session_id) || 0) + asNum(tx.amount),
+          );
         }
       }
 
@@ -194,7 +215,17 @@ export const CallHistoryTab: React.FC<CallHistoryTabProps> = ({
       // (Group call partners are not direct 1:1; no extra partner IDs to fetch)
 
       // Batch fetch profiles
-      const profileMap = new Map<string, { full_name: string; photo_url: string; age: number | null; language: string | null; state: string | null; country: string | null }>();
+      const profileMap = new Map<
+        string,
+        {
+          full_name: string;
+          photo_url: string;
+          age: number | null;
+          language: string | null;
+          state: string | null;
+          country: string | null;
+        }
+      >();
       if (partnerIds.size > 0) {
         const publicProfiles = await fetchPublicProfiles(Array.from(partnerIds));
         asList(publicProfiles).forEach((p) =>
@@ -205,7 +236,7 @@ export const CallHistoryTab: React.FC<CallHistoryTabProps> = ({
             language: p.primary_language || p.preferred_language || p.language || null,
             state: p.state || p.city || null,
             country: p.country || null,
-          })
+          }),
         );
       }
 
@@ -216,10 +247,10 @@ export const CallHistoryTab: React.FC<CallHistoryTabProps> = ({
         const profile = profileMap.get(pid);
         const rate = asNum(s.rate_per_minute) || (isMale ? RATES.chat.man : RATES.chat.woman);
         const fromWallet = amountBySession.get(s.id);
-        const totalAmount = fromWallet ?? (isMale ? sessionMinutes(s) * rate : (asNum(s.total_earned) || sessionMinutes(s) * rate));
-        const mins = fromWallet && rate > 0
-          ? billedMinutes(fromWallet / rate)
-          : sessionMinutes(s);
+        const totalAmount =
+          fromWallet ??
+          (isMale ? sessionMinutes(s) * rate : asNum(s.total_earned) || sessionMinutes(s) * rate);
+        const mins = fromWallet && rate > 0 ? billedMinutes(fromWallet / rate) : sessionMinutes(s);
         items.push({
           id: s.id,
           type: "chat",
@@ -250,10 +281,10 @@ export const CallHistoryTab: React.FC<CallHistoryTabProps> = ({
         const rateSet = isAudio ? RATES.audio : RATES.video;
         const rate = asNum(s.rate_per_minute) || (isMale ? rateSet.man : rateSet.woman);
         const fromWallet = amountBySession.get(s.id);
-        const totalAmount = fromWallet ?? (isMale ? sessionMinutes(s) * rate : (asNum(s.total_earned) || sessionMinutes(s) * rate));
-        const mins = fromWallet && rate > 0
-          ? billedMinutes(fromWallet / rate)
-          : sessionMinutes(s);
+        const totalAmount =
+          fromWallet ??
+          (isMale ? sessionMinutes(s) * rate : asNum(s.total_earned) || sessionMinutes(s) * rate);
+        const mins = fromWallet && rate > 0 ? billedMinutes(fromWallet / rate) : sessionMinutes(s);
         items.push({
           id: s.id,
           type: isAudio ? "audio" : "video",
@@ -276,17 +307,20 @@ export const CallHistoryTab: React.FC<CallHistoryTabProps> = ({
       });
 
       // Map group call transactions — aggregate by session_id (one row per call)
-      const groupBySession = new Map<string, {
-        id: string;
-        totalSeconds: number;
-        totalAmount: number;
-        rate: number;
-        startedAt: string;
-        endedAt: string;
-        partnerName: string;
-        partnerId: string;
-        partnerAvatar: string;
-      }>();
+      const groupBySession = new Map<
+        string,
+        {
+          id: string;
+          totalSeconds: number;
+          totalAmount: number;
+          rate: number;
+          startedAt: string;
+          endedAt: string;
+          partnerName: string;
+          partnerId: string;
+          partnerAvatar: string;
+        }
+      >();
       groupRows.forEach((tx: any) => {
         if (!tx?.id) return;
         const key = tx.session_id ? String(tx.session_id) : String(tx.id);
@@ -295,7 +329,7 @@ export const CallHistoryTab: React.FC<CallHistoryTabProps> = ({
         const rate = asNum(tx.rate_per_minute) || (isMale ? RATES.group.man : RATES.group.woman);
         const partnerName = asText(
           tx.counterparty_name || tx.partner_name || tx.description,
-          "Private Group"
+          "Private Group",
         );
         const createdAt = asText(tx.created_at, "");
         const existing = groupBySession.get(key);
@@ -389,7 +423,6 @@ export const CallHistoryTab: React.FC<CallHistoryTabProps> = ({
         });
       });
 
-
       // Sort by most recent
       items.sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime());
       setHistory(items);
@@ -408,23 +441,35 @@ export const CallHistoryTab: React.FC<CallHistoryTabProps> = ({
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case "chat": return <MessageCircle className="w-4 h-4" />;
-      case "audio": return <Phone className="w-4 h-4" />;
-      case "video": return <Video className="w-4 h-4" />;
-      case "group": return <Users className="w-4 h-4" />;
-      case "groupchat": return <Radio className="w-4 h-4" />;
-      default: return <Phone className="w-4 h-4" />;
+      case "chat":
+        return <MessageCircle className="w-4 h-4" />;
+      case "audio":
+        return <Phone className="w-4 h-4" />;
+      case "video":
+        return <Video className="w-4 h-4" />;
+      case "group":
+        return <Users className="w-4 h-4" />;
+      case "groupchat":
+        return <Radio className="w-4 h-4" />;
+      default:
+        return <Phone className="w-4 h-4" />;
     }
   };
 
   const getTypeBadgeColor = (type: string) => {
     switch (type) {
-      case "chat": return "bg-primary/10 text-primary";
-      case "audio": return "bg-emerald-500/10 text-emerald-600";
-      case "video": return "bg-accent/20 text-accent-foreground";
-      case "group": return "bg-secondary/30 text-secondary-foreground";
-      case "groupchat": return "bg-red-500/10 text-red-500";
-      default: return "bg-muted text-muted-foreground";
+      case "chat":
+        return "bg-primary/10 text-primary";
+      case "audio":
+        return "bg-emerald-500/10 text-emerald-600";
+      case "video":
+        return "bg-accent/20 text-accent-foreground";
+      case "group":
+        return "bg-secondary/30 text-secondary-foreground";
+      case "groupchat":
+        return "bg-red-500/10 text-red-500";
+      default:
+        return "bg-muted text-muted-foreground";
     }
   };
 
@@ -474,7 +519,7 @@ export const CallHistoryTab: React.FC<CallHistoryTabProps> = ({
                 "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors",
                 filter === fb.id
                   ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:bg-muted-foreground/10"
+                  : "bg-muted text-muted-foreground hover:bg-muted-foreground/10",
               )}
             >
               {fb.icon}
@@ -514,9 +559,12 @@ export const CallHistoryTab: React.FC<CallHistoryTabProps> = ({
             const subtitleParts: string[] = [];
             const amount = asNum(item.totalAmount);
             const rate = asNum(item.ratePerMinute);
-            const mins = item.totalMinutes > 0
-              ? item.totalMinutes
-              : (rate > 0 && amount > 0 ? billedMinutes(amount / rate) : 0);
+            const mins =
+              item.totalMinutes > 0
+                ? item.totalMinutes
+                : rate > 0 && amount > 0
+                  ? billedMinutes(amount / rate)
+                  : 0;
             if (item.status === "active") subtitleParts.push("Ongoing");
             else subtitleParts.push(item.endReason || "Ended");
             subtitleParts.push(`${mins} min`);
@@ -530,12 +578,24 @@ export const CallHistoryTab: React.FC<CallHistoryTabProps> = ({
                   {getTypeIcon(item.type)}
                 </span>
                 <span className="font-medium">{mins} min</span>
-                <span className={cn("font-semibold", amount > 0 ? (isMale ? "text-destructive" : "text-primary") : "text-muted-foreground")}>
+                <span
+                  className={cn(
+                    "font-semibold",
+                    amount > 0
+                      ? isMale
+                        ? "text-destructive"
+                        : "text-primary"
+                      : "text-muted-foreground",
+                  )}
+                >
                   {isMale ? "-" : "+"}₹{amount.toFixed(2)}
                 </span>
                 <span>{relativeTime(item.startedAt)}</span>
                 {item.status === "active" && (
-                  <Badge variant="outline" className="text-[9px] py-0 px-1.5 bg-primary/10 text-primary border-primary/30">
+                  <Badge
+                    variant="outline"
+                    className="text-[9px] py-0 px-1.5 bg-primary/10 text-primary border-primary/30"
+                  >
                     LIVE
                   </Badge>
                 )}
@@ -546,9 +606,7 @@ export const CallHistoryTab: React.FC<CallHistoryTabProps> = ({
             if (item.type === "group" || item.type === "groupchat") {
               const dashboardBase = userGender === "female" ? "/women-dashboard" : "/dashboard";
               const navTarget =
-                item.type === "groupchat"
-                  ? `${dashboardBase}?tab=groupchat`
-                  : "/private-groups";
+                item.type === "groupchat" ? `${dashboardBase}?tab=groupchat` : "/private-groups";
               return (
                 <button
                   key={`${item.type}-${item.id}`}
@@ -561,7 +619,12 @@ export const CallHistoryTab: React.FC<CallHistoryTabProps> = ({
                         <Users className="w-5 h-5" />
                       </AvatarFallback>
                     </Avatar>
-                    <div className={cn("absolute -bottom-0.5 -right-0.5 p-1 rounded-full border-2 border-background", getTypeBadgeColor(item.type))}>
+                    <div
+                      className={cn(
+                        "absolute -bottom-0.5 -right-0.5 p-1 rounded-full border-2 border-background",
+                        getTypeBadgeColor(item.type),
+                      )}
+                    >
                       {getTypeIcon(item.type)}
                     </div>
                   </div>
@@ -571,7 +634,16 @@ export const CallHistoryTab: React.FC<CallHistoryTabProps> = ({
                   </div>
                   <div className="text-[10px] text-muted-foreground flex-shrink-0 text-right">
                     <p className="font-medium">{mins} min</p>
-                    <p className={cn("font-semibold", amount > 0 ? (isMale ? "text-destructive" : "text-primary") : "text-muted-foreground")}>
+                    <p
+                      className={cn(
+                        "font-semibold",
+                        amount > 0
+                          ? isMale
+                            ? "text-destructive"
+                            : "text-primary"
+                          : "text-muted-foreground",
+                      )}
+                    >
                       {isMale ? "-" : "+"}₹{amount.toFixed(2)}
                     </p>
                     <p>{relativeTime(item.startedAt)}</p>

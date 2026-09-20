@@ -30,9 +30,7 @@ export function useWebCaptureGuard() {
 
     const lastLogged: Record<string, number> = {};
 
-    const log = async (
-      event_type: "screenshot" | "recording_started" | "recording_stopped",
-    ) => {
+    const log = async (event_type: "screenshot" | "recording_started" | "recording_stopped") => {
       const now = Date.now();
       if (now - (lastLogged[event_type] ?? 0) < THROTTLE_MS) return;
       lastLogged[event_type] = now;

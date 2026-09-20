@@ -7,11 +7,7 @@
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChevronDown, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -279,7 +275,7 @@ export default function PhoneInputWithCode({
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [selectedCountry, setSelectedCountry] = useState(
-    countryCodes.find((c) => c.code === defaultCountryCode) || countryCodes[0]
+    countryCodes.find((c) => c.code === defaultCountryCode) || countryCodes[0],
   );
 
   // Parse existing value to extract country code if present
@@ -297,15 +293,15 @@ export default function PhoneInputWithCode({
     (country) =>
       country.name.toLowerCase().includes(search.toLowerCase()) ||
       country.dialCode.includes(search) ||
-      country.code.toLowerCase().includes(search.toLowerCase())
+      country.code.toLowerCase().includes(search.toLowerCase()),
   );
 
   // Handle country selection
-  const handleCountrySelect = (country: typeof countryCodes[0]) => {
+  const handleCountrySelect = (country: (typeof countryCodes)[0]) => {
     setSelectedCountry(country);
     setOpen(false);
     setSearch("");
-    
+
     // Update the phone value with new country code
     const phoneWithoutCode = value.replace(/^\+\d+/, "").trim();
     onChange(country.dialCode + phoneWithoutCode);
@@ -337,7 +333,7 @@ export default function PhoneInputWithCode({
             className={cn(
               "w-[100px] h-12 rounded-xl border-2 justify-between px-3",
               "hover:bg-accent/50 focus:ring-2 focus:ring-primary/20",
-              error ? "border-destructive" : "border-input focus:border-primary"
+              error ? "border-destructive" : "border-input focus:border-primary",
             )}
           >
             <span className="flex items-center gap-1.5 text-base">
@@ -347,8 +343,8 @@ export default function PhoneInputWithCode({
             <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent 
-          className="w-[280px] p-0 bg-popover border border-border shadow-lg z-50" 
+        <PopoverContent
+          className="w-[280px] p-0 bg-popover border border-border shadow-lg z-50"
           align="start"
         >
           {/* Search */}
@@ -363,14 +359,12 @@ export default function PhoneInputWithCode({
               />
             </div>
           </div>
-          
+
           {/* Country List */}
           <ScrollArea className="h-[250px]">
             <div className="p-1">
               {filteredCountries.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  No country found
-                </p>
+                <p className="text-sm text-muted-foreground text-center py-4">No country found</p>
               ) : (
                 filteredCountries.map((country) => (
                   <button
@@ -379,7 +373,7 @@ export default function PhoneInputWithCode({
                     className={cn(
                       "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left",
                       "hover:bg-accent transition-colors",
-                      selectedCountry.code === country.code && "bg-accent"
+                      selectedCountry.code === country.code && "bg-accent",
                     )}
                   >
                     <span className="text-xl">{country.flag}</span>
@@ -406,7 +400,9 @@ export default function PhoneInputWithCode({
         onBlur={onBlur}
         className={cn(
           "flex-1 h-12 rounded-xl border-2 transition-all focus:ring-2 focus:ring-primary/20",
-          error ? "border-destructive focus:border-destructive" : "border-input focus:border-primary"
+          error
+            ? "border-destructive focus:border-destructive"
+            : "border-input focus:border-primary",
         )}
       />
     </div>

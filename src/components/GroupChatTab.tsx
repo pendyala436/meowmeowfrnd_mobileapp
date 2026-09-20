@@ -5,7 +5,14 @@
 import React, { useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Search, Radio } from "lucide-react";
-import { useGroupChatRooms, gcGoLive, gcJoin, gcEndLive, gcAnnounce, type GroupChatRoom } from "@/hooks/useGroupChat";
+import {
+  useGroupChatRooms,
+  gcGoLive,
+  gcJoin,
+  gcEndLive,
+  gcAnnounce,
+  type GroupChatRoom,
+} from "@/hooks/useGroupChat";
 import { GroupChatRoomCard } from "./group-chat/GroupChatRoomCard";
 import { GroupChatRoom as GroupChatRoomView } from "./group-chat/GroupChatRoom";
 import { toast } from "@/hooks/use-toast";
@@ -17,9 +24,20 @@ interface Props {
   viewerLanguage?: string;
 }
 
-interface ActiveRoom { sessionId: string; roomId: string; roomName: string; hostId: string; hostName?: string | null; }
+interface ActiveRoom {
+  sessionId: string;
+  roomId: string;
+  roomName: string;
+  hostId: string;
+  hostName?: string | null;
+}
 
-const GroupChatTab: React.FC<Props> = ({ currentUserId, viewerGender, viewerName, viewerLanguage }) => {
+const GroupChatTab: React.FC<Props> = ({
+  currentUserId,
+  viewerGender,
+  viewerName,
+  viewerLanguage,
+}) => {
   const isMale = viewerGender === "male";
   const { rooms, loading } = useGroupChatRooms({ onlyLive: isMale });
   const [search, setSearch] = useState("");
@@ -28,14 +46,19 @@ const GroupChatTab: React.FC<Props> = ({ currentUserId, viewerGender, viewerName
   const filtered = useMemo(() => {
     if (!search.trim()) return rooms;
     const q = search.toLowerCase();
-    return rooms.filter((r) => r.name.toLowerCase().includes(q) || r.tree_type.toLowerCase().includes(q));
+    return rooms.filter(
+      (r) => r.name.toLowerCase().includes(q) || r.tree_type.toLowerCase().includes(q),
+    );
   }, [rooms, search]);
 
   const liveCount = rooms.filter((r) => r.status === "live").length;
 
   const handleJoin = async (r: GroupChatRoom) => {
     const res = await gcJoin(r.id);
-    if (!res.success) { toast({ title: "Cannot join", description: res.error, variant: "destructive" }); return; }
+    if (!res.success) {
+      toast({ title: "Cannot join", description: res.error, variant: "destructive" });
+      return;
+    }
     setActive({
       sessionId: res.session_id!,
       roomId: r.id,
@@ -47,7 +70,10 @@ const GroupChatTab: React.FC<Props> = ({ currentUserId, viewerGender, viewerName
   };
   const handleGoLive = async (r: GroupChatRoom) => {
     const res = await gcGoLive(r.id);
-    if (!res.success) { toast({ title: "Cannot go live", description: res.error, variant: "destructive" }); return; }
+    if (!res.success) {
+      toast({ title: "Cannot go live", description: res.error, variant: "destructive" });
+      return;
+    }
     setActive({
       sessionId: res.session_id!,
       roomId: r.id,
@@ -59,7 +85,11 @@ const GroupChatTab: React.FC<Props> = ({ currentUserId, viewerGender, viewerName
   };
   const handleEndLive = async (r: GroupChatRoom) => {
     if (!r.current_session_id) {
-      toast({ title: "Cannot end room", description: "No live session on this room.", variant: "destructive" });
+      toast({
+        title: "Cannot end room",
+        description: "No live session on this room.",
+        variant: "destructive",
+      });
       return;
     }
     const res = await gcEndLive(r.current_session_id);

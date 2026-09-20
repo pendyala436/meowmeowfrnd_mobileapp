@@ -19,7 +19,6 @@ import { toast } from "sonner";
 import { Trash2, AlertTriangle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-
 interface AccountDeletionSectionProps {
   compact?: boolean;
 }
@@ -38,7 +37,9 @@ export const AccountDeletionSection = ({ compact = false }: AccountDeletionSecti
 
     setDeleting(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session?.user) {
         toast.error("Session expired. Please log in again.");
         navigate("/");
@@ -59,7 +60,9 @@ export const AccountDeletionSection = ({ compact = false }: AccountDeletionSecti
       navigate("/", { replace: true });
     } catch (error) {
       console.error("Error deleting account:", error);
-      toast.error(t("accountDeleteFailed", "Failed to delete account. Please try again or contact support."));
+      toast.error(
+        t("accountDeleteFailed", "Failed to delete account. Please try again or contact support."),
+      );
     } finally {
       setDeleting(false);
     }
@@ -81,7 +84,7 @@ export const AccountDeletionSection = ({ compact = false }: AccountDeletionSecti
           <p className="text-sm text-muted-foreground">
             {t(
               "deleteAccountWarning",
-              "Deleting your account will permanently remove all your data including your profile, messages, matches, wallet balance, and transaction history. This action cannot be undone."
+              "Deleting your account will permanently remove all your data including your profile, messages, matches, wallet balance, and transaction history. This action cannot be undone.",
             )}
           </p>
 
@@ -103,9 +106,6 @@ export const AccountDeletionSection = ({ compact = false }: AccountDeletionSecti
               onEscapeKeyDown={(e) => {
                 if (deleting) e.preventDefault();
               }}
-              onPointerDownOutside={(e) => {
-                if (deleting) e.preventDefault();
-              }}
             >
               <AlertDialogHeader>
                 <AlertDialogTitle className="flex items-center gap-2 text-destructive">
@@ -116,7 +116,7 @@ export const AccountDeletionSection = ({ compact = false }: AccountDeletionSecti
                   <span className="block">
                     {t(
                       "deleteConfirmMessage",
-                      "This will permanently delete your account and all associated data. You will lose:"
+                      "This will permanently delete your account and all associated data. You will lose:",
                     )}
                   </span>
                   <ul className="list-disc pl-5 space-y-1 text-sm">
@@ -139,15 +139,13 @@ export const AccountDeletionSection = ({ compact = false }: AccountDeletionSecti
                   id="confirm-delete"
                   value={confirmText}
                   onChange={(e) => setConfirmText(e.target.value.toUpperCase())}
-                  placeholder='DELETE'
+                  placeholder="DELETE"
                   className="border-destructive/50 focus-visible:ring-destructive"
                   autoComplete="off"
                 />
               </div>
               <AlertDialogFooter>
-                <AlertDialogCancel disabled={deleting}>
-                  {t("cancel", "Cancel")}
-                </AlertDialogCancel>
+                <AlertDialogCancel disabled={deleting}>{t("cancel", "Cancel")}</AlertDialogCancel>
                 <Button
                   type="button"
                   variant="destructive"

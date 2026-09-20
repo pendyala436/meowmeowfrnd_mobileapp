@@ -70,8 +70,12 @@ describe("billing.service", () => {
   describe("minimumBalanceFor", () => {
     it("returns double the man rate for each session type", () => {
       expect(minimumBalanceFor("chat", PRICING_DEFAULTS)).toBe(PRICING_DEFAULTS.chat_man_rate * 2);
-      expect(minimumBalanceFor("audio_call", PRICING_DEFAULTS)).toBe(PRICING_DEFAULTS.audio_man_rate * 2);
-      expect(minimumBalanceFor("video_call", PRICING_DEFAULTS)).toBe(PRICING_DEFAULTS.video_man_rate * 2);
+      expect(minimumBalanceFor("audio_call", PRICING_DEFAULTS)).toBe(
+        PRICING_DEFAULTS.audio_man_rate * 2,
+      );
+      expect(minimumBalanceFor("video_call", PRICING_DEFAULTS)).toBe(
+        PRICING_DEFAULTS.video_man_rate * 2,
+      );
       expect(minimumBalanceFor("private_group_call", PRICING_DEFAULTS)).toBe(
         PRICING_DEFAULTS.group_man_rate * 2,
       );
@@ -142,26 +146,35 @@ describe("billing.service", () => {
     it("billChatMinute uses chat type", async () => {
       rpcMock.mockResolvedValue({ data: { success: true }, error: null });
       await billChatMinute("s1", 1, "m1", "w1", 2);
-      expect(rpcMock).toHaveBeenCalledWith("bill_session_minute", expect.objectContaining({
-        p_session_type: "chat",
-        p_minute_index: 2,
-      }));
+      expect(rpcMock).toHaveBeenCalledWith(
+        "bill_session_minute",
+        expect.objectContaining({
+          p_session_type: "chat",
+          p_minute_index: 2,
+        }),
+      );
     });
 
     it("billAudioCallMinute uses audio_call type", async () => {
       rpcMock.mockResolvedValue({ data: { success: true }, error: null });
       await billAudioCallMinute("s1", 1, "m1", "w1");
-      expect(rpcMock).toHaveBeenCalledWith("bill_session_minute", expect.objectContaining({
-        p_session_type: "audio_call",
-      }));
+      expect(rpcMock).toHaveBeenCalledWith(
+        "bill_session_minute",
+        expect.objectContaining({
+          p_session_type: "audio_call",
+        }),
+      );
     });
 
     it("billVideoCallMinute uses video_call type", async () => {
       rpcMock.mockResolvedValue({ data: { success: true }, error: null });
       await billVideoCallMinute("s1", 1, "m1", "w1");
-      expect(rpcMock).toHaveBeenCalledWith("bill_session_minute", expect.objectContaining({
-        p_session_type: "video_call",
-      }));
+      expect(rpcMock).toHaveBeenCalledWith(
+        "bill_session_minute",
+        expect.objectContaining({
+          p_session_type: "video_call",
+        }),
+      );
     });
 
     it("billGroupCallMinute uses private_group_call type", async () => {
@@ -197,18 +210,24 @@ describe("billing.service", () => {
       rpcMock.mockResolvedValue({ data: { success: true, charged: 4 }, error: null });
       const result = await billFinalPartialMinute("s1", "chat", 61, "m1", "w1");
       expect(result?.success).toBe(true);
-      expect(rpcMock).toHaveBeenCalledWith("bill_session_minute", expect.objectContaining({
-        p_minutes: 1.0,
-        p_minute_index: 1,
-      }));
+      expect(rpcMock).toHaveBeenCalledWith(
+        "bill_session_minute",
+        expect.objectContaining({
+          p_minutes: 1.0,
+          p_minute_index: 1,
+        }),
+      );
     });
 
     it("bills first minute for short sessions", async () => {
       rpcMock.mockResolvedValue({ data: { success: true }, error: null });
       await billFinalPartialMinute("s1", "video_call", 5, "m1", "w1");
-      expect(rpcMock).toHaveBeenCalledWith("bill_session_minute", expect.objectContaining({
-        p_minute_index: 0,
-      }));
+      expect(rpcMock).toHaveBeenCalledWith(
+        "bill_session_minute",
+        expect.objectContaining({
+          p_minute_index: 0,
+        }),
+      );
     });
   });
 

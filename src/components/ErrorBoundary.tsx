@@ -5,10 +5,10 @@
  * component crash from taking down everything.
  */
 
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { AlertTriangle, RefreshCw, Home, WifiOff, ShieldAlert, ServerCrash } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { classifyError, ErrorCategory } from '@/lib/errors';
+import React, { Component, ErrorInfo, ReactNode } from "react";
+import { AlertTriangle, RefreshCw, Home, WifiOff, ShieldAlert, ServerCrash } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { classifyError, ErrorCategory } from "@/lib/errors";
 
 interface Props {
   children: ReactNode;
@@ -45,8 +45,8 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    console.error('[ErrorBoundary]', this.state.errorId, error?.message, error);
-    console.error('[ErrorBoundary] Component stack:', errorInfo.componentStack);
+    console.error("[ErrorBoundary]", this.state.errorId, error?.message, error);
+    console.error("[ErrorBoundary] Component stack:", errorInfo.componentStack);
     this.props.onError?.(error, errorInfo);
   }
 
@@ -57,11 +57,11 @@ export class ErrorBoundary extends Component<Props, State> {
   handleReload = async (): Promise<void> => {
     // Clear stale service worker and caches first to prevent reload loops
     try {
-      if ('serviceWorker' in navigator) {
+      if ("serviceWorker" in navigator) {
         const regs = await navigator.serviceWorker.getRegistrations();
         await Promise.all(regs.map((r) => r.unregister()));
       }
-      if ('caches' in window) {
+      if ("caches" in window) {
         const keys = await caches.keys();
         await Promise.all(keys.map((k) => caches.delete(k)));
       }
@@ -72,7 +72,7 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   handleGoHome = (): void => {
-    window.location.href = '/';
+    window.location.href = "/";
   };
 
   render(): ReactNode {
@@ -90,40 +90,41 @@ export class ErrorBoundary extends Component<Props, State> {
       if (!appError) {
         return {
           icon: <AlertTriangle className="h-12 w-12 text-destructive" />,
-          bgClass: 'bg-destructive/10',
-          title: 'Something went wrong',
-          message: 'An unexpected error occurred. Please try reloading the page.',
+          bgClass: "bg-destructive/10",
+          title: "Something went wrong",
+          message: "An unexpected error occurred. Please try reloading the page.",
         };
       }
       switch (appError.category) {
         case ErrorCategory.NETWORK:
           return {
             icon: <WifiOff className="h-12 w-12 text-warning" />,
-            bgClass: 'bg-warning/10',
-            title: 'No internet connection',
-            message: 'Please check your internet connection and try again.',
+            bgClass: "bg-warning/10",
+            title: "No internet connection",
+            message: "Please check your internet connection and try again.",
           };
         case ErrorCategory.AUTH:
         case ErrorCategory.PERMISSION:
           return {
             icon: <ShieldAlert className="h-12 w-12 text-primary" />,
-            bgClass: 'bg-primary/10',
+            bgClass: "bg-primary/10",
             title: appError.title,
             message: appError.message,
           };
         case ErrorCategory.SERVER:
           return {
             icon: <ServerCrash className="h-12 w-12 text-destructive" />,
-            bgClass: 'bg-destructive/10',
-            title: 'Server error',
-            message: 'Our servers ran into a problem. Please try again in a few moments.',
+            bgClass: "bg-destructive/10",
+            title: "Server error",
+            message: "Our servers ran into a problem. Please try again in a few moments.",
           };
         default:
           return {
             icon: <AlertTriangle className="h-12 w-12 text-destructive" />,
-            bgClass: 'bg-destructive/10',
-            title: appError.title || 'Something went wrong',
-            message: appError.message || 'An unexpected error occurred. Please try reloading the page.',
+            bgClass: "bg-destructive/10",
+            title: appError.title || "Something went wrong",
+            message:
+              appError.message || "An unexpected error occurred. Please try reloading the page.",
           };
       }
     };
@@ -134,9 +135,7 @@ export class ErrorBoundary extends Component<Props, State> {
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="max-w-md w-full text-center space-y-6 animate-fade-in">
           <div className="flex justify-center">
-            <div className={`p-5 ${display.bgClass} rounded-full`}>
-              {display.icon}
-            </div>
+            <div className={`p-5 ${display.bgClass} rounded-full`}>{display.icon}</div>
           </div>
 
           <div className="space-y-2">
@@ -178,15 +177,16 @@ export class ErrorBoundary extends Component<Props, State> {
           </div>
 
           <p className="text-xs text-muted-foreground">
-            If this keeps happening, please{' '}
+            If this keeps happening, please{" "}
             <button
               className="underline underline-offset-2 hover:text-foreground transition-colors"
               onClick={() => {
-                window.location.href = 'mailto:support@meow.app?subject=App error ' + this.state.errorId;
+                window.location.href =
+                  "mailto:support@meow.app?subject=App error " + this.state.errorId;
               }}
             >
               contact support
-            </button>{' '}
+            </button>{" "}
             with the error reference above.
           </p>
         </div>

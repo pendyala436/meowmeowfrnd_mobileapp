@@ -30,9 +30,11 @@ export function useAndroidCaptureGuard() {
   useEffect(() => {
     if (Capacitor.getPlatform() !== "android") return;
 
-    const plugin = (Capacitor as unknown as {
-      Plugins: { ScreenCapture?: ScreenCapturePlugin };
-    }).Plugins.ScreenCapture;
+    const plugin = (
+      Capacitor as unknown as {
+        Plugins: { ScreenCapture?: ScreenCapturePlugin };
+      }
+    ).Plugins.ScreenCapture;
     if (!plugin) return;
 
     const subs: Array<{ remove: () => Promise<void> }> = [];

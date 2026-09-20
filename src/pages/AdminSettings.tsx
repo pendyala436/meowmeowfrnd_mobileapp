@@ -8,17 +8,23 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
-import { 
-  Save, 
-  Settings, 
-  Shield, 
-  MessageSquare, 
-  CreditCard, 
+import {
+  Save,
+  Settings,
+  Shield,
+  MessageSquare,
+  CreditCard,
   Bell,
   BarChart3,
   Check,
@@ -76,7 +82,7 @@ const THEME_OPTIONS = [
 
 import { languages } from "@/data/languages";
 
-const LANGUAGE_OPTIONS = languages.map(lang => ({
+const LANGUAGE_OPTIONS = languages.map((lang) => ({
   value: lang.code,
   label: lang.name,
 }));
@@ -108,13 +114,13 @@ const AdminSettings = () => {
     } finally {
       setLoading(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Real-time subscription for settings
   useRealtimeSubscription({
     table: "admin_settings",
-    onUpdate: loadSettings
+    onUpdate: loadSettings,
   });
 
   useEffect(() => {
@@ -122,7 +128,7 @@ const AdminSettings = () => {
   }, [loadSettings]);
 
   const handleSettingChange = (settingKey: string, value: string) => {
-    setModifiedSettings(prev => ({
+    setModifiedSettings((prev) => ({
       ...prev,
       [settingKey]: value,
     }));
@@ -133,25 +139,29 @@ const AdminSettings = () => {
   };
 
   // Mapping from admin_settings keys → app_settings keys for sync
-  const ADMIN_TO_APP_SETTINGS_MAP: Record<string, { key: string; transform?: (v: string) => any }> = {
-    max_message_length: { key: "max_message_length" },
-    max_parallel_connections: { key: "max_parallel_chats" },
-    reconnect_attempts: { key: "max_reconnect_attempts" },
-    min_wallet_balance: { key: "min_withdrawal_balance" },
-    default_theme: { key: "default_theme" },
-    default_language: { key: "default_language" },
-    maintenance_mode: { key: "maintenance_mode" },
-    min_recharge_amount: { key: "min_recharge_amount" },
-    max_recharge_amount: { key: "max_recharge_amount" },
-    min_withdrawal_amount: { key: "min_withdrawal_amount" },
-    chat_rate_per_minute: { key: "chat_rate_per_minute" },
-    platform_fee_percent: { key: "platform_fee_percent" },
-    women_earning_percentage: { key: "women_earning_percentage" },
-    withdrawal_processing_days: { key: "withdrawal_processing_hours", transform: (v) => (parseInt(v) * 24).toString() },
-    session_timeout_minutes: { key: "session_timeout_minutes" },
-    auto_disconnect_timer: { key: "auto_disconnect_timer" },
-    chat_timeout_seconds: { key: "chat_timeout_seconds" },
-  };
+  const ADMIN_TO_APP_SETTINGS_MAP: Record<string, { key: string; transform?: (v: string) => any }> =
+    {
+      max_message_length: { key: "max_message_length" },
+      max_parallel_connections: { key: "max_parallel_chats" },
+      reconnect_attempts: { key: "max_reconnect_attempts" },
+      min_wallet_balance: { key: "min_withdrawal_balance" },
+      default_theme: { key: "default_theme" },
+      default_language: { key: "default_language" },
+      maintenance_mode: { key: "maintenance_mode" },
+      min_recharge_amount: { key: "min_recharge_amount" },
+      max_recharge_amount: { key: "max_recharge_amount" },
+      min_withdrawal_amount: { key: "min_withdrawal_amount" },
+      chat_rate_per_minute: { key: "chat_rate_per_minute" },
+      platform_fee_percent: { key: "platform_fee_percent" },
+      women_earning_percentage: { key: "women_earning_percentage" },
+      withdrawal_processing_days: {
+        key: "withdrawal_processing_hours",
+        transform: (v) => (parseInt(v) * 24).toString(),
+      },
+      session_timeout_minutes: { key: "session_timeout_minutes" },
+      auto_disconnect_timer: { key: "auto_disconnect_timer" },
+      chat_timeout_seconds: { key: "chat_timeout_seconds" },
+    };
 
   /**
    * Sync changed admin_settings to app_settings table so dashboards
@@ -169,21 +179,20 @@ const AdminSettings = () => {
       // Upsert into app_settings (update if exists, insert if not)
       syncPromises.push(
         (async () => {
-          const { error } = await supabase
-            .from("app_settings")
-            .upsert(
-              {
-                setting_key: mapping.key,
-                setting_value: syncValue,
-                setting_type: typeof syncValue === "number" ? "number" : "string",
-                category: "synced",
-                is_public: true,
-                updated_at: new Date().toISOString(),
-              },
-              { onConflict: "setting_key" }
-            );
-          if (error) console.warn(`[Sync] Failed to sync ${adminKey} → ${mapping.key}:`, error.message);
-        })()
+          const { error } = await supabase.from("app_settings").upsert(
+            {
+              setting_key: mapping.key,
+              setting_value: syncValue,
+              setting_type: typeof syncValue === "number" ? "number" : "string",
+              category: "synced",
+              is_public: true,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "setting_key" },
+          );
+          if (error)
+            console.warn(`[Sync] Failed to sync ${adminKey} → ${mapping.key}:`, error.message);
+        })(),
       );
     }
 
@@ -201,7 +210,9 @@ const AdminSettings = () => {
 
     setSaving(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session?.user) {
         toast.error("Error", { description: "Session expired. Please log in again." });
         navigate("/");
@@ -211,9 +222,9 @@ const AdminSettings = () => {
       for (const [key, value] of Object.entries(modifiedSettings)) {
         const { error } = await supabase
           .from("admin_settings")
-          .update({ 
+          .update({
             setting_value: value,
-            last_updated_by: user?.id 
+            last_updated_by: user?.id,
           })
           .eq("setting_key", key);
 
@@ -226,7 +237,9 @@ const AdminSettings = () => {
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 2000);
 
-      toast.success("Settings saved & synced", { description: `${Object.keys(modifiedSettings).length} setting(s) updated and synced to dashboards` });
+      toast.success("Settings saved & synced", {
+        description: `${Object.keys(modifiedSettings).length} setting(s) updated and synced to dashboards`,
+      });
 
       setModifiedSettings({});
       loadSettings();
@@ -239,10 +252,10 @@ const AdminSettings = () => {
   };
 
   const getSettingsByCategory = (category: string) => {
-    return settings.filter(s => s.category === category);
+    return settings.filter((s) => s.category === category);
   };
 
-  const categories = [...new Set(settings.map(s => s.category))];
+  const categories = [...new Set(settings.map((s) => s.category))];
 
   const renderSettingInput = (setting: AdminSetting) => {
     const value = getSettingValue(setting);
@@ -260,29 +273,41 @@ const AdminSettings = () => {
             </div>
             <Switch
               checked={value === "true"}
-              onCheckedChange={(checked) => handleSettingChange(setting.setting_key, checked.toString())}
+              onCheckedChange={(checked) =>
+                handleSettingChange(setting.setting_key, checked.toString())
+              }
               className={isModified ? "ring-2 ring-primary ring-offset-2" : ""}
             />
           </div>
         );
 
       case "select":
-        const options = setting.setting_key === "default_theme" ? THEME_OPTIONS : 
-                       setting.setting_key === "default_language" ? LANGUAGE_OPTIONS : 
-                       [];
+        const options =
+          setting.setting_key === "default_theme"
+            ? THEME_OPTIONS
+            : setting.setting_key === "default_language"
+              ? LANGUAGE_OPTIONS
+              : [];
         return (
           <div className="space-y-2">
             <Label className="text-foreground font-medium">{setting.setting_name}</Label>
             {setting.description && (
               <p className="text-sm text-muted-foreground">{setting.description}</p>
             )}
-            <Select value={value} onValueChange={(v) => handleSettingChange(setting.setting_key, v)}>
-              <SelectTrigger className={`w-full bg-background ${isModified ? "ring-2 ring-primary" : ""}`}>
+            <Select
+              value={value}
+              onValueChange={(v) => handleSettingChange(setting.setting_key, v)}
+            >
+              <SelectTrigger
+                className={`w-full bg-background ${isModified ? "ring-2 ring-primary" : ""}`}
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-popover border border-border z-50">
-                {options.map(opt => (
-                  <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                {options.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -348,10 +373,10 @@ const AdminSettings = () => {
             <Button variant="outline" size="icon" onClick={loadSettings}>
               <RefreshCw className="h-4 w-4" />
             </Button>
-            <Button 
-              onClick={saveSettings} 
+            <Button
+              onClick={saveSettings}
               disabled={saving || Object.keys(modifiedSettings).length === 0}
-              className={`gap-2 transition-all duration-300 ${saveSuccess ? 'bg-emerald-500 hover:bg-emerald-600' : ''}`}
+              className={`gap-2 transition-all duration-300 ${saveSuccess ? "bg-emerald-500 hover:bg-emerald-600" : ""}`}
             >
               {saving ? (
                 <RefreshCw className="h-4 w-4 animate-spin" />
@@ -372,16 +397,16 @@ const AdminSettings = () => {
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid grid-cols-3 lg:grid-cols-6 mb-6 bg-muted/50">
-            {categories.map(category => {
+            {categories.map((category) => {
               const Icon = CATEGORY_ICONS[category] || Settings;
               const count = getSettingsByCategory(category).length;
               const modifiedCount = getSettingsByCategory(category).filter(
-                s => modifiedSettings[s.setting_key] !== undefined
+                (s) => modifiedSettings[s.setting_key] !== undefined,
               ).length;
-              
+
               return (
-                <TabsTrigger 
-                  key={category} 
+                <TabsTrigger
+                  key={category}
                   value={category}
                   className="gap-2 relative data-[state=active]:bg-background"
                 >
@@ -397,7 +422,7 @@ const AdminSettings = () => {
             })}
           </TabsList>
 
-          {categories.map(category => (
+          {categories.map((category) => (
             <TabsContent key={category} value={category} className="space-y-4">
               <Card>
                 <CardHeader>
@@ -413,13 +438,13 @@ const AdminSettings = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {getSettingsByCategory(category).map(setting => (
-                    <div 
-                      key={setting.id} 
+                  {getSettingsByCategory(category).map((setting) => (
+                    <div
+                      key={setting.id}
                       className={`p-4 rounded-lg border transition-all ${
-                        modifiedSettings[setting.setting_key] !== undefined 
-                          ? 'border-primary bg-primary/5' 
-                          : 'border-border bg-card'
+                        modifiedSettings[setting.setting_key] !== undefined
+                          ? "border-primary bg-primary/5"
+                          : "border-border bg-card"
                       }`}
                     >
                       {renderSettingInput(setting)}
@@ -447,7 +472,8 @@ const AdminSettings = () => {
                 Theme Preview &amp; Colors
               </CardTitle>
               <CardDescription>
-                Live preview and color swatches for all 51 themes. Changes apply immediately for your admin session.
+                Live preview and color swatches for all 51 themes. Changes apply immediately for
+                your admin session.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -464,23 +490,27 @@ const AdminSettings = () => {
                 <Palette className="h-5 w-5" />
                 Default Theme Mode
               </CardTitle>
-              <CardDescription>Default light/dark mode saved in admin settings for the platform</CardDescription>
+              <CardDescription>
+                Default light/dark mode saved in admin settings for the platform
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {THEME_OPTIONS.map(theme => {
-                  const isSelected = getSettingValue(
-                    settings.find(s => s.setting_key === "default_theme") || {} as AdminSetting
-                  ) === theme.value;
-                  
+                {THEME_OPTIONS.map((theme) => {
+                  const isSelected =
+                    getSettingValue(
+                      settings.find((s) => s.setting_key === "default_theme") ||
+                        ({} as AdminSetting),
+                    ) === theme.value;
+
                   return (
                     <div
                       key={theme.value}
                       onClick={() => handleSettingChange("default_theme", theme.value)}
                       className={`p-4 rounded-lg border-2 cursor-pointer transition-all glass-panel ${
-                        isSelected 
-                          ? 'border-white ring-2 ring-white/30' 
-                          : 'border-white/20 hover:border-white/40'
+                        isSelected
+                          ? "border-white ring-2 ring-white/30"
+                          : "border-white/20 hover:border-white/40"
                       }`}
                     >
                       <div className="flex items-center justify-between mb-3">
@@ -522,58 +552,71 @@ const AdminVideoGroupControls = () => {
     setLoading(true);
     try {
       // Check circuit breaker status
-      const { data: cbData } = await supabase.functions.invoke('video-call-circuit-breaker', {
-        body: { action: 'check_status' },
+      const { data: cbData } = await supabase.functions.invoke("video-call-circuit-breaker", {
+        body: { action: "check_status" },
       });
       setBreakerActive(cbData?.active ?? false);
-      setBreakerReason(cbData?.reason ?? '');
-      setBreakerResumesAt(cbData?.resumes_at ?? '');
+      setBreakerReason(cbData?.reason ?? "");
+      setBreakerResumesAt(cbData?.resumes_at ?? "");
 
       // Check permanent disable flag
       const { data: disableSetting } = await supabase
-        .from('app_settings')
-        .select('setting_value')
-        .eq('setting_key', 'video_calls_permanently_disabled')
+        .from("app_settings")
+        .select("setting_value")
+        .eq("setting_key", "video_calls_permanently_disabled")
         .maybeSingle();
       if (disableSetting) {
-        const val = typeof disableSetting.setting_value === 'string'
-          ? JSON.parse(disableSetting.setting_value)
-          : disableSetting.setting_value;
+        const val =
+          typeof disableSetting.setting_value === "string"
+            ? JSON.parse(disableSetting.setting_value)
+            : disableSetting.setting_value;
         setVideoCallsDisabled(val?.disabled ?? false);
       }
 
       // Check private group count
       const { data: groupSetting } = await supabase
-        .from('app_settings')
-        .select('setting_value')
-        .eq('setting_key', 'private_group_max_count')
+        .from("app_settings")
+        .select("setting_value")
+        .eq("setting_key", "private_group_max_count")
         .maybeSingle();
       if (groupSetting) {
-        const val = typeof groupSetting.setting_value === 'string'
-          ? JSON.parse(groupSetting.setting_value)
-          : groupSetting.setting_value;
-        setPrivateGroupCount(typeof val === 'number' ? val : (val?.count ?? 10));
+        const val =
+          typeof groupSetting.setting_value === "string"
+            ? JSON.parse(groupSetting.setting_value)
+            : groupSetting.setting_value;
+        setPrivateGroupCount(typeof val === "number" ? val : (val?.count ?? 10));
       }
     } catch (err) {
-      console.error('Error loading video/group settings:', err);
-      toast.error('Settings unavailable', { description: 'Unable to load video/group call settings. Please refresh.' });
+      console.error("Error loading video/group settings:", err);
+      toast.error("Settings unavailable", {
+        description: "Unable to load video/group call settings. Please refresh.",
+      });
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => { loadState(); }, [loadState]);
+  useEffect(() => {
+    loadState();
+  }, [loadState]);
 
   // Stop all active video calls immediately
   const handleStopAllCalls = async () => {
-    setLoadingAction('stop_all');
+    setLoadingAction("stop_all");
     try {
-      const { data } = await supabase.functions.invoke('video-call-circuit-breaker', {
-        body: { action: 'report_high_utilization', cpu_percent: 100, memory_percent: 100, source: 'admin_manual' },
+      const { data } = await supabase.functions.invoke("video-call-circuit-breaker", {
+        body: {
+          action: "report_high_utilization",
+          cpu_percent: 100,
+          memory_percent: 100,
+          source: "admin_manual",
+        },
       });
-      toast.success("All Video Calls Stopped", { description: `${data?.terminated_calls ?? 0} active call(s) terminated. New calls blocked for 2 hours.` });
+      toast.success("All Video Calls Stopped", {
+        description: `${data?.terminated_calls ?? 0} active call(s) terminated. New calls blocked for 2 hours.`,
+      });
       setBreakerActive(true);
-      setBreakerResumesAt(data?.resumes_at ?? '');
+      setBreakerResumesAt(data?.resumes_at ?? "");
     } catch (err) {
       toast.error("Error", { description: "Failed to stop calls" });
     } finally {
@@ -583,10 +626,10 @@ const AdminVideoGroupControls = () => {
 
   // Reset circuit breaker
   const handleResetBreaker = async () => {
-    setLoadingAction('reset_breaker');
+    setLoadingAction("reset_breaker");
     try {
-      await supabase.functions.invoke('video-call-circuit-breaker', {
-        body: { action: 'reset' },
+      await supabase.functions.invoke("video-call-circuit-breaker", {
+        body: { action: "reset" },
       });
       toast.success("Circuit Breaker Reset", { description: "Video calls are now allowed again." });
       setBreakerActive(false);
@@ -599,25 +642,31 @@ const AdminVideoGroupControls = () => {
 
   // Toggle permanent disable
   const handleTogglePermanentDisable = async (disabled: boolean) => {
-    setLoadingAction('toggle_permanent');
+    setLoadingAction("toggle_permanent");
     try {
-      await supabase
-        .from('app_settings')
-        .upsert({
-          setting_key: 'video_calls_permanently_disabled',
+      await supabase.from("app_settings").upsert(
+        {
+          setting_key: "video_calls_permanently_disabled",
           setting_value: JSON.stringify({ disabled, updated_at: new Date().toISOString() }),
-          setting_type: 'json',
-          category: 'system',
-          description: 'Permanently disable all video calls',
+          setting_type: "json",
+          category: "system",
+          description: "Permanently disable all video calls",
           is_public: true,
-        }, { onConflict: 'setting_key' });
+        },
+        { onConflict: "setting_key" },
+      );
 
       setVideoCallsDisabled(disabled);
 
       if (disabled) {
         // Also stop all active calls
-        await supabase.functions.invoke('video-call-circuit-breaker', {
-          body: { action: 'report_high_utilization', cpu_percent: 100, memory_percent: 100, source: 'admin_permanent_disable' },
+        await supabase.functions.invoke("video-call-circuit-breaker", {
+          body: {
+            action: "report_high_utilization",
+            cpu_percent: 100,
+            memory_percent: 100,
+            source: "admin_permanent_disable",
+          },
         });
       }
 
@@ -639,20 +688,26 @@ const AdminVideoGroupControls = () => {
   };
 
   const handleGroupCountSave = async () => {
-    setLoadingAction('save_groups');
+    setLoadingAction("save_groups");
     try {
-      await supabase
-        .from('app_settings')
-        .upsert({
-          setting_key: 'private_group_max_count',
-          setting_value: JSON.stringify({ count: privateGroupCount, updated_at: new Date().toISOString() }),
-          setting_type: 'json',
-          category: 'system',
-          description: 'Maximum number of private groups (flower rooms) allowed (2-50)',
+      await supabase.from("app_settings").upsert(
+        {
+          setting_key: "private_group_max_count",
+          setting_value: JSON.stringify({
+            count: privateGroupCount,
+            updated_at: new Date().toISOString(),
+          }),
+          setting_type: "json",
+          category: "system",
+          description: "Maximum number of private groups (flower rooms) allowed (2-50)",
           is_public: true,
-        }, { onConflict: 'setting_key' });
+        },
+        { onConflict: "setting_key" },
+      );
 
-      toast.success("Private Groups Updated", { description: `Maximum private groups set to ${privateGroupCount}` });
+      toast.success("Private Groups Updated", {
+        description: `Maximum private groups set to ${privateGroupCount}`,
+      });
     } catch (err) {
       toast.error("Error", { description: "Failed to update" });
     } finally {
@@ -680,7 +735,6 @@ const AdminVideoGroupControls = () => {
         <CardDescription>Emergency controls for video calls and group management</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-
         {/* Circuit Breaker Status */}
         {breakerActive && (
           <div className="flex items-center gap-3 p-3 rounded-lg bg-destructive/10 border border-destructive/30">
@@ -696,10 +750,14 @@ const AdminVideoGroupControls = () => {
               size="sm"
               variant="outline"
               onClick={handleResetBreaker}
-              disabled={loadingAction === 'reset_breaker'}
+              disabled={loadingAction === "reset_breaker"}
               className="shrink-0"
             >
-              {loadingAction === 'reset_breaker' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Reset"}
+              {loadingAction === "reset_breaker" ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                "Reset"
+              )}
             </Button>
           </div>
         )}
@@ -722,7 +780,7 @@ const AdminVideoGroupControls = () => {
             disabled={!!loadingAction}
             className="gap-1.5 shrink-0"
           >
-            {loadingAction === 'stop_all' ? (
+            {loadingAction === "stop_all" ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <PhoneOff className="h-4 w-4" />
@@ -782,7 +840,7 @@ const AdminVideoGroupControls = () => {
               disabled={!!loadingAction}
               className="gap-1.5"
             >
-              {loadingAction === 'save_groups' ? (
+              {loadingAction === "save_groups" ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
               ) : (
                 <Save className="h-3.5 w-3.5" />

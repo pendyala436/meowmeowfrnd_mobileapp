@@ -41,7 +41,7 @@ export const useResizableWindow = ({ position, setPosition }: UseResizableWindow
         corner,
       };
     },
-    [size]
+    [size],
   );
 
   // Effect: attach global move/end listeners while resizing
@@ -49,8 +49,10 @@ export const useResizableWindow = ({ position, setPosition }: UseResizableWindow
     const handleResizeMove = (e: MouseEvent | TouchEvent) => {
       if (!isResizing || !resizeRef.current) return;
 
-      const clientX = "touches" in e ? (e as TouchEvent).touches[0].clientX : (e as MouseEvent).clientX;
-      const clientY = "touches" in e ? (e as TouchEvent).touches[0].clientY : (e as MouseEvent).clientY;
+      const clientX =
+        "touches" in e ? (e as TouchEvent).touches[0].clientX : (e as MouseEvent).clientX;
+      const clientY =
+        "touches" in e ? (e as TouchEvent).touches[0].clientY : (e as MouseEvent).clientY;
 
       const deltaX = clientX - resizeRef.current.startX;
       const deltaY = clientY - resizeRef.current.startY;
@@ -72,17 +74,26 @@ export const useResizableWindow = ({ position, setPosition }: UseResizableWindow
       }
       if (corner.includes("w")) {
         const widthDelta = -deltaX;
-        newWidth = Math.max(minWidth, Math.min(maxWidth, resizeRef.current.startWidth + widthDelta));
+        newWidth = Math.max(
+          minWidth,
+          Math.min(maxWidth, resizeRef.current.startWidth + widthDelta),
+        );
         if (newWidth !== resizeRef.current.startWidth) {
           newX = position.x + (resizeRef.current.startWidth - newWidth);
         }
       }
       if (corner.includes("s")) {
-        newHeight = Math.max(minHeight, Math.min(maxHeight, resizeRef.current.startHeight + deltaY));
+        newHeight = Math.max(
+          minHeight,
+          Math.min(maxHeight, resizeRef.current.startHeight + deltaY),
+        );
       }
       if (corner.includes("n")) {
         const heightDelta = -deltaY;
-        newHeight = Math.max(minHeight, Math.min(maxHeight, resizeRef.current.startHeight + heightDelta));
+        newHeight = Math.max(
+          minHeight,
+          Math.min(maxHeight, resizeRef.current.startHeight + heightDelta),
+        );
         if (newHeight !== resizeRef.current.startHeight) {
           newY = position.y + (resizeRef.current.startHeight - newHeight);
         }

@@ -2,7 +2,7 @@ import { useEffect, useCallback, useRef, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { RealtimeChannel } from "@supabase/supabase-js";
 
-type TableName = 
+type TableName =
   | "profiles"
   | "female_profiles"
   | "male_profiles"
@@ -59,7 +59,7 @@ export const useRealtimeSubscription = ({
   filter,
   onUpdate,
   enabled = true,
-  debounceMs = 100 // Default 100ms debounce for high concurrency
+  debounceMs = 100, // Default 100ms debounce for high concurrency
 }: UseRealtimeSubscriptionOptions) => {
   const channelRef = useRef<RealtimeChannel | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -81,12 +81,12 @@ export const useRealtimeSubscription = ({
     }
 
     // Include unique ID to avoid channel collision when same table subscribed in multiple components
-    const channelName = `rt-${table}${filter ? `-${filter}` : ''}-${Math.random().toString(36).slice(2, 8)}`;
-    
+    const channelName = `rt-${table}${filter ? `-${filter}` : ""}-${Math.random().toString(36).slice(2, 8)}`;
+
     const subscriptionConfig: any = {
       event,
-      schema: 'public',
-      table
+      schema: "public",
+      table,
     };
 
     if (filter) {
@@ -95,7 +95,7 @@ export const useRealtimeSubscription = ({
 
     channelRef.current = supabase
       .channel(channelName)
-      .on('postgres_changes', subscriptionConfig, () => {
+      .on("postgres_changes", subscriptionConfig, () => {
         debouncedUpdate();
       })
       .subscribe();
@@ -115,7 +115,7 @@ export const useRealtimeSubscription = ({
   }, [setupSubscription]);
 
   return {
-    refresh: onUpdate
+    refresh: onUpdate,
   };
 };
 
@@ -124,7 +124,7 @@ export const useMultipleRealtimeSubscriptions = (
   tables: TableName[],
   onUpdate: () => void,
   enabled = true,
-  debounceMs = 150 // Slightly longer debounce for multiple tables
+  debounceMs = 150, // Slightly longer debounce for multiple tables
 ) => {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const onUpdateRef = useRef(onUpdate);
@@ -132,7 +132,7 @@ export const useMultipleRealtimeSubscriptions = (
 
   // Memoize the tables key to avoid infinite re-subscribe when caller passes inline array literals
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const tablesKey = useMemo(() => tables.slice().sort().join(','), [JSON.stringify(tables)]);
+  const tablesKey = useMemo(() => tables.slice().sort().join(","), [JSON.stringify(tables)]);
 
   const debouncedUpdate = useCallback(() => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -142,15 +142,13 @@ export const useMultipleRealtimeSubscriptions = (
   useEffect(() => {
     if (!enabled || !tablesKey) return;
 
-    const tableList = tablesKey.split(',') as TableName[];
+    const tableList = tablesKey.split(",") as TableName[];
     const channelName = `multi-rt-${tablesKey}`;
     const channel = supabase.channel(channelName);
 
     tableList.forEach((table) => {
-      channel.on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table },
-        () => debouncedUpdate()
+      channel.on("postgres_changes", { event: "*", schema: "public", table }, () =>
+        debouncedUpdate(),
       );
     });
 

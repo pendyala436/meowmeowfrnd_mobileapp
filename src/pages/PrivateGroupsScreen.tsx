@@ -42,8 +42,7 @@ const PrivateGroupsScreen = () => {
           return;
         }
 
-        const dashboard =
-          profile?.gender === "female" ? ROUTES.WOMEN_DASHBOARD : ROUTES.DASHBOARD;
+        const dashboard = profile?.gender === "female" ? ROUTES.WOMEN_DASHBOARD : ROUTES.DASHBOARD;
         navigate(`${dashboard}?tab=groups`, { replace: true });
       } catch {
         if (!cancelled) navigate(`${ROUTES.DASHBOARD}?tab=groups`, { replace: true });

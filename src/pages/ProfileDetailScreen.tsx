@@ -6,8 +6,8 @@ import { Card } from "@/components/ui/card";
 import MeowLogo from "@/components/MeowLogo";
 import { useToast } from "@/hooks/use-toast";
 // useChatPricing removed — billing system removed
-import { 
-  Heart, 
+import {
+  Heart,
   ArrowLeft,
   Languages,
   MapPin,
@@ -19,7 +19,7 @@ import {
   X,
   Sparkles,
   Home,
-  Wallet
+  Wallet,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -32,7 +32,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
-
 
 interface UserPhoto {
   id: string;
@@ -64,19 +63,21 @@ interface ProfileData {
 
 // Fields that should NEVER be shown to other users
 // Phone, Email, and KYC details are strictly private
-const HIDDEN_FIELDS = ['phone', 'email', 'kyc', 'date_of_birth'] as const;
+const HIDDEN_FIELDS = ["phone", "email", "kyc", "date_of_birth"] as const;
 
 const ProfileDetailScreen = () => {
   const navigate = useNavigate();
   const { userId } = useParams<{ userId: string }>();
   const { toast } = useToast();
-  const t = (key: string, def: string) => def; const translateDynamicBatch = async (t: string[]) => t; const currentLanguage = "English";
+  const t = (key: string, def: string) => def;
+  const translateDynamicBatch = async (t: string[]) => t;
+  const currentLanguage = "English";
   const [isLoading, setIsLoading] = useState(true);
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [isLiked, setIsLiked] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
-  
+
   const [currentUserGender, setCurrentUserGender] = useState("");
   const [walletBalance, setWalletBalance] = useState<number>(0);
   const [showRechargeDialog, setShowRechargeDialog] = useState(false);
@@ -96,22 +97,26 @@ const ProfileDetailScreen = () => {
     const channel = supabase
       .channel(`profile-status-${userId}`)
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*',
-          schema: 'public',
-          table: 'user_status',
-          filter: `user_id=eq.${userId}`
+          event: "*",
+          schema: "public",
+          table: "user_status",
+          filter: `user_id=eq.${userId}`,
         },
         (payload: any) => {
           if (payload.new) {
-            setProfile(prev => prev ? {
-              ...prev,
-              isOnline: payload.new.is_online,
-              lastSeen: payload.new.last_seen
-            } : null);
+            setProfile((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    isOnline: payload.new.is_online,
+                    lastSeen: payload.new.last_seen,
+                  }
+                : null,
+            );
           }
-        }
+        },
       )
       .subscribe();
 
@@ -124,7 +129,9 @@ const ProfileDetailScreen = () => {
     try {
       setIsLoading(true);
 
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session?.user) {
         navigate("/");
         return;
@@ -140,26 +147,27 @@ const ProfileDetailScreen = () => {
         photosResult,
         statusResult,
         matchResult,
-        walletResult
+        walletResult,
       ] = await Promise.all([
-        supabase.from("profiles")
-          .select("gender")
-          .eq("user_id", user.id).maybeSingle(),
-        fetchPublicProfile(targetUserId).then(data => ({ data, error: null })),
-        supabase.from("user_languages")
-          .select("language_name")
-          .eq("user_id", targetUserId),
-        supabase.from("user_photos")
+        supabase.from("profiles").select("gender").eq("user_id", user.id).maybeSingle(),
+        fetchPublicProfile(targetUserId).then((data) => ({ data, error: null })),
+        supabase.from("user_languages").select("language_name").eq("user_id", targetUserId),
+        supabase
+          .from("user_photos")
           .select("*")
           .eq("user_id", targetUserId)
           .order("display_order", { ascending: true }),
-        supabase.from("user_status")
+        supabase
+          .from("user_status")
           .select("is_online, last_seen")
-          .eq("user_id", targetUserId).maybeSingle(),
-        supabase.from("matches")
+          .eq("user_id", targetUserId)
+          .maybeSingle(),
+        supabase
+          .from("matches")
           .select("id")
           .eq("user_id", user.id)
-          .eq("matched_user_id", targetUserId).maybeSingle(),
+          .eq("matched_user_id", targetUserId)
+          .maybeSingle(),
         // Placeholder — actual balance loaded gender-aware below via canonical RPC
         Promise.resolve({ data: null, error: null }),
       ]);
@@ -170,17 +178,22 @@ const ProfileDetailScreen = () => {
       const myGender = currentUserProfile?.gender?.toLowerCase() || "";
       try {
         if (myGender === "female") {
-          const { data: wRpc } = await supabase.rpc("get_women_wallet_balance", { p_user_id: user.id });
+          const { data: wRpc } = await supabase.rpc("get_women_wallet_balance", {
+            p_user_id: user.id,
+          });
           setWalletBalance(Number((wRpc as Record<string, number> | null)?.available_balance) || 0);
         } else {
-          const { data: mRpc } = await supabase.rpc("get_men_wallet_balance", { p_user_id: user.id });
+          const { data: mRpc } = await supabase.rpc("get_men_wallet_balance", {
+            p_user_id: user.id,
+          });
           setWalletBalance(Number((mRpc as Record<string, number> | null)?.balance) || 0);
         }
-      } catch { setWalletBalance(0); }
+      } catch {
+        setWalletBalance(0);
+      }
 
       const gender = currentUserProfile?.gender?.toLowerCase() || "";
       setCurrentUserGender(gender);
-      
 
       if (!profileData) {
         toast({
@@ -197,23 +210,25 @@ const ProfileDetailScreen = () => {
       // Use age from profile (date_of_birth is not exposed in public profile for privacy)
       let age: number | null = profileData.age || null;
 
-      const allLanguages = languagesResult.data?.map(l => l.language_name) || [];
+      const allLanguages = languagesResult.data?.map((l) => l.language_name) || [];
       let motherTongue = profileData.preferred_language || allLanguages[0] || "Not specified";
-      let optionalLanguages = allLanguages.filter(l => l !== motherTongue);
+      let optionalLanguages = allLanguages.filter((l) => l !== motherTongue);
 
-      if (currentLanguage !== 'English') {
+      if (currentLanguage !== "English") {
         const textsToTranslate = [
           motherTongue,
-          profileData.country || 'Unknown',
-          profileData.state || '',
-          ...optionalLanguages
+          profileData.country || "Unknown",
+          profileData.state || "",
+          ...optionalLanguages,
         ].filter(Boolean);
-        
+
         const translated = await translateDynamicBatch(textsToTranslate);
         motherTongue = translated[0] || motherTongue;
-        const translatedCountry = translated[1] || profileData.country || 'Unknown';
-        const translatedState = translated[2] || profileData.state || '';
-        const translatedOptionalLangs = optionalLanguages.map((_, i) => translated[3 + i] || optionalLanguages[i]);
+        const translatedCountry = translated[1] || profileData.country || "Unknown";
+        const translatedState = translated[2] || profileData.state || "";
+        const translatedOptionalLangs = optionalLanguages.map(
+          (_, i) => translated[3 + i] || optionalLanguages[i],
+        );
 
         setProfile({
           userId: targetUserId,
@@ -221,7 +236,7 @@ const ProfileDetailScreen = () => {
           fullName: profileData.full_name || "Anonymous",
           avatar: profileData.photo_url || "",
           age,
-          gender: profileData.gender || t('notAvailable', 'Not specified'),
+          gender: profileData.gender || t("notAvailable", "Not specified"),
           country: translatedCountry,
           state: translatedState,
           motherTongue,
@@ -255,7 +270,6 @@ const ProfileDetailScreen = () => {
           photos: (photosResult.data as UserPhoto[]) || [],
         });
       }
-
     } catch (error) {
       console.error("Error loading profile:", error);
       toast({
@@ -272,14 +286,12 @@ const ProfileDetailScreen = () => {
     if (!profile || isLiked || profile.userId === currentUserId) return;
 
     try {
-      await supabase
-        .from("matches")
-        .insert({
-          user_id: currentUserId,
-          matched_user_id: profile.userId,
-          status: "pending",
-          match_score: 75,
-        });
+      await supabase.from("matches").insert({
+        user_id: currentUserId,
+        matched_user_id: profile.userId,
+        status: "pending",
+        match_score: 75,
+      });
 
       setIsLiked(true);
       toast({
@@ -312,7 +324,7 @@ const ProfileDetailScreen = () => {
       const isFemale = localGender === "female";
 
       // Check super user bypass
-      const userEmail = (await supabase.auth.getSession()).data.session?.user?.email || '';
+      const userEmail = (await supabase.auth.getSession()).data.session?.user?.email || "";
       const isSuperUser = /^(female|male|admin)([1-9]|1[0-5])@meow-meow\.com$/i.test(userEmail);
 
       // Men must have some wallet balance to start chat (women earn, no balance needed)
@@ -329,7 +341,7 @@ const ProfileDetailScreen = () => {
           action: "start_chat",
           man_user_id: isMale ? currentUserId : profile.userId,
           woman_user_id: isMale ? profile.userId : currentUserId,
-        }
+        },
       });
 
       if (error) throw error;
@@ -348,7 +360,7 @@ const ProfileDetailScreen = () => {
           chat_id: data.chat_id,
           sender_id: currentUserId,
           receiver_id: profile.userId,
-          message: "👋 Hi!"
+          message: "👋 Hi!",
         });
       }
 
@@ -356,12 +368,12 @@ const ProfileDetailScreen = () => {
       const dashboardRoute = isMale ? "/dashboard" : "/women-dashboard";
       navigate(dashboardRoute);
       setTimeout(() => {
-        window.dispatchEvent(new CustomEvent('force-reload-chats'));
+        window.dispatchEvent(new CustomEvent("force-reload-chats"));
       }, 300);
-      
+
       toast({
-        title: t('chatStarted', 'Chat Started'),
-        description: `${t('chattingWith', 'Chatting with')} ${profile.fullName}`,
+        title: t("chatStarted", "Chat Started"),
+        description: `${t("chattingWith", "Chatting with")} ${profile.fullName}`,
       });
     } catch (error) {
       console.error("Error starting chat:", error);
@@ -374,7 +386,7 @@ const ProfileDetailScreen = () => {
   };
 
   const formatLastSeen = (lastSeen: string) => {
-    if (!lastSeen) return t('unknown', 'Unknown');
+    if (!lastSeen) return t("unknown", "Unknown");
     const date = new Date(lastSeen);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
@@ -382,10 +394,11 @@ const ProfileDetailScreen = () => {
     const diffHours = Math.floor(diffMins / 60);
     const diffDays = Math.floor(diffHours / 24);
 
-    if (diffMins < 1) return t('justNow', 'Just now');
-    if (diffMins < 60) return `${diffMins} ${t('minutes', 'min')} ${t('ago', 'ago')}`;
-    if (diffHours < 24) return `${diffHours} ${t('hours', 'hour')}${diffHours > 1 ? "s" : ""} ${t('ago', 'ago')}`;
-    return `${diffDays} day${diffDays > 1 ? "s" : ""} ${t('ago', 'ago')}`;
+    if (diffMins < 1) return t("justNow", "Just now");
+    if (diffMins < 60) return `${diffMins} ${t("minutes", "min")} ${t("ago", "ago")}`;
+    if (diffHours < 24)
+      return `${diffHours} ${t("hours", "hour")}${diffHours > 1 ? "s" : ""} ${t("ago", "ago")}`;
+    return `${diffDays} day${diffDays > 1 ? "s" : ""} ${t("ago", "ago")}`;
   };
 
   if (isLoading) {
@@ -393,7 +406,7 @@ const ProfileDetailScreen = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
           <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto" />
-          <p className="text-muted-foreground">{t('loadingProfile', 'Loading profile...')}</p>
+          <p className="text-muted-foreground">{t("loadingProfile", "Loading profile...")}</p>
         </div>
       </div>
     );
@@ -404,9 +417,11 @@ const ProfileDetailScreen = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="p-8 text-center">
           <X className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-foreground mb-2">{t('profileNotFound', 'Profile Not Found')}</h2>
+          <h2 className="text-xl font-bold text-foreground mb-2">
+            {t("profileNotFound", "Profile Not Found")}
+          </h2>
           <Button variant="aurora" onClick={() => navigate(-1)}>
-            {t('goBack', 'Go Back')}
+            {t("goBack", "Go Back")}
           </Button>
         </Card>
       </div>
@@ -419,7 +434,7 @@ const ProfileDetailScreen = () => {
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border/50">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Button 
+            <Button
               variant="auroraGhost"
               size="icon"
               onClick={() => navigate(-1)}
@@ -427,7 +442,7 @@ const ProfileDetailScreen = () => {
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <Button 
+            <Button
               variant="auroraGhost"
               size="icon"
               onClick={() => {
@@ -439,9 +454,9 @@ const ProfileDetailScreen = () => {
               <Home className="w-5 h-5" />
             </Button>
           </div>
-          
+
           <MeowLogo size="sm" />
-          
+
           <div className="w-20" />
         </div>
       </header>
@@ -452,17 +467,20 @@ const ProfileDetailScreen = () => {
           {/* Photo Gallery Section */}
           <div className="relative">
             {(() => {
-              const allPhotos = profile.photos.length > 0 
-                ? profile.photos.map(p => p.photo_url) 
-                : profile.avatar ? [profile.avatar] : [];
+              const allPhotos =
+                profile.photos.length > 0
+                  ? profile.photos.map((p) => p.photo_url)
+                  : profile.avatar
+                    ? [profile.avatar]
+                    : [];
               const currentPhoto = allPhotos[selectedPhotoIndex] || allPhotos[0];
-              
+
               return (
                 <>
                   <div className="aspect-square max-h-[400px] overflow-hidden bg-muted">
                     {currentPhoto ? (
-                      <img 
-                        src={currentPhoto} 
+                      <img
+                        src={currentPhoto}
                         alt={profile.fullName}
                         className="w-full h-full object-cover"
                       />
@@ -483,12 +501,16 @@ const ProfileDetailScreen = () => {
                           key={idx}
                           onClick={() => setSelectedPhotoIndex(idx)}
                           className={`w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all ${
-                            idx === selectedPhotoIndex 
-                              ? "border-primary ring-2 ring-primary/30" 
+                            idx === selectedPhotoIndex
+                              ? "border-primary ring-2 ring-primary/30"
                               : "border-transparent opacity-70 hover:opacity-100"
                           }`}
                         >
-                          <img src={photo} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover" />
+                          <img
+                            src={photo}
+                            alt={`Photo ${idx + 1}`}
+                            className="w-full h-full object-cover"
+                          />
                         </button>
                       ))}
                     </div>
@@ -505,20 +527,28 @@ const ProfileDetailScreen = () => {
             })()}
 
             {/* Online Status Badge */}
-            <div className={`absolute top-4 right-4 flex items-center gap-2 px-4 py-2 rounded-full backdrop-blur-sm ${
-              profile.isOnline 
-                ? "bg-emerald-500/20 border border-emerald-500/30" 
-                : "bg-muted/80"
-            }`}>
-              <Circle className={`w-3 h-3 ${
-                profile.isOnline 
-                  ? "fill-emerald-500 text-emerald-500 animate-pulse" 
-                  : "fill-muted-foreground text-muted-foreground"
-              }`} />
-              <span className={`text-sm font-medium ${
-                profile.isOnline ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"
-              }`}>
-                {profile.isOnline ? t('online', 'Online') : `${t('lastSeen', 'Last seen')} ${formatLastSeen(profile.lastSeen)}`}
+            <div
+              className={`absolute top-4 right-4 flex items-center gap-2 px-4 py-2 rounded-full backdrop-blur-sm ${
+                profile.isOnline ? "bg-emerald-500/20 border border-emerald-500/30" : "bg-muted/80"
+              }`}
+            >
+              <Circle
+                className={`w-3 h-3 ${
+                  profile.isOnline
+                    ? "fill-emerald-500 text-emerald-500 animate-pulse"
+                    : "fill-muted-foreground text-muted-foreground"
+                }`}
+              />
+              <span
+                className={`text-sm font-medium ${
+                  profile.isOnline
+                    ? "text-emerald-600 dark:text-emerald-400"
+                    : "text-muted-foreground"
+                }`}
+              >
+                {profile.isOnline
+                  ? t("online", "Online")
+                  : `${t("lastSeen", "Last seen")} ${formatLastSeen(profile.lastSeen)}`}
               </span>
             </div>
 
@@ -526,7 +556,9 @@ const ProfileDetailScreen = () => {
             {profile.isVerified && (
               <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/20 border border-blue-500/30 backdrop-blur-sm">
                 <Shield className="w-4 h-4 text-blue-500" />
-                <span className="text-sm font-medium text-blue-600 dark:text-blue-400">{t('verified', 'Verified')}</span>
+                <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                  {t("verified", "Verified")}
+                </span>
               </div>
             )}
           </div>
@@ -538,7 +570,9 @@ const ProfileDetailScreen = () => {
               <div>
                 <h1 className="text-2xl font-bold text-foreground">
                   {profile.fullName}
-                  {profile.age && <span className="text-muted-foreground font-normal">, {profile.age}</span>}
+                  {profile.age && (
+                    <span className="text-muted-foreground font-normal">, {profile.age}</span>
+                  )}
                 </h1>
                 <p className="text-muted-foreground">{profile.gender}</p>
                 {profile.userCode && (
@@ -553,7 +587,8 @@ const ProfileDetailScreen = () => {
             <div className="flex items-center gap-3 text-muted-foreground">
               <MapPin className="w-5 h-5" />
               <span>
-                {profile.state ? `${profile.state}, ` : ""}{profile.country}
+                {profile.state ? `${profile.state}, ` : ""}
+                {profile.country}
               </span>
             </div>
 
@@ -563,7 +598,9 @@ const ProfileDetailScreen = () => {
               <div className="flex items-start gap-3">
                 <Languages className="w-5 h-5 text-primary mt-0.5" />
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">{t('motherTongue', 'Mother Tongue')}</p>
+                  <p className="text-sm text-muted-foreground mb-1">
+                    {t("motherTongue", "Mother Tongue")}
+                  </p>
                   <span className="px-3 py-1.5 rounded-full bg-primary/10 text-primary font-medium text-sm">
                     {profile.motherTongue}
                   </span>
@@ -575,10 +612,12 @@ const ProfileDetailScreen = () => {
                 <div className="flex items-start gap-3">
                   <div className="w-5" /> {/* Spacer for alignment */}
                   <div>
-                    <p className="text-sm text-muted-foreground mb-2">{t('alsoSpeaks', 'Also speaks')}</p>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      {t("alsoSpeaks", "Also speaks")}
+                    </p>
                     <div className="flex flex-wrap gap-2">
-                      {profile.optionalLanguages.map(lang => (
-                        <span 
+                      {profile.optionalLanguages.map((lang) => (
+                        <span
                           key={lang}
                           className="px-3 py-1.5 rounded-full bg-muted text-muted-foreground text-sm"
                         >
@@ -594,7 +633,7 @@ const ProfileDetailScreen = () => {
             {/* Bio Section */}
             {profile.bio && (
               <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">{t('about', 'About')}</p>
+                <p className="text-sm text-muted-foreground">{t("about", "About")}</p>
                 <p className="text-foreground">{profile.bio}</p>
               </div>
             )}
@@ -612,11 +651,11 @@ const ProfileDetailScreen = () => {
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-primary" />
-                  <p className="font-medium text-foreground">{t('interests', 'Interests')}</p>
+                  <p className="font-medium text-foreground">{t("interests", "Interests")}</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {profile.interests.map((interest, idx) => (
-                    <span 
+                    <span
                       key={idx}
                       className="px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm border border-primary/20"
                     >
@@ -629,14 +668,19 @@ const ProfileDetailScreen = () => {
             {profile.age && (
               <div className="flex items-center gap-3 text-muted-foreground">
                 <Calendar className="w-5 h-5" />
-                <span>{profile.age} {t('yearsOld', 'years old')}</span>
+                <span>
+                  {profile.age} {t("yearsOld", "years old")}
+                </span>
               </div>
             )}
 
             {/* Privacy Notice - Hidden Fields */}
             <div className="pt-4 border-t border-border">
               <p className="text-xs text-muted-foreground text-center">
-                {t('privacyNotice', 'Phone, email, and identity documents are not visible to other users')}
+                {t(
+                  "privacyNotice",
+                  "Phone, email, and identity documents are not visible to other users",
+                )}
               </p>
             </div>
           </div>
@@ -652,7 +696,7 @@ const ProfileDetailScreen = () => {
             disabled={isLiked}
           >
             <Heart className={`w-6 h-6 ${isLiked ? "fill-primary text-primary" : ""}`} />
-            {isLiked ? t('liked', 'Liked') : t('like', 'Like')}
+            {isLiked ? t("liked", "Liked") : t("like", "Like")}
           </Button>
 
           {/* Chat Button */}
@@ -662,37 +706,47 @@ const ProfileDetailScreen = () => {
             onClick={handleChat}
           >
             <MessageCircle className="w-6 h-6" />
-            {t('chat', 'Chat')}
+            {t("chat", "Chat")}
           </Button>
         </div>
 
         {/* Online Status Card */}
-        <Card className={`p-4 animate-fade-in border-2 transition-colors ${
-          profile.isOnline 
-            ? "bg-emerald-500/5 border-emerald-500/20" 
-            : "bg-muted/50 border-transparent"
-        }`} style={{ animationDelay: "0.3s" }}>
+        <Card
+          className={`p-4 animate-fade-in border-2 transition-colors ${
+            profile.isOnline
+              ? "bg-emerald-500/5 border-emerald-500/20"
+              : "bg-muted/50 border-transparent"
+          }`}
+          style={{ animationDelay: "0.3s" }}
+        >
           <div className="flex items-center gap-4">
-            <div className={`p-3 rounded-full ${
-              profile.isOnline ? "bg-emerald-500/20" : "bg-muted"
-            }`}>
-              <Circle className={`w-6 h-6 ${
-                profile.isOnline 
-                  ? "fill-emerald-500 text-emerald-500 animate-pulse" 
-                  : "fill-muted-foreground/50 text-muted-foreground/50"
-              }`} />
+            <div
+              className={`p-3 rounded-full ${profile.isOnline ? "bg-emerald-500/20" : "bg-muted"}`}
+            >
+              <Circle
+                className={`w-6 h-6 ${
+                  profile.isOnline
+                    ? "fill-emerald-500 text-emerald-500 animate-pulse"
+                    : "fill-muted-foreground/50 text-muted-foreground/50"
+                }`}
+              />
             </div>
             <div>
-              <p className={`font-medium ${
-                profile.isOnline ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"
-              }`}>
-                {profile.isOnline ? t('currentlyOnline', 'Currently Online') : t('currentlyOffline', 'Currently Offline')}
+              <p
+                className={`font-medium ${
+                  profile.isOnline
+                    ? "text-emerald-600 dark:text-emerald-400"
+                    : "text-muted-foreground"
+                }`}
+              >
+                {profile.isOnline
+                  ? t("currentlyOnline", "Currently Online")
+                  : t("currentlyOffline", "Currently Offline")}
               </p>
               <p className="text-sm text-muted-foreground">
-                {profile.isOnline 
-                  ? t('availableToChatNow', 'Available to chat now')
-                  : `${t('lastActive', 'Last active')} ${formatLastSeen(profile.lastSeen)}`
-                }
+                {profile.isOnline
+                  ? t("availableToChatNow", "Available to chat now")
+                  : `${t("lastActive", "Last active")} ${formatLastSeen(profile.lastSeen)}`}
               </p>
             </div>
           </div>
@@ -707,15 +761,11 @@ const ProfileDetailScreen = () => {
               <Wallet className="h-5 w-5 text-destructive" />
               Recharge Required
             </AlertDialogTitle>
-            <AlertDialogDescription>
-              {rechargeMessage}
-            </AlertDialogDescription>
+            <AlertDialogDescription>{rechargeMessage}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => navigate('/wallet')}>
-              Recharge Now
-            </AlertDialogAction>
+            <AlertDialogAction onClick={() => navigate("/wallet")}>Recharge Now</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

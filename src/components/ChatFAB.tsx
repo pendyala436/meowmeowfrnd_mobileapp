@@ -9,12 +9,7 @@ interface ChatFABProps {
   className?: string;
 }
 
-export const ChatFAB: React.FC<ChatFABProps> = ({
-  onClick,
-  icon,
-  badge,
-  className,
-}) => {
+export const ChatFAB: React.FC<ChatFABProps> = ({ onClick, icon, badge, className }) => {
   return (
     <button
       onClick={onClick}
@@ -22,7 +17,7 @@ export const ChatFAB: React.FC<ChatFABProps> = ({
         "fixed bottom-20 right-4 z-40 w-14 h-14 rounded-full bg-primary text-primary-foreground",
         "shadow-lg hover:shadow-xl active:scale-95 transition-all duration-200",
         "flex items-center justify-center",
-        className
+        className,
       )}
       aria-label="New action"
     >

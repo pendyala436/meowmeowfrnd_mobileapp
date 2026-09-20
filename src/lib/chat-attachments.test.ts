@@ -15,30 +15,33 @@ describe("normalizeChatAttachmentUrl", () => {
   });
 
   it("strips duplicate chat-attachment:// prefixes", () => {
-    expect(normalizeChatAttachmentUrl("chat-attachment://chat-attachment://path/file.mp3"))
-      .toBe("chat-attachment://path/file.mp3");
+    expect(normalizeChatAttachmentUrl("chat-attachment://chat-attachment://path/file.mp3")).toBe(
+      "chat-attachment://path/file.mp3",
+    );
   });
 
   it("preserves https URLs", () => {
-    expect(normalizeChatAttachmentUrl("https://cdn.example.com/voice.mp3"))
-      .toBe("https://cdn.example.com/voice.mp3");
+    expect(normalizeChatAttachmentUrl("https://cdn.example.com/voice.mp3")).toBe(
+      "https://cdn.example.com/voice.mp3",
+    );
   });
 
   it("wraps bare paths in chat-attachment scheme", () => {
-    expect(normalizeChatAttachmentUrl("user123/voice.webm"))
-      .toBe("chat-attachment://user123/voice.webm");
+    expect(normalizeChatAttachmentUrl("user123/voice.webm")).toBe(
+      "chat-attachment://user123/voice.webm",
+    );
   });
 });
 
 describe("extractVoiceUrl", () => {
   it("extracts [VOICE: ...] marker", () => {
-    expect(extractVoiceUrl("[VOICE: user/voice.mp3]"))
-      .toBe("chat-attachment://user/voice.mp3");
+    expect(extractVoiceUrl("[VOICE: user/voice.mp3]")).toBe("chat-attachment://user/voice.mp3");
   });
 
   it("extracts emoji voice marker", () => {
-    expect(extractVoiceUrl("🎤 voice: nested/path.webm"))
-      .toBe("chat-attachment://nested/path.webm");
+    expect(extractVoiceUrl("🎤 voice: nested/path.webm")).toBe(
+      "chat-attachment://nested/path.webm",
+    );
   });
 
   it("returns null when no voice marker", () => {
@@ -48,13 +51,11 @@ describe("extractVoiceUrl", () => {
 
 describe("storagePathFromAttachmentUrl", () => {
   it("removes chat-attachment scheme", () => {
-    expect(storagePathFromAttachmentUrl("chat-attachment://user/file.mp3"))
-      .toBe("user/file.mp3");
+    expect(storagePathFromAttachmentUrl("chat-attachment://user/file.mp3")).toBe("user/file.mp3");
   });
 
   it("removes multiple stacked schemes", () => {
-    expect(storagePathFromAttachmentUrl("chat-attachment://chat-attachment://a/b"))
-      .toBe("a/b");
+    expect(storagePathFromAttachmentUrl("chat-attachment://chat-attachment://a/b")).toBe("a/b");
   });
 });
 

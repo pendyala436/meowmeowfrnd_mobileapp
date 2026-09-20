@@ -10,13 +10,27 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import {
-  Send, X, Maximize2, Minimize2, Clock, IndianRupee, Loader2,
-  ChevronDown, ChevronUp, TrendingUp, Wallet, AlertTriangle,
-  Move, Paperclip, Image, Video, FileText, Mic, MoreHorizontal
+  Send,
+  X,
+  Maximize2,
+  Minimize2,
+  Clock,
+  IndianRupee,
+  Loader2,
+  ChevronDown,
+  ChevronUp,
+  TrendingUp,
+  Wallet,
+  AlertTriangle,
+  Move,
+  Paperclip,
+  Image,
+  Video,
+  FileText,
+  Mic,
+  MoreHorizontal,
 } from "lucide-react";
-import {
-  Popover, PopoverContent, PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { MiniChatActions } from "@/components/MiniChatActions";
 import { SendGiftButton } from "@/components/SendGiftButton";
 import { useBlockCheck } from "@/hooks/useBlockCheck";
@@ -72,7 +86,7 @@ const DraggableMiniChatWindow = ({
   onClose,
   initialPosition = { x: 20, y: 20 },
   zIndex = 50,
-  onFocus
+  onFocus,
 }: DraggableMiniChatWindowProps) => {
   const { toast } = useToast();
   const [isMinimized, setIsMinimized] = useState(false);
@@ -103,14 +117,42 @@ const DraggableMiniChatWindow = ({
     setPosition,
   });
 
-  const { messages, setMessages, unreadCount, setUnreadCount, messagesEndRef, hasOlderMessages, isLoadingOlder, loadOlderMessages, addSeenId } =
-    useMiniChatMessages({ chatId, currentUserId, isMinimized, currentUserLanguage, partnerLanguage: partnerLanguage });
+  const {
+    messages,
+    setMessages,
+    unreadCount,
+    setUnreadCount,
+    messagesEndRef,
+    hasOlderMessages,
+    isLoadingOlder,
+    loadOlderMessages,
+    addSeenId,
+  } = useMiniChatMessages({
+    chatId,
+    currentUserId,
+    isMinimized,
+    currentUserLanguage,
+    partnerLanguage: partnerLanguage,
+  });
 
   const manId = userGender === "male" ? currentUserId : partnerId;
   const womanId = userGender === "female" ? currentUserId : partnerId;
   const isBillingDriver = userGender === "male" && currentUserId === manId;
-  const bothReplied = messages.some((m) => !m.isSystem && m.ownerId === currentUserId && (!sessionStartedAt || new Date(m.createdAt).getTime() >= new Date(sessionStartedAt).getTime()))
-    && messages.some((m) => !m.isSystem && m.ownerId === partnerId && (!sessionStartedAt || new Date(m.createdAt).getTime() >= new Date(sessionStartedAt).getTime()));
+  const bothReplied =
+    messages.some(
+      (m) =>
+        !m.isSystem &&
+        m.ownerId === currentUserId &&
+        (!sessionStartedAt ||
+          new Date(m.createdAt).getTime() >= new Date(sessionStartedAt).getTime()),
+    ) &&
+    messages.some(
+      (m) =>
+        !m.isSystem &&
+        m.ownerId === partnerId &&
+        (!sessionStartedAt ||
+          new Date(m.createdAt).getTime() >= new Date(sessionStartedAt).getTime()),
+    );
   const chatBillingActive = !!sessionId && !!chatId && bothReplied;
   const { pricing } = useChatPricing();
   const billingHook = useMiniChatBilling({
@@ -120,9 +162,15 @@ const DraggableMiniChatWindow = ({
     womanId,
     isActive: chatBillingActive && (isBillingDriver || userGender === "female"),
     displayOnly: !isBillingDriver,
-    activitySignal: messages.length ? `${messages.length}:${messages[messages.length - 1]?.createdAt}` : messages.length,
+    activitySignal: messages.length
+      ? `${messages.length}:${messages[messages.length - 1]?.createdAt}`
+      : messages.length,
     onInsufficientBalance: () => {
-      toast({ title: "Chat ended", description: "Insufficient balance to continue.", variant: "destructive" });
+      toast({
+        title: "Chat ended",
+        description: "Insufficient balance to continue.",
+        variant: "destructive",
+      });
       onClose();
     },
   });
@@ -216,7 +264,10 @@ const DraggableMiniChatWindow = ({
   }, [partnerState, partnerName, setMessages]);
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
   };
 
   const toggleMinimize = () => {
@@ -233,8 +284,13 @@ const DraggableMiniChatWindow = ({
     await signalLeave();
     await billing.stopBillingTimers();
     try {
-      await supabase.from("active_chat_sessions")
-        .update({ status: "ended", ended_at: new Date().toISOString(), end_reason: userGender === "male" ? "man_closed" : "woman_closed" })
+      await supabase
+        .from("active_chat_sessions")
+        .update({
+          status: "ended",
+          ended_at: new Date().toISOString(),
+          end_reason: userGender === "male" ? "man_closed" : "woman_closed",
+        })
         .eq("id", sessionId);
     } catch (error) {
       console.error("Error closing chat session:", error);
@@ -242,11 +298,18 @@ const DraggableMiniChatWindow = ({
     onClose();
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, fileType: "image" | "video" | "document") => {
+  const handleFileUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    fileType: "image" | "video" | "document",
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 50 * 1024 * 1024) {
-      toast({ title: "File too large", description: "Maximum file size is 50MB", variant: "destructive" });
+      toast({
+        title: "File too large",
+        description: "Maximum file size is 50MB",
+        variant: "destructive",
+      });
       return;
     }
     setIsUploading(true);
@@ -260,22 +323,37 @@ const DraggableMiniChatWindow = ({
       const bucket = "meowmeow-app-attachment";
 
       const mimeMap: Record<string, string> = {
-        jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", gif: "image/gif",
-        webp: "image/webp", heic: "image/heic", heif: "image/heif", bmp: "image/bmp",
-        mp4: "video/mp4", webm: "video/webm", mov: "video/quicktime",
-        mp3: "audio/mpeg", wav: "audio/wav", m4a: "audio/x-m4a",
-        pdf: "application/pdf", doc: "application/msword",
+        jpg: "image/jpeg",
+        jpeg: "image/jpeg",
+        png: "image/png",
+        gif: "image/gif",
+        webp: "image/webp",
+        heic: "image/heic",
+        heif: "image/heif",
+        bmp: "image/bmp",
+        mp4: "video/mp4",
+        webm: "video/webm",
+        mov: "video/quicktime",
+        mp3: "audio/mpeg",
+        wav: "audio/wav",
+        m4a: "audio/x-m4a",
+        pdf: "application/pdf",
+        doc: "application/msword",
         docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         xls: "application/vnd.ms-excel",
         xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         ppt: "application/vnd.ms-powerpoint",
         pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-        txt: "text/plain", csv: "text/csv", zip: "application/zip",
+        txt: "text/plain",
+        csv: "text/csv",
+        zip: "application/zip",
       };
       const extLower = (fileExt || "").toLowerCase();
       const contentType = file.type || mimeMap[extLower] || "application/octet-stream";
 
-      const { error: uploadError } = await supabase.storage.from(bucket).upload(fileName, file, { cacheControl: "3600", upsert: false, contentType });
+      const { error: uploadError } = await supabase.storage
+        .from(bucket)
+        .upload(fileName, file, { cacheControl: "3600", upsert: false, contentType });
       if (uploadError) throw uploadError;
 
       const messageUrl = `chat-attachment://${fileName}`;
@@ -284,7 +362,9 @@ const DraggableMiniChatWindow = ({
       const { data: inserted, error: messageError } = await supabase
         .from("chat_messages")
         .insert({
-          chat_id: chatId, sender_id: currentUserId, receiver_id: partnerId,
+          chat_id: chatId,
+          sender_id: currentUserId,
+          receiver_id: partnerId,
           message: messageBody,
         })
         .select("id, sender_id, message, created_at")
@@ -295,7 +375,15 @@ const DraggableMiniChatWindow = ({
         setMessages((prev) =>
           prev.some((m) => m.id === inserted.id)
             ? prev
-            : [...prev, { id: inserted.id, ownerId: inserted.sender_id, message: inserted.message, createdAt: inserted.created_at }]
+            : [
+                ...prev,
+                {
+                  id: inserted.id,
+                  ownerId: inserted.sender_id,
+                  message: inserted.message,
+                  createdAt: inserted.created_at,
+                },
+              ],
         );
       }
       toast({ title: "File sent", description: `${file.name} has been sent` });
@@ -327,38 +415,79 @@ const DraggableMiniChatWindow = ({
   const useFlexLayout = initialPosition.x === 0 && initialPosition.y === 0;
 
   const windowStyle = isMaximized
-    ? { position: "fixed" as const, top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%", zIndex: zIndex + 100 }
+    ? {
+        position: "fixed" as const,
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: "100%",
+        height: "100%",
+        zIndex: zIndex + 100,
+      }
     : useFlexLayout
-      ? { position: "relative" as const, width: isMinimized ? 240 : size.width, height: isMinimized ? 48 : size.height, zIndex }
-      : { position: "fixed" as const, left: position.x, top: position.y, width: isMinimized ? 240 : size.width, height: isMinimized ? 48 : size.height, zIndex };
+      ? {
+          position: "relative" as const,
+          width: isMinimized ? 240 : size.width,
+          height: isMinimized ? 48 : size.height,
+          zIndex,
+        }
+      : {
+          position: "fixed" as const,
+          left: position.x,
+          top: position.y,
+          width: isMinimized ? 240 : size.width,
+          height: isMinimized ? 48 : size.height,
+          zIndex,
+        };
 
   const sendMessage = async () => {
     const inputText = newMessage.trim();
     if (inputText.length > MAX_MESSAGE_LENGTH) {
-      toast({ title: "Message too long", description: `Messages must be under ${MAX_MESSAGE_LENGTH} characters`, variant: "destructive" });
+      toast({
+        title: "Message too long",
+        description: `Messages must be under ${MAX_MESSAGE_LENGTH} characters`,
+        variant: "destructive",
+      });
       return;
     }
     const messageTimestamp = new Date().toISOString();
     const tempId = `temp-${Date.now()}`;
     setNewMessage("");
-    setMessages((prev) => [...prev, { id: tempId, ownerId: currentUserId, message: inputText, createdAt: messageTimestamp }]);
+    setMessages((prev) => [
+      ...prev,
+      { id: tempId, ownerId: currentUserId, message: inputText, createdAt: messageTimestamp },
+    ]);
     try {
       const { data: insertedMessage, error: insertError } = await supabase
         .from("chat_messages")
-        .insert({ chat_id: chatId, sender_id: currentUserId, receiver_id: partnerId, message: inputText })
+        .insert({
+          chat_id: chatId,
+          sender_id: currentUserId,
+          receiver_id: partnerId,
+          message: inputText,
+        })
         .select("id, sender_id, message, created_at")
         .single();
       if (insertError) throw insertError;
       if (insertedMessage?.id) {
         addSeenId(insertedMessage.id);
-        setMessages((prev) => prev.map((m) => (m.id === tempId ? { ...m, id: insertedMessage.id, ownerId: insertedMessage.sender_id } : m)));
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === tempId
+              ? { ...m, id: insertedMessage.id, ownerId: insertedMessage.sender_id }
+              : m,
+          ),
+        );
       }
     } catch (dbError) {
       console.error("[sendMessage] DB insert error:", dbError);
-      setMessages((prev) => prev.map((m) =>
-        m.id === tempId ? { ...m, sendFailed: true } : m
-      ));
-      toast({ title: "Message Not Sent", description: "Failed to send message", variant: "destructive" });
+      setMessages((prev) => prev.map((m) => (m.id === tempId ? { ...m, sendFailed: true } : m)));
+      toast({
+        title: "Message Not Sent",
+        description: "Failed to send message",
+        variant: "destructive",
+      });
     }
   };
 
@@ -370,14 +499,14 @@ const DraggableMiniChatWindow = ({
         "flex flex-col shadow-2xl border-2 transition-all duration-200",
         isPartnerOnline ? "border-primary/30" : "border-muted",
         isDragging && "opacity-90",
-        isMaximized && "rounded-none"
+        isMaximized && "rounded-none",
       )}
       onClick={onFocus}
     >
       <div
         className={cn(
           "flex items-center justify-between p-2 bg-gradient-to-r from-primary/10 to-transparent border-b touch-none select-none",
-          !isMaximized && "cursor-move"
+          !isMaximized && "cursor-move",
         )}
         onMouseDown={handleDragStart}
         onTouchStart={handleDragStart}
@@ -387,7 +516,9 @@ const DraggableMiniChatWindow = ({
           <div className="relative">
             <Avatar className="h-7 w-7">
               <AvatarImage src={partnerPhoto || undefined} />
-              <AvatarFallback className="text-xs bg-primary/20">{partnerName.charAt(0)}</AvatarFallback>
+              <AvatarFallback className="text-xs bg-primary/20">
+                {partnerName.charAt(0)}
+              </AvatarFallback>
             </Avatar>
             <div
               className={cn(
@@ -395,8 +526,8 @@ const DraggableMiniChatWindow = ({
                 partnerState === "in_chat" || partnerState === "typing"
                   ? "bg-primary animate-pulse"
                   : partnerState === "online_away" || isPartnerOnline
-                  ? "bg-online"
-                  : "bg-muted-foreground"
+                    ? "bg-online"
+                    : "bg-muted-foreground",
               )}
               aria-hidden="true"
             />
@@ -416,7 +547,8 @@ const DraggableMiniChatWindow = ({
                 <Clock className="h-2 w-2 text-muted-foreground" />
                 <span className="text-muted-foreground">
                   {(() => {
-                    const rate = userGender === "male" ? pricing.ratePerMinute : pricing.womenEarningRate;
+                    const rate =
+                      userGender === "male" ? pricing.ratePerMinute : pricing.womenEarningRate;
                     const amount = (rate / 60) * billingHook.elapsedSeconds;
                     const label = userGender === "male" ? "Spent" : "Earned";
                     return `${label} ₹${amount.toFixed(2)} · ${formatTime(billingHook.elapsedSeconds)} · ₹${rate}/min`;
@@ -429,32 +561,81 @@ const DraggableMiniChatWindow = ({
             <Badge className="h-4 min-w-[16px] text-[9px] px-1 bg-primary">{unreadCount}</Badge>
           )}
         </div>
-        <div className="flex items-center gap-0.5" data-no-drag onMouseDown={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()}>
-          <Button variant="ghost" size="icon" className="h-5 w-5" onClick={(e) => { e.stopPropagation(); setAreButtonsExpanded(!areButtonsExpanded); }} title={areButtonsExpanded ? "Hide actions" : "Show actions"}>
+        <div
+          className="flex items-center gap-0.5"
+          data-no-drag
+          onMouseDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
+        >
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-5 w-5"
+            onClick={(e) => {
+              e.stopPropagation();
+              setAreButtonsExpanded(!areButtonsExpanded);
+            }}
+            title={areButtonsExpanded ? "Hide actions" : "Show actions"}
+          >
             <MoreHorizontal className="h-2.5 w-2.5" />
           </Button>
           {areButtonsExpanded && (
             <>
-              {userGender === 'male' && (
+              {userGender === "male" && (
                 <SendGiftButton
                   senderUserId={currentUserId}
                   recipientUserId={partnerId}
                   context="chat"
                 />
               )}
-              <MiniChatActions currentUserId={currentUserId} targetUserId={partnerId} targetUserName={partnerName} isPartnerOnline={isPartnerOnline} onBlock={handleClose} onStopChat={handleClose} onLogOff={handleClose} />
-              <Button variant="ghost" size="icon" className="h-5 w-5" onClick={toggleMaximize} title={isMaximized ? "Restore size" : "Maximize"}>
-                {isMaximized ? <Minimize2 className="h-2.5 w-2.5" /> : <Maximize2 className="h-2.5 w-2.5" />}
+              <MiniChatActions
+                currentUserId={currentUserId}
+                targetUserId={partnerId}
+                targetUserName={partnerName}
+                isPartnerOnline={isPartnerOnline}
+                onBlock={handleClose}
+                onStopChat={handleClose}
+                onLogOff={handleClose}
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-5 w-5"
+                onClick={toggleMaximize}
+                title={isMaximized ? "Restore size" : "Maximize"}
+              >
+                {isMaximized ? (
+                  <Minimize2 className="h-2.5 w-2.5" />
+                ) : (
+                  <Maximize2 className="h-2.5 w-2.5" />
+                )}
               </Button>
             </>
           )}
-          <Button variant="ghost" size="icon" className="h-5 w-5" onClick={(e) => { e.stopPropagation(); toggleMinimize(); }}>
-            {isMinimized ? <ChevronUp className="h-2.5 w-2.5" /> : <ChevronDown className="h-2.5 w-2.5" />}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-5 w-5"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleMinimize();
+            }}
+          >
+            {isMinimized ? (
+              <ChevronUp className="h-2.5 w-2.5" />
+            ) : (
+              <ChevronDown className="h-2.5 w-2.5" />
+            )}
           </Button>
           <Button
-            variant="ghost" size="icon"
+            variant="ghost"
+            size="icon"
             className="h-5 w-5 hover:bg-destructive/20 hover:text-destructive"
-            onClick={(e) => { e.stopPropagation(); e.preventDefault(); handleClose(); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              handleClose();
+            }}
             onPointerDown={(e) => e.stopPropagation()}
             onMouseDown={(e) => e.stopPropagation()}
             onTouchStart={(e) => e.stopPropagation()}
@@ -478,7 +659,9 @@ const DraggableMiniChatWindow = ({
                 </button>
               )}
               {messages.length === 0 && (
-                <p className="text-center text-[10px] text-muted-foreground py-4">Say hi to start chatting.</p>
+                <p className="text-center text-[10px] text-muted-foreground py-4">
+                  Say hi to start chatting.
+                </p>
               )}
               {messages.map((msg) => (
                 <MessageBubble
@@ -498,36 +681,101 @@ const DraggableMiniChatWindow = ({
 
           <div className="border-t">
             <div className="p-2">
-              <input type="file" ref={fileInputRef} className="hidden" onChange={(e) => {
-                const fileType = fileInputRef.current?.dataset.fileType as "image" | "video" | "document";
-                handleFileUpload(e, fileType);
-              }} />
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                onChange={(e) => {
+                  const fileType = fileInputRef.current?.dataset.fileType as
+                    "image" | "video" | "document";
+                  handleFileUpload(e, fileType);
+                }}
+              />
               <div className="flex items-center gap-1">
                 <Popover open={isAttachOpen} onOpenChange={setIsAttachOpen}>
                   <PopoverTrigger asChild>
-                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" disabled={isUploading}>
-                      {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 shrink-0"
+                      disabled={isUploading}
+                    >
+                      {isUploading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Paperclip className="h-4 w-4" />
+                      )}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-40 p-1 z-[100] bg-popover border shadow-lg" side="top" align="start">
+                  <PopoverContent
+                    className="w-40 p-1 z-[100] bg-popover border shadow-lg"
+                    side="top"
+                    align="start"
+                  >
                     <div className="flex flex-col gap-0.5">
-                      <Button variant="ghost" size="sm" className="justify-start h-8 text-xs" onClick={() => triggerFileInput("image/*", "image")}>
-                        <Image className="h-4 w-4 mr-2 text-blue-500" />Photo
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="justify-start h-8 text-xs"
+                        onClick={() => triggerFileInput("image/*", "image")}
+                      >
+                        <Image className="h-4 w-4 mr-2 text-blue-500" />
+                        Photo
                       </Button>
-                      <Button variant="ghost" size="sm" className="justify-start h-8 text-xs" onClick={() => triggerFileInput("video/*", "video")}>
-                        <Video className="h-4 w-4 mr-2 text-purple-500" />Video
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="justify-start h-8 text-xs"
+                        onClick={() => triggerFileInput("video/*", "video")}
+                      >
+                        <Video className="h-4 w-4 mr-2 text-purple-500" />
+                        Video
                       </Button>
-                      <Button variant="ghost" size="sm" className="justify-start h-8 text-xs" onClick={() => triggerFileInput(".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar", "document")}>
-                        <FileText className="h-4 w-4 mr-2 text-orange-500" />Document
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="justify-start h-8 text-xs"
+                        onClick={() =>
+                          triggerFileInput(
+                            ".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar",
+                            "document",
+                          )
+                        }
+                      >
+                        <FileText className="h-4 w-4 mr-2 text-orange-500" />
+                        Document
                       </Button>
                     </div>
                   </PopoverContent>
                 </Popover>
                 <div className="flex-1">
-                  <Input placeholder="Type a message..." value={newMessage} onChange={(e) => { setNewMessage(e.target.value); sendTyping(e.target.value.trim().length > 0); }} onKeyDown={handleKeyPress} onBlur={() => sendTyping(false)} dir="auto" spellCheck={true} autoComplete="off" autoCorrect="on" inputMode="text" enterKeyHint="send" className="h-8 text-xs w-full unicode-text" disabled={isUploading} />
+                  <Input
+                    placeholder="Type a message..."
+                    value={newMessage}
+                    onChange={(e) => {
+                      setNewMessage(e.target.value);
+                      sendTyping(e.target.value.trim().length > 0);
+                    }}
+                    onKeyDown={handleKeyPress}
+                    onBlur={() => sendTyping(false)}
+                    dir="auto"
+                    spellCheck={true}
+                    autoComplete="off"
+                    autoCorrect="on"
+                    inputMode="text"
+                    enterKeyHint="send"
+                    className="h-8 text-xs w-full unicode-text"
+                    disabled={isUploading}
+                  />
                 </div>
                 {newMessage.trim() ? (
-                  <Button size="icon" className="h-8 w-8 shrink-0 bg-primary hover:bg-primary/90" onClick={sendMessage} disabled={!newMessage.trim()}>
+                  <Button
+                    size="icon"
+                    className="h-8 w-8 shrink-0 bg-primary hover:bg-primary/90"
+                    onClick={sendMessage}
+                    disabled={!newMessage.trim()}
+                  >
                     <Send className="h-3.5 w-3.5" />
                   </Button>
                 ) : (
@@ -544,10 +792,20 @@ const DraggableMiniChatWindow = ({
                       setMessages((prev) =>
                         prev.some((m) => m.id === row.id)
                           ? prev
-                          : [...prev, { id: row.id, ownerId: row.sender_id, message: row.message, createdAt: row.created_at }]
+                          : [
+                              ...prev,
+                              {
+                                id: row.id,
+                                ownerId: row.sender_id,
+                                message: row.message,
+                                createdAt: row.created_at,
+                              },
+                            ],
                       );
                     }}
-                    onError={(m) => toast({ title: "Voice failed", description: m, variant: "destructive" })}
+                    onError={(m) =>
+                      toast({ title: "Voice failed", description: m, variant: "destructive" })
+                    }
                   />
                 )}
               </div>
@@ -556,12 +814,28 @@ const DraggableMiniChatWindow = ({
 
           {!isMaximized && (
             <>
-              <div className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize flex items-center justify-center touch-none" onMouseDown={(e) => handleResizeStart(e, "se")} onTouchStart={(e) => handleResizeStart(e, "se")}>
+              <div
+                className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize flex items-center justify-center touch-none"
+                onMouseDown={(e) => handleResizeStart(e, "se")}
+                onTouchStart={(e) => handleResizeStart(e, "se")}
+              >
                 <div className="w-2 h-2 border-b-2 border-r-2 border-muted-foreground/30" />
               </div>
-              <div className="absolute bottom-0 left-0 w-4 h-4 cursor-sw-resize touch-none" onMouseDown={(e) => handleResizeStart(e, "sw")} onTouchStart={(e) => handleResizeStart(e, "sw")} />
-              <div className="absolute top-0 right-0 w-4 h-4 cursor-ne-resize touch-none" onMouseDown={(e) => handleResizeStart(e, "ne")} onTouchStart={(e) => handleResizeStart(e, "ne")} />
-              <div className="absolute top-0 left-0 w-4 h-4 cursor-nw-resize touch-none" onMouseDown={(e) => handleResizeStart(e, "nw")} onTouchStart={(e) => handleResizeStart(e, "nw")} />
+              <div
+                className="absolute bottom-0 left-0 w-4 h-4 cursor-sw-resize touch-none"
+                onMouseDown={(e) => handleResizeStart(e, "sw")}
+                onTouchStart={(e) => handleResizeStart(e, "sw")}
+              />
+              <div
+                className="absolute top-0 right-0 w-4 h-4 cursor-ne-resize touch-none"
+                onMouseDown={(e) => handleResizeStart(e, "ne")}
+                onTouchStart={(e) => handleResizeStart(e, "ne")}
+              />
+              <div
+                className="absolute top-0 left-0 w-4 h-4 cursor-nw-resize touch-none"
+                onMouseDown={(e) => handleResizeStart(e, "nw")}
+                onTouchStart={(e) => handleResizeStart(e, "nw")}
+              />
             </>
           )}
         </>
@@ -571,14 +845,30 @@ const DraggableMiniChatWindow = ({
 };
 
 interface MessageBubbleProps {
-  msg: { id: string; ownerId: string; message: string; createdAt: string; sendFailed?: boolean; isSystem?: boolean; translatedMessage?: string; englishText?: string };
+  msg: {
+    id: string;
+    ownerId: string;
+    message: string;
+    createdAt: string;
+    sendFailed?: boolean;
+    isSystem?: boolean;
+    translatedMessage?: string;
+    englishText?: string;
+  };
   partnerId: string;
   currentUserId: string;
   currentUserName: string;
   currentUserPhoto: string | null;
   partnerName: string;
   partnerPhoto: string | null;
-  onRetry?: (msg: { id: string; ownerId: string; message: string; createdAt: string; sendFailed?: boolean; isSystem?: boolean }) => void;
+  onRetry?: (msg: {
+    id: string;
+    ownerId: string;
+    message: string;
+    createdAt: string;
+    sendFailed?: boolean;
+    isSystem?: boolean;
+  }) => void;
 }
 
 const MessageBubble = ({
@@ -591,7 +881,7 @@ const MessageBubble = ({
   onRetry,
 }: MessageBubbleProps) => {
   const isMine = String(msg.ownerId) === String(currentUserId);
-  const displayName = isMine ? (currentUserName || "You") : (partnerName || "User");
+  const displayName = isMine ? currentUserName || "You" : partnerName || "User";
   const displayPhoto = isMine ? currentUserPhoto : partnerPhoto;
 
   const voiceUrl = extractVoiceUrl(msg.message);
@@ -606,23 +896,34 @@ const MessageBubble = ({
 
   const rawUrl = voiceUrl
     ? voiceUrl
-    : isImage ? extractUrl(msg.message, "IMAGE")
-    : isVideo ? extractUrl(msg.message, "VIDEO")
-    : isDocument ? extractUrl(msg.message, "DOCUMENT")
-    : null;
+    : isImage
+      ? extractUrl(msg.message, "IMAGE")
+      : isVideo
+        ? extractUrl(msg.message, "VIDEO")
+        : isDocument
+          ? extractUrl(msg.message, "DOCUMENT")
+          : null;
 
   const [fileUrl, setFileUrl] = useState<string | null>(null);
   const [fileFailed, setFileFailed] = useState(false);
   useEffect(() => {
     let cancelled = false;
     setFileFailed(false);
-    if (!rawUrl) { setFileUrl(null); return; }
-    if (!rawUrl.startsWith("chat-attachment://")) { setFileUrl(rawUrl); return; }
+    if (!rawUrl) {
+      setFileUrl(null);
+      return;
+    }
+    if (!rawUrl.startsWith("chat-attachment://")) {
+      setFileUrl(rawUrl);
+      return;
+    }
     const path = storagePathFromAttachmentUrl(rawUrl);
-    const primary = path.startsWith("meowmeow/app/attachment/") ? "meowmeow-app-attachment" : "chat-attachments";
+    const primary = path.startsWith("meowmeow/app/attachment/")
+      ? "meowmeow-app-attachment"
+      : "chat-attachments";
     (async () => {
       let res = await supabase.storage.from(primary).createSignedUrl(path, 3600);
-      if ((!res.data?.signedUrl) && primary === "meowmeow-app-attachment") {
+      if (!res.data?.signedUrl && primary === "meowmeow-app-attachment") {
         res = await supabase.storage.from("chat-attachments").createSignedUrl(path, 3600);
       }
       if (!cancelled) {
@@ -630,7 +931,9 @@ const MessageBubble = ({
         else setFileFailed(true);
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [rawUrl]);
 
   if (msg.isSystem || msg.ownerId === "system") {
@@ -653,10 +956,12 @@ const MessageBubble = ({
       </Avatar>
 
       <div className={cn("flex flex-col min-w-0", isMine ? "items-end" : "items-start")}>
-        <span className={cn(
-          "text-[9px] font-semibold mb-0.5 px-1",
-          isMine ? "text-primary" : "text-emerald-600 dark:text-emerald-400"
-        )}>
+        <span
+          className={cn(
+            "text-[9px] font-semibold mb-0.5 px-1",
+            isMine ? "text-primary" : "text-emerald-600 dark:text-emerald-400",
+          )}
+        >
           {displayName}
         </span>
         <div
@@ -665,44 +970,70 @@ const MessageBubble = ({
             isMine
               ? "bg-primary/5 border-primary/20 rounded-br-sm"
               : "bg-emerald-50 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-800 rounded-bl-sm",
-            msg.sendFailed && "bg-destructive/10 border-destructive/30 cursor-pointer"
+            msg.sendFailed && "bg-destructive/10 border-destructive/30 cursor-pointer",
           )}
           onClick={msg.sendFailed && onRetry ? () => onRetry(msg) : undefined}
         >
           {voiceUrl && fileUrl ? (
             <div className="flex items-center gap-2">
               <Mic className="h-3 w-3 shrink-0" />
-              <audio src={fileUrl} controls preload="metadata" crossOrigin="anonymous" className="h-8 max-w-[160px]" />
+              <audio
+                src={fileUrl}
+                controls
+                preload="metadata"
+                crossOrigin="anonymous"
+                className="h-8 max-w-[160px]"
+              />
             </div>
           ) : voiceUrl && fileFailed ? (
             <span className="text-[10px] text-destructive">Voice unavailable</span>
           ) : voiceUrl && !fileUrl ? (
             <span className="text-[10px] text-muted-foreground">Loading voice...</span>
           ) : isImage && fileUrl ? (
-            <img src={fileUrl} alt="Shared image" className="max-w-[200px] max-h-[150px] rounded object-cover cursor-pointer" onClick={() => window.open(fileUrl, "_blank")} />
+            <img
+              src={fileUrl}
+              alt="Shared image"
+              className="max-w-[200px] max-h-[150px] rounded object-cover cursor-pointer"
+              onClick={() => window.open(fileUrl, "_blank")}
+            />
           ) : isVideo && fileUrl ? (
             <video src={fileUrl} controls className="max-w-[200px] max-h-[150px] rounded" />
           ) : isDocument && fileUrl ? (
-            <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 underline hover:opacity-80">
-              <FileText className="h-3 w-3" /><span>View Document</span>
+            <a
+              href={fileUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 underline hover:opacity-80"
+            >
+              <FileText className="h-3 w-3" />
+              <span>View Document</span>
             </a>
           ) : (
             <>
-              <p className={cn(
-                "unicode-text leading-relaxed",
-                isMine ? "text-primary dark:text-primary" : "text-emerald-800 dark:text-emerald-200"
-              )} dir="auto">
+              <p
+                className={cn(
+                  "unicode-text leading-relaxed",
+                  isMine
+                    ? "text-primary dark:text-primary"
+                    : "text-emerald-800 dark:text-emerald-200",
+                )}
+                dir="auto"
+              >
                 {msg.message}
               </p>
-              {!isMine && msg.translatedMessage && msg.translatedMessage.trim().toLowerCase() !== msg.message.trim().toLowerCase() && (
-                <p className="text-[9px] text-muted-foreground/70 italic mt-0.5" dir="auto">
-                  {msg.translatedMessage}
-                </p>
-              )}
+              {!isMine &&
+                msg.translatedMessage &&
+                msg.translatedMessage.trim().toLowerCase() !== msg.message.trim().toLowerCase() && (
+                  <p className="text-[9px] text-muted-foreground/70 italic mt-0.5" dir="auto">
+                    {msg.translatedMessage}
+                  </p>
+                )}
             </>
           )}
           {msg.sendFailed && (
-            <span className="text-[8px] text-destructive block mt-0.5">⚠ Failed — tap to retry</span>
+            <span className="text-[8px] text-destructive block mt-0.5">
+              ⚠ Failed — tap to retry
+            </span>
           )}
           <span className="text-[8px] text-muted-foreground/50 block mt-0.5">
             {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}

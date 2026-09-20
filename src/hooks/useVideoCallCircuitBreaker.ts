@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CircuitBreakerState {
   active: boolean;
@@ -30,12 +30,9 @@ export const useVideoCallCircuitBreaker = () => {
     try {
       // Query both settings directly from the DB — no edge function needed
       const { data: settings } = await supabase
-        .from('app_settings')
-        .select('setting_key, setting_value')
-        .in('setting_key', [
-          'video_call_circuit_breaker',
-          'video_calls_permanently_disabled',
-        ]);
+        .from("app_settings")
+        .select("setting_key, setting_value")
+        .in("setting_key", ["video_call_circuit_breaker", "video_calls_permanently_disabled"]);
 
       let active = false;
       let reason: string | undefined;
@@ -43,11 +40,18 @@ export const useVideoCallCircuitBreaker = () => {
       let permanentlyDisabled = false;
 
       for (const row of settings ?? []) {
-        const val = typeof row.setting_value === 'string'
-          ? (() => { try { return JSON.parse(row.setting_value); } catch { return row.setting_value; } })()
-          : row.setting_value;
+        const val =
+          typeof row.setting_value === "string"
+            ? (() => {
+                try {
+                  return JSON.parse(row.setting_value);
+                } catch {
+                  return row.setting_value;
+                }
+              })()
+            : row.setting_value;
 
-        if (row.setting_key === 'video_call_circuit_breaker' && val) {
+        if (row.setting_key === "video_call_circuit_breaker" && val) {
           // Check if cooldown has passed (auto-resume logic)
           if (val.active && val.resumes_at) {
             const resumeTime = new Date(val.resumes_at).getTime();
@@ -66,14 +70,14 @@ export const useVideoCallCircuitBreaker = () => {
           }
         }
 
-        if (row.setting_key === 'video_calls_permanently_disabled' && val) {
+        if (row.setting_key === "video_calls_permanently_disabled" && val) {
           permanentlyDisabled = val.disabled ?? false;
         }
       }
 
       setState({ active, permanentlyDisabled, reason, resumesAt, loading: false });
     } catch (err) {
-      console.error('[CircuitBreaker] Check failed:', err);
+      console.error("[CircuitBreaker] Check failed:", err);
       setState({ active: false, permanentlyDisabled: false, loading: false });
     }
   }, []);
@@ -88,7 +92,7 @@ export const useVideoCallCircuitBreaker = () => {
     isVideoCallsDisabled: state.active || state.permanentlyDisabled,
     isPermanentlyDisabled: state.permanentlyDisabled,
     isCircuitBreakerActive: state.active,
-    reason: state.permanentlyDisabled ? 'Permanently disabled by admin' : state.reason,
+    reason: state.permanentlyDisabled ? "Permanently disabled by admin" : state.reason,
     resumesAt: state.resumesAt,
     loading: state.loading,
     refresh: checkStatus,

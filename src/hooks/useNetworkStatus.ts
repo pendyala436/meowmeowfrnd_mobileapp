@@ -1,12 +1,12 @@
 /**
  * useNetworkStatus Hook
- * 
+ *
  * React hook for monitoring network connectivity status.
  * Provides real-time online/offline detection across all platforms.
  */
 
-import { useState, useEffect, useCallback } from 'react';
-import { networkMonitor, type NetworkStatus } from '@/lib/api';
+import { useState, useEffect, useCallback } from "react";
+import { networkMonitor, type NetworkStatus } from "@/lib/api";
 
 interface UseNetworkStatusReturn extends NetworkStatus {
   checkConnection: () => Promise<boolean>;
@@ -25,27 +25,27 @@ export function useNetworkStatus(): UseNetworkStatusReturn {
 
     // Subscribe to network changes
     const unsubscribe = networkMonitor.subscribe((event) => {
-      if (event.type === 'network:online' || event.type === 'network:offline') {
+      if (event.type === "network:online" || event.type === "network:offline") {
         setStatus(event.data as NetworkStatus);
       }
     });
 
     // Fallback: Listen to browser events directly
     const handleOnline = () => {
-      setStatus(prev => ({ ...prev, isOnline: true }));
+      setStatus((prev) => ({ ...prev, isOnline: true }));
     };
 
     const handleOffline = () => {
-      setStatus(prev => ({ ...prev, isOnline: false }));
+      setStatus((prev) => ({ ...prev, isOnline: false }));
     };
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
 
     return () => {
       unsubscribe();
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
     };
   }, []);
 
@@ -57,9 +57,9 @@ export function useNetworkStatus(): UseNetworkStatusReturn {
 
     try {
       // Try to fetch a small resource
-      const response = await fetch('/favicon.ico', {
-        method: 'HEAD',
-        cache: 'no-cache',
+      const response = await fetch("/favicon.ico", {
+        method: "HEAD",
+        cache: "no-cache",
       });
       return response.ok;
     } catch {
@@ -67,7 +67,7 @@ export function useNetworkStatus(): UseNetworkStatusReturn {
     }
   }, []);
 
-  const isSlowConnection = status.effectiveType === 'slow-2g' || status.effectiveType === '2g';
+  const isSlowConnection = status.effectiveType === "slow-2g" || status.effectiveType === "2g";
 
   return {
     ...status,

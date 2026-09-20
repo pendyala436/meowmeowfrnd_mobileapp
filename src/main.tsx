@@ -51,7 +51,10 @@ function isRealtimeSerializerNoise(message: string, stack = ""): boolean {
 
 function isPlayAbortNoise(reason: unknown, message: string): boolean {
   const name = (reason as { name?: string } | null)?.name;
-  return name === "AbortError" || /play\(\) request was interrupted|interrupted by a call to pause/i.test(message);
+  return (
+    name === "AbortError" ||
+    /play\(\) request was interrupted|interrupted by a call to pause/i.test(message)
+  );
 }
 
 function isIgnorableWindowError(event: ErrorEvent): boolean {
@@ -70,7 +73,10 @@ function isIgnorableWindowError(event: ErrorEvent): boolean {
 window.addEventListener("error", (event) => {
   if (isIgnorableWindowError(event)) return;
   const msg = event.error?.message || event.message || "";
-  if (isStaleBundleError(msg)) { void recoverFromStaleBundle(); return; }
+  if (isStaleBundleError(msg)) {
+    void recoverFromStaleBundle();
+    return;
+  }
   console.error("[FATAL] Uncaught error:", event.error);
   showFatalError(msg || "Unknown error");
 });
@@ -84,7 +90,10 @@ window.addEventListener("unhandledrejection", (event) => {
     return;
   }
   if (isRealtimeSerializerNoise(msg, stack)) return;
-  if (isStaleBundleError(msg)) { void recoverFromStaleBundle(); return; }
+  if (isStaleBundleError(msg)) {
+    void recoverFromStaleBundle();
+    return;
+  }
   console.error("[FATAL] Unhandled rejection:", event.reason);
   showFatalError(msg || "Startup failed");
 });
@@ -115,12 +124,16 @@ async function cleanupPreviewServiceWorkers() {
     const host = window.location.hostname;
     const isPreviewHost = host.includes("id-preview--") || host.includes("lovableproject.com");
     const isInIframe = (() => {
-      try { return window.self !== window.top; }
-      catch { return true; }
+      try {
+        return window.self !== window.top;
+      } catch {
+        return true;
+      }
     })();
     if (!isPreviewHost && !isInIframe) return true;
 
-    const registrations = "serviceWorker" in navigator ? await navigator.serviceWorker.getRegistrations() : [];
+    const registrations =
+      "serviceWorker" in navigator ? await navigator.serviceWorker.getRegistrations() : [];
     if (registrations.length) {
       await Promise.all(registrations.map((registration) => registration.unregister()));
       if ("caches" in window) {

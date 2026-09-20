@@ -1,14 +1,14 @@
 /**
  * VoiceMessagePlayer.tsx
- * 
+ *
  * Audio player component for voice messages in chat.
  * Displays a compact audio player with playback controls.
  */
 
-import { useState, useRef, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Play, Pause, Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useState, useRef, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Play, Pause, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface VoiceMessagePlayerProps {
   audioUrl: string;
@@ -16,11 +16,7 @@ interface VoiceMessagePlayerProps {
   className?: string;
 }
 
-export const VoiceMessagePlayer = ({
-  audioUrl,
-  isMine,
-  className
-}: VoiceMessagePlayerProps) => {
+export const VoiceMessagePlayer = ({ audioUrl, isMine, className }: VoiceMessagePlayerProps) => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -114,28 +110,30 @@ export const VoiceMessagePlayer = ({
 
   if (error) {
     return (
-      <div className={cn(
-        "flex items-center gap-2 px-3 py-2 rounded-2xl text-sm",
-        isMine
-          ? "bg-primary/80 text-primary-foreground"
-          : "bg-muted text-foreground",
-        className
-      )}>
+      <div
+        className={cn(
+          "flex items-center gap-2 px-3 py-2 rounded-2xl text-sm",
+          isMine ? "bg-primary/80 text-primary-foreground" : "bg-muted text-foreground",
+          className,
+        )}
+      >
         <audio src={audioUrl} controls preload="metadata" className="h-8 max-w-[200px]" />
       </div>
     );
   }
 
   return (
-    <div className={cn(
-      "flex items-center gap-2 px-3 py-2 rounded-2xl min-w-[200px] max-w-[280px]",
-      isMine 
-        ? "bg-primary text-primary-foreground rounded-br-md" 
-        : "bg-muted text-foreground rounded-bl-md",
-      className
-    )}>
+    <div
+      className={cn(
+        "flex items-center gap-2 px-3 py-2 rounded-2xl min-w-[200px] max-w-[280px]",
+        isMine
+          ? "bg-primary text-primary-foreground rounded-br-md"
+          : "bg-muted text-foreground rounded-bl-md",
+        className,
+      )}
+    >
       <audio ref={audioRef} src={audioUrl} preload="metadata" />
-      
+
       {/* Play/Pause button */}
       <Button
         type="button"
@@ -143,9 +141,7 @@ export const VoiceMessagePlayer = ({
         variant="ghost"
         className={cn(
           "rounded-full w-8 h-8 shrink-0",
-          isMine 
-            ? "hover:bg-primary-foreground/20" 
-            : "hover:bg-foreground/10"
+          isMine ? "hover:bg-primary-foreground/20" : "hover:bg-foreground/10",
         )}
         onClick={togglePlay}
         disabled={isLoading}
@@ -162,22 +158,22 @@ export const VoiceMessagePlayer = ({
       {/* Progress bar and time */}
       <div className="flex-1 flex flex-col gap-1">
         {/* Progress bar */}
-        <div 
+        <div
           className={cn(
             "h-1.5 rounded-full cursor-pointer relative overflow-hidden",
-            isMine ? "bg-primary-foreground/30" : "bg-foreground/20"
+            isMine ? "bg-primary-foreground/30" : "bg-foreground/20",
           )}
           onClick={handleSeek}
         >
-          <div 
+          <div
             className={cn(
               "absolute inset-y-0 left-0 rounded-full transition-all",
-              isMine ? "bg-primary-foreground" : "bg-primary"
+              isMine ? "bg-primary-foreground" : "bg-primary",
             )}
             style={{ width: `${progress}%` }}
           />
         </div>
-        
+
         {/* Time display */}
         <div className="flex justify-between text-xs opacity-75">
           <span>{formatTime(currentTime)}</span>

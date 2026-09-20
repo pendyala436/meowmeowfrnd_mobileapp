@@ -1,11 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,15 +11,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { 
-  UserPlus, 
-  UserMinus, 
-  ShieldOff, 
-  Shield, 
-  PhoneOff,
-  Circle,
-  LogOut
-} from "lucide-react";
+import { UserPlus, UserMinus, ShieldOff, Shield, PhoneOff, Circle, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -48,7 +35,7 @@ export const MiniChatActions = ({
   onBlock,
   onStopChat,
   onLogOff,
-  className
+  className,
 }: MiniChatActionsProps) => {
   const { toast } = useToast();
   const [isBlocked, setIsBlocked] = useState(false);
@@ -71,15 +58,11 @@ export const MiniChatActions = ({
 
     const channel = supabase
       .channel(`mini-chat-actions-${currentUserId}-${targetUserId}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'user_blocks' },
-        () => loadUserRelationship()
+      .on("postgres_changes", { event: "*", schema: "public", table: "user_blocks" }, () =>
+        loadUserRelationship(),
       )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'user_friends' },
-        () => loadUserRelationship()
+      .on("postgres_changes", { event: "*", schema: "public", table: "user_friends" }, () =>
+        loadUserRelationship(),
       )
       .subscribe();
 
@@ -104,7 +87,9 @@ export const MiniChatActions = ({
       const { data: friendData } = await supabase
         .from("user_friends")
         .select("id, status")
-        .or(`and(user_id.eq.${currentUserId},friend_id.eq.${targetUserId}),and(user_id.eq.${targetUserId},friend_id.eq.${currentUserId})`)
+        .or(
+          `and(user_id.eq.${currentUserId},friend_id.eq.${targetUserId}),and(user_id.eq.${targetUserId},friend_id.eq.${currentUserId})`,
+        )
         .eq("status", "accepted")
         .maybeSingle();
 
@@ -117,18 +102,18 @@ export const MiniChatActions = ({
   const handleBlock = async () => {
     setIsLoading(true);
     try {
-      await supabase
-        .from("user_blocks")
-        .insert({
-          blocked_by: currentUserId,
-          blocked_user_id: targetUserId
-        });
+      await supabase.from("user_blocks").insert({
+        blocked_by: currentUserId,
+        blocked_user_id: targetUserId,
+      });
 
       // Remove friendship if exists
       await supabase
         .from("user_friends")
         .delete()
-        .or(`and(user_id.eq.${currentUserId},friend_id.eq.${targetUserId}),and(user_id.eq.${targetUserId},friend_id.eq.${currentUserId})`);
+        .or(
+          `and(user_id.eq.${currentUserId},friend_id.eq.${targetUserId}),and(user_id.eq.${targetUserId},friend_id.eq.${currentUserId})`,
+        );
 
       // End any active chat sessions
       await supabase
@@ -136,9 +121,11 @@ export const MiniChatActions = ({
         .update({
           status: "ended",
           ended_at: new Date().toISOString(),
-          end_reason: "user_blocked"
+          end_reason: "user_blocked",
         })
-        .or(`and(man_user_id.eq.${currentUserId},woman_user_id.eq.${targetUserId}),and(man_user_id.eq.${targetUserId},woman_user_id.eq.${currentUserId})`)
+        .or(
+          `and(man_user_id.eq.${currentUserId},woman_user_id.eq.${targetUserId}),and(man_user_id.eq.${targetUserId},woman_user_id.eq.${currentUserId})`,
+        )
         .eq("status", "active");
 
       // End any active video call sessions
@@ -147,26 +134,28 @@ export const MiniChatActions = ({
         .update({
           status: "ended",
           ended_at: new Date().toISOString(),
-          end_reason: "user_blocked"
+          end_reason: "user_blocked",
         })
-        .or(`and(man_user_id.eq.${currentUserId},woman_user_id.eq.${targetUserId}),and(man_user_id.eq.${targetUserId},woman_user_id.eq.${currentUserId})`)
+        .or(
+          `and(man_user_id.eq.${currentUserId},woman_user_id.eq.${targetUserId}),and(man_user_id.eq.${targetUserId},woman_user_id.eq.${currentUserId})`,
+        )
         .in("status", ["ringing", "active", "connecting"]);
 
       setIsBlocked(true);
       setIsFriend(false);
       setShowBlockDialog(false);
-      
+
       toast({
         title: "User Blocked",
-        description: `${targetUserName} has been blocked`
+        description: `${targetUserName} has been blocked`,
       });
-      
+
       onBlock?.();
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to block user",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -185,13 +174,13 @@ export const MiniChatActions = ({
       setIsBlocked(false);
       toast({
         title: "User Unblocked",
-        description: `${targetUserName} has been unblocked`
+        description: `${targetUserName} has been unblocked`,
       });
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to unblock user",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -206,45 +195,42 @@ export const MiniChatActions = ({
       const { data: existing } = await supabase
         .from("user_friends")
         .select("id, status")
-        .or(`and(user_id.eq.${currentUserId},friend_id.eq.${targetUserId}),and(user_id.eq.${targetUserId},friend_id.eq.${currentUserId})`)
+        .or(
+          `and(user_id.eq.${currentUserId},friend_id.eq.${targetUserId}),and(user_id.eq.${targetUserId},friend_id.eq.${currentUserId})`,
+        )
         .maybeSingle();
 
       if (existing) {
         if (existing.status === "pending") {
           // Accept the existing request
-          await supabase
-            .from("user_friends")
-            .update({ status: "accepted" })
-            .eq("id", existing.id);
-          
+          await supabase.from("user_friends").update({ status: "accepted" }).eq("id", existing.id);
+
           setIsFriend(true);
           toast({
             title: "Friend Added",
-            description: `You are now friends with ${targetUserName}`
+            description: `You are now friends with ${targetUserName}`,
           });
         }
         return;
       }
 
-      await supabase
-        .from("user_friends")
-        .insert({
-          user_id: currentUserId,
-          friend_id: targetUserId,
-          status: "accepted", // Direct add since they're already chatting
-          created_by: currentUserId
-        });
+      await supabase.from("user_friends").insert({
+        user_id: currentUserId,
+        friend_id: targetUserId,
+        status: "accepted", // Direct add since they're already chatting
+        created_by: currentUserId,
+      });
 
       setIsFriend(true);
       toast({
         title: "Friend Added",
-        description: `${targetUserName} is now your friend`
+        description: `${targetUserName} is now your friend`,
       });
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to add friend",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -257,19 +243,21 @@ export const MiniChatActions = ({
       await supabase
         .from("user_friends")
         .delete()
-        .or(`and(user_id.eq.${currentUserId},friend_id.eq.${targetUserId}),and(user_id.eq.${targetUserId},friend_id.eq.${currentUserId})`);
+        .or(
+          `and(user_id.eq.${currentUserId},friend_id.eq.${targetUserId}),and(user_id.eq.${targetUserId},friend_id.eq.${currentUserId})`,
+        );
 
       setIsFriend(false);
       setShowUnfriendDialog(false);
       toast({
         title: "Unfriended",
-        description: `${targetUserName} has been removed from your friends`
+        description: `${targetUserName} has been removed from your friends`,
       });
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to unfriend user",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -296,11 +284,13 @@ export const MiniChatActions = ({
         <Tooltip>
           <TooltipTrigger asChild>
             <div className="h-5 w-5 flex items-center justify-center">
-              <Circle 
+              <Circle
                 className={cn(
                   "h-2.5 w-2.5",
-                  isPartnerOnline ? "fill-green-500 text-green-500" : "fill-muted-foreground text-muted-foreground"
-                )} 
+                  isPartnerOnline
+                    ? "fill-green-500 text-green-500"
+                    : "fill-muted-foreground text-muted-foreground",
+                )}
               />
             </div>
           </TooltipTrigger>
@@ -317,7 +307,10 @@ export const MiniChatActions = ({
                 variant="ghost"
                 size="icon"
                 className="h-5 w-5 hover:bg-primary/20"
-                onClick={(e) => { e.stopPropagation(); setShowUnfriendDialog(true); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowUnfriendDialog(true);
+                }}
                 disabled={isLoading}
               >
                 <UserMinus className="h-2.5 w-2.5 text-primary" />
@@ -334,7 +327,10 @@ export const MiniChatActions = ({
                 variant="ghost"
                 size="icon"
                 className="h-5 w-5 hover:bg-primary/20"
-                onClick={(e) => { e.stopPropagation(); handleAddFriend(); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAddFriend();
+                }}
                 disabled={isLoading || isBlocked}
               >
                 <UserPlus className="h-2.5 w-2.5 text-primary" />
@@ -354,7 +350,10 @@ export const MiniChatActions = ({
                 variant="ghost"
                 size="icon"
                 className="h-5 w-5 hover:bg-primary/20"
-                onClick={(e) => { e.stopPropagation(); handleUnblock(); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleUnblock();
+                }}
                 disabled={isLoading}
               >
                 <ShieldOff className="h-2.5 w-2.5 text-primary" />
@@ -371,7 +370,10 @@ export const MiniChatActions = ({
                 variant="ghost"
                 size="icon"
                 className="h-5 w-5 hover:bg-destructive/20"
-                onClick={(e) => { e.stopPropagation(); setShowBlockDialog(true); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowBlockDialog(true);
+                }}
                 disabled={isLoading}
               >
                 <Shield className="h-2.5 w-2.5 text-destructive" />
@@ -390,7 +392,10 @@ export const MiniChatActions = ({
               variant="ghost"
               size="icon"
               className="h-5 w-5 hover:bg-destructive/20"
-              onClick={(e) => { e.stopPropagation(); setShowStopDialog(true); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowStopDialog(true);
+              }}
               disabled={isLoading}
             >
               <PhoneOff className="h-2.5 w-2.5 text-destructive" />
@@ -408,7 +413,10 @@ export const MiniChatActions = ({
               variant="ghost"
               size="icon"
               className="h-5 w-5 hover:bg-primary/20"
-              onClick={(e) => { e.stopPropagation(); setShowLogOffDialog(true); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowLogOffDialog(true);
+              }}
               disabled={isLoading}
             >
               <LogOut className="h-2.5 w-2.5 text-primary" />
@@ -425,14 +433,17 @@ export const MiniChatActions = ({
             <AlertDialogHeader>
               <AlertDialogTitle>Block {targetUserName}?</AlertDialogTitle>
               <AlertDialogDescription>
-                This will end any active chats and video calls immediately. 
-                {isFriend && " Your friendship will also be removed."}
-                {" "}They won't be able to message you or call you until unblocked.
+                This will end any active chats and video calls immediately.
+                {isFriend && " Your friendship will also be removed."} They won't be able to message
+                you or call you until unblocked.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleBlock} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              <AlertDialogAction
+                onClick={handleBlock}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
                 Block
               </AlertDialogAction>
             </AlertDialogFooter>
@@ -450,9 +461,7 @@ export const MiniChatActions = ({
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleUnfriend}>
-                Unfriend
-              </AlertDialogAction>
+              <AlertDialogAction onClick={handleUnfriend}>Unfriend</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
@@ -468,7 +477,10 @@ export const MiniChatActions = ({
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleStopChat} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              <AlertDialogAction
+                onClick={handleStopChat}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
                 End Chat
               </AlertDialogAction>
             </AlertDialogFooter>
@@ -481,12 +493,16 @@ export const MiniChatActions = ({
             <AlertDialogHeader>
               <AlertDialogTitle>Log off from this chat session?</AlertDialogTitle>
               <AlertDialogDescription>
-                This will end the chat with {targetUserName} and close this window. You will remain logged into the app.
+                This will end the chat with {targetUserName} and close this window. You will remain
+                logged into the app.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleLogOff} className="bg-primary text-primary-foreground hover:bg-primary/90">
+              <AlertDialogAction
+                onClick={handleLogOff}
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+              >
                 Log Off
               </AlertDialogAction>
             </AlertDialogFooter>

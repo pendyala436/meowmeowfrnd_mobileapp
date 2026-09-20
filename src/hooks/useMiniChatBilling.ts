@@ -2,9 +2,9 @@
  * 1:1 chat billing (₹4/min man, ₹2/min woman).
  * The on-screen second counter is the source of truth for leftover settlement.
  */
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { billChatMinute } from '@/services/billing.service';
-import type { BillingResult } from '@/services/billing.service';
+import { useState, useEffect, useRef, useCallback } from "react";
+import { billChatMinute } from "@/services/billing.service";
+import type { BillingResult } from "@/services/billing.service";
 
 interface UseMiniChatBillingProps {
   sessionId: string | null;
@@ -71,23 +71,30 @@ export const useMiniChatBilling = ({
   onSettledRef.current = onSettled;
 
   const applyCharge = useCallback((result: BillingResult, reason: string) => {
-    if (result.skipped === 'admin' || result.super_user_skip || result.skipped === 'waiting_for_replies' || result.skipped === 'not_answered') {
-      setSkipReason(result.skipped === 'admin' || result.super_user_skip ? 'admin' : result.skipped || null);
-      if (result.skipped === 'waiting_for_replies' || result.skipped === 'not_answered') {
-        console.info('[billing] skipped until both parties engage', result);
+    if (
+      result.skipped === "admin" ||
+      result.super_user_skip ||
+      result.skipped === "waiting_for_replies" ||
+      result.skipped === "not_answered"
+    ) {
+      setSkipReason(
+        result.skipped === "admin" || result.super_user_skip ? "admin" : result.skipped || null,
+      );
+      if (result.skipped === "waiting_for_replies" || result.skipped === "not_answered") {
+        console.info("[billing] skipped until both parties engage", result);
       } else {
-        console.warn('[billing] server returned skip', result);
+        console.warn("[billing] server returned skip", result);
       }
       return false;
     }
     if (result.duplicate_skipped) {
-      console.info('[billing] duplicate minute skipped', reason, result);
+      console.info("[billing] duplicate minute skipped", reason, result);
       return false;
     }
     if (result.success) {
       const charged = Number(result.charged);
       if (!Number.isFinite(charged) || charged <= 0) {
-        console.warn('[billing] success but charged ₹0', result);
+        console.warn("[billing] success but charged ₹0", result);
         return false;
       }
       const amount = charged;
@@ -102,7 +109,7 @@ export const useMiniChatBilling = ({
     if (result.error && /insufficient/i.test(result.error)) {
       onInsufficientRef.current?.();
     }
-    console.error('[billing] charge failed:', result);
+    console.error("[billing] charge failed:", result);
     return false;
   }, []);
 
@@ -114,22 +121,25 @@ export const useMiniChatBilling = ({
     return Math.max(0, Math.floor((Date.now() - start - pausedMsRef.current - frozen) / 1000));
   }, []);
 
-  const billOneMinute = useCallback(async (minuteIndex: number, reason: string) => {
-    const sid = sessionIdRef.current;
-    const mid = manIdRef.current;
-    const wid = womanIdRef.current;
-    if (!sid || !mid || !wid || inFlightRef.current) return false;
-    inFlightRef.current = true;
-    try {
-      const result = await billChatMinute(sid, 1, mid, wid, runIdRef.current + minuteIndex);
-      return applyCharge(result, reason);
-    } catch (e) {
-      console.error('[billing] charge error:', e);
-      return false;
-    } finally {
-      inFlightRef.current = false;
-    }
-  }, [applyCharge]);
+  const billOneMinute = useCallback(
+    async (minuteIndex: number, reason: string) => {
+      const sid = sessionIdRef.current;
+      const mid = manIdRef.current;
+      const wid = womanIdRef.current;
+      if (!sid || !mid || !wid || inFlightRef.current) return false;
+      inFlightRef.current = true;
+      try {
+        const result = await billChatMinute(sid, 1, mid, wid, runIdRef.current + minuteIndex);
+        return applyCharge(result, reason);
+      } catch (e) {
+        console.error("[billing] charge error:", e);
+        return false;
+      } finally {
+        inFlightRef.current = false;
+      }
+    },
+    [applyCharge],
+  );
 
   const stopTicker = useCallback(() => {
     if (intervalRef.current) {
@@ -138,19 +148,22 @@ export const useMiniChatBilling = ({
     }
   }, []);
 
-  const startTicker = useCallback((start: number) => {
-    stopTicker();
-    intervalRef.current = setInterval(() => {
-      if (pausedFlagRef.current) return;
-      const secs = Math.max(0, Math.floor((Date.now() - start - pausedMsRef.current) / 1000));
-      elapsedRef.current = secs;
-      setElapsedSeconds(secs);
-      const due = Math.floor(secs / 60);
-      if (!displayOnlyRef.current && due > billedRef.current) {
-        void billOneMinute(billedRef.current, `minute ${due}`);
-      }
-    }, 1000);
-  }, [billOneMinute, stopTicker]);
+  const startTicker = useCallback(
+    (start: number) => {
+      stopTicker();
+      intervalRef.current = setInterval(() => {
+        if (pausedFlagRef.current) return;
+        const secs = Math.max(0, Math.floor((Date.now() - start - pausedMsRef.current) / 1000));
+        elapsedRef.current = secs;
+        setElapsedSeconds(secs);
+        const due = Math.floor(secs / 60);
+        if (!displayOnlyRef.current && due > billedRef.current) {
+          void billOneMinute(billedRef.current, `minute ${due}`);
+        }
+      }, 1000);
+    },
+    [billOneMinute, stopTicker],
+  );
 
   const stopBillingTimers = useCallback(async () => {
     if (displayOnlyRef.current) {
@@ -174,7 +187,7 @@ export const useMiniChatBilling = ({
       const wid = womanIdRef.current;
       startRef.current = null;
       setIsBilling(false);
-      console.info('[billing] settling leftover', { elapsed, sid, mid, wid });
+      console.info("[billing] settling leftover", { elapsed, sid, mid, wid });
       if (!sid || !mid || !wid || elapsed < 1) {
         onSettledRef.current?.(null, elapsed);
         return;
@@ -185,8 +198,11 @@ export const useMiniChatBilling = ({
         if (result) applyCharge(result, `leftover ${elapsed}s`);
         onSettledRef.current?.(result ?? null, elapsed);
       } catch (e) {
-        console.error('[billing] leftover error:', e);
-        onSettledRef.current?.({ success: false, error: e instanceof Error ? e.message : 'leftover failed' }, elapsed);
+        console.error("[billing] leftover error:", e);
+        onSettledRef.current?.(
+          { success: false, error: e instanceof Error ? e.message : "leftover failed" },
+          elapsed,
+        );
       }
     })();
     return leftoverPromiseRef.current;
@@ -228,7 +244,7 @@ export const useMiniChatBilling = ({
     const start = Date.now();
     startRef.current = start;
     setIsBilling(true);
-    console.info('[billing] started', { sessionId, manId, womanId });
+    console.info("[billing] started", { sessionId, manId, womanId });
     startTicker(start);
 
     return () => {

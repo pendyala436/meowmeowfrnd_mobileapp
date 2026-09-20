@@ -4,15 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import MeowLogo from "@/components/MeowLogo";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  ChevronLeft, 
-  ChevronRight, 
-  Sparkles, 
-  MessageCircle, 
-  Heart, 
-  Shield, 
+import {
+  ChevronLeft,
+  ChevronRight,
+  Sparkles,
+  MessageCircle,
+  Heart,
+  Shield,
   Globe,
-  Zap
+  Zap,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -35,35 +35,40 @@ const tutorialSlides: TutorialSlide[] = [
   {
     id: 1,
     title: "Start Conversations",
-    description: "Send messages, voice notes, and photos. Express yourself freely and connect authentically.",
+    description:
+      "Send messages, voice notes, and photos. Express yourself freely and connect authentically.",
     icon: <MessageCircle className="w-12 h-12" />,
     color: "from-primary to-primary/80",
   },
   {
     id: 2,
     title: "Find Your Match",
-    description: "Our AI-powered matching helps you discover people who share your interests and values.",
+    description:
+      "Our AI-powered matching helps you discover people who share your interests and values.",
     icon: <Heart className="w-12 h-12" />,
     color: "from-accent to-accent/80",
   },
   {
     id: 3,
     title: "Stay Safe",
-    description: "Your privacy matters. All profiles are verified, and you control who sees your information.",
+    description:
+      "Your privacy matters. All profiles are verified, and you control who sees your information.",
     icon: <Shield className="w-12 h-12" />,
     color: "from-success to-success/80",
   },
   {
     id: 4,
     title: "Connect Globally",
-    description: "Meet people from different cultures and backgrounds. Explore connections from around the world!",
+    description:
+      "Meet people from different cultures and backgrounds. Explore connections from around the world!",
     icon: <Globe className="w-12 h-12" />,
     color: "from-secondary to-secondary/80",
   },
   {
     id: 5,
     title: "You're All Set!",
-    description: "Start exploring and make meaningful connections. Your perfect match is just a swipe away!",
+    description:
+      "Start exploring and make meaningful connections. Your perfect match is just a swipe away!",
     icon: <Zap className="w-12 h-12" />,
     color: "from-warning to-warning/80",
   },
@@ -81,15 +86,13 @@ const WelcomeTutorialScreen = () => {
   const isLastStep = currentStep === totalSteps - 1;
 
   useEffect(() => {
-    setStepsViewed(prev => 
-      prev.includes(currentStep) ? prev : [...prev, currentStep]
-    );
+    setStepsViewed((prev) => (prev.includes(currentStep) ? prev : [...prev, currentStep]));
   }, [currentStep]);
 
   const animateTransition = useCallback((direction: "left" | "right", newStep: number) => {
     setSlideDirection(direction);
     setIsAnimating(true);
-    
+
     setTimeout(() => {
       setCurrentStep(newStep);
       setIsAnimating(false);
@@ -109,7 +112,9 @@ const WelcomeTutorialScreen = () => {
   };
 
   const navigateIfAuthenticated = async (destination: string) => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (session?.user) {
       navigate(destination);
     } else {
@@ -138,22 +143,22 @@ const WelcomeTutorialScreen = () => {
 
   const saveTutorialProgress = async (skipped: boolean) => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
       if (!session?.user) return;
       const user = session.user;
 
       // Always mark completed=true so user goes directly to dashboard on next login
-      await supabase
-        .from("tutorial_progress")
-        .upsert({
-          user_id: user.id,
-          current_step: skipped ? currentStep : totalSteps - 1,
-          completed: true,
-          skipped,
-          steps_viewed: stepsViewed,
-          completed_at: new Date().toISOString(),
-        });
+      await supabase.from("tutorial_progress").upsert({
+        user_id: user.id,
+        current_step: skipped ? currentStep : totalSteps - 1,
+        completed: true,
+        skipped,
+        steps_viewed: stepsViewed,
+        completed_at: new Date().toISOString(),
+      });
     } catch (error) {
       console.error("Error saving tutorial progress:", error);
       // Non-critical: don't block tutorial with a toast, just log
@@ -186,18 +191,18 @@ const WelcomeTutorialScreen = () => {
       <main className="flex-1 flex items-center justify-center p-6">
         <Card className="w-full max-w-lg p-8 space-y-8 bg-card/80 backdrop-blur-sm border-border/50 shadow-xl overflow-hidden">
           {/* Slide Content with Animation */}
-          <div 
+          <div
             className={`transition-all duration-300 ease-out ${
-              isAnimating 
-                ? slideDirection === "right" 
-                  ? "-translate-x-8 opacity-0" 
+              isAnimating
+                ? slideDirection === "right"
+                  ? "-translate-x-8 opacity-0"
                   : "translate-x-8 opacity-0"
                 : "translate-x-0 opacity-100"
             }`}
           >
             {/* Icon */}
             <div className="text-center mb-6">
-              <div 
+              <div
                 className={`inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br ${currentSlide.color} text-white shadow-lg`}
               >
                 {currentSlide.icon}
@@ -206,9 +211,7 @@ const WelcomeTutorialScreen = () => {
 
             {/* Title & Description */}
             <div className="text-center space-y-4">
-              <h1 className="text-2xl font-bold text-foreground">
-                {currentSlide.title}
-              </h1>
+              <h1 className="text-2xl font-bold text-foreground">{currentSlide.title}</h1>
               <p className="text-muted-foreground text-lg leading-relaxed">
                 {currentSlide.description}
               </p>
@@ -225,8 +228,8 @@ const WelcomeTutorialScreen = () => {
                   index === currentStep
                     ? "w-8 h-2 bg-primary"
                     : stepsViewed.includes(index)
-                    ? "w-2 h-2 bg-primary/40 hover:bg-primary/60"
-                    : "w-2 h-2 bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                      ? "w-2 h-2 bg-primary/40 hover:bg-primary/60"
+                      : "w-2 h-2 bg-muted-foreground/30 hover:bg-muted-foreground/50"
                 }`}
                 aria-label={`Go to slide ${index + 1}`}
               />
@@ -244,7 +247,7 @@ const WelcomeTutorialScreen = () => {
               <ChevronLeft className="w-5 h-5 mr-1" />
               Previous
             </Button>
-            
+
             {isLastStep ? (
               <Button
                 onClick={handleComplete}
@@ -275,10 +278,10 @@ const WelcomeTutorialScreen = () => {
 
       {/* Background Decorations */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
-        <div 
+        <div
           className={`absolute top-1/4 -left-20 w-64 h-64 rounded-full bg-gradient-to-br ${currentSlide.color} opacity-10 blur-3xl transition-all duration-700`}
         />
-        <div 
+        <div
           className={`absolute bottom-1/4 -right-20 w-80 h-80 rounded-full bg-gradient-to-br ${currentSlide.color} opacity-10 blur-3xl transition-all duration-700`}
         />
       </div>

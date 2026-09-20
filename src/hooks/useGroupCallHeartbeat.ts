@@ -5,8 +5,8 @@
  *
  * Woman earns group_woman_rate × number_of_men this tick (one credit row per man).
  */
-import { useEffect, useRef } from 'react';
-import { billGroupCallMinute } from '@/services/billing.service';
+import { useEffect, useRef } from "react";
+import { billGroupCallMinute } from "@/services/billing.service";
 
 interface GroupHeartbeatOptions {
   groupId: string;
@@ -18,8 +18,11 @@ interface GroupHeartbeatOptions {
 }
 
 export function useGroupCallHeartbeat({
-  groupId, womanId, activeManIds,
-  intervalMs = 60_000, enabled = true,
+  groupId,
+  womanId,
+  activeManIds,
+  intervalMs = 60_000,
+  enabled = true,
   onManInsufficientBalance,
 }: GroupHeartbeatOptions) {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -29,15 +32,19 @@ export function useGroupCallHeartbeat({
   useEffect(() => {
     if (!enabled || !groupId || !womanId) return;
     const tick = async () => {
-      await Promise.all(menRef.current.map(async (manId) => {
-        const r = await billGroupCallMinute(groupId, 1.0, manId, womanId);
-        if (!r.success && r.error?.includes('Insufficient balance')) {
-          onManInsufficientBalance?.(manId);
-        }
-      }));
+      await Promise.all(
+        menRef.current.map(async (manId) => {
+          const r = await billGroupCallMinute(groupId, 1.0, manId, womanId);
+          if (!r.success && r.error?.includes("Insufficient balance")) {
+            onManInsufficientBalance?.(manId);
+          }
+        }),
+      );
     };
     timerRef.current = setInterval(tick, intervalMs);
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [groupId, womanId, intervalMs, enabled]);
 }

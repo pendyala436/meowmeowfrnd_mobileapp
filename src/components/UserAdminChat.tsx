@@ -3,18 +3,16 @@
  * All admin emails (admin1-15@meow-meow.com) appear as "Admin"
  * Messages auto-delete after 1 week
  */
-import { useState, useEffect, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { toast } from 'sonner';
-import { format } from 'date-fns';
-import {
-  MessageCircle, Send, X, Loader2, Shield, ChevronDown
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useState, useEffect, useRef } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { toast } from "sonner";
+import { format } from "date-fns";
+import { MessageCircle, Send, X, Loader2, Shield, ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface UserAdminChatProps {
   currentUserId: string;
@@ -33,7 +31,7 @@ interface Message {
 export function UserAdminChat({ currentUserId, userName, embedded = false }: UserAdminChatProps) {
   const [isOpen, setIsOpen] = useState(embedded);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [newMessage, setNewMessage] = useState('');
+  const [newMessage, setNewMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -51,34 +49,40 @@ export function UserAdminChat({ currentUserId, userName, embedded = false }: Use
     // Realtime subscription for new messages
     const channel = supabase
       .channel(`admin-chat-${currentUserId}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'admin_user_messages',
-        filter: `target_user_id=eq.${currentUserId}`,
-      }, () => {
-        if (isOpen) {
-          fetchMessages();
-          markAsRead();
-        } else {
-          fetchUnreadCount();
-        }
-      })
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "admin_user_messages",
+          filter: `target_user_id=eq.${currentUserId}`,
+        },
+        () => {
+          if (isOpen) {
+            fetchMessages();
+            markAsRead();
+          } else {
+            fetchUnreadCount();
+          }
+        },
+      )
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [currentUserId, isOpen]);
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const fetchMessages = async () => {
     const { data } = await supabase
-      .from('admin_user_messages')
-      .select('id, sender_role, sender_id, message, created_at')
-      .eq('target_user_id', currentUserId)
-      .order('created_at', { ascending: true })
+      .from("admin_user_messages")
+      .select("id, sender_role, sender_id, message, created_at")
+      .eq("target_user_id", currentUserId)
+      .order("created_at", { ascending: true })
       .limit(100);
 
     if (data) setMessages(data as Message[]);
@@ -86,22 +90,22 @@ export function UserAdminChat({ currentUserId, userName, embedded = false }: Use
 
   const fetchUnreadCount = async () => {
     const { count } = await supabase
-      .from('admin_user_messages')
-      .select('*', { count: 'exact', head: true })
-      .eq('target_user_id', currentUserId)
-      .eq('sender_role', 'admin')
-      .eq('is_read', false);
+      .from("admin_user_messages")
+      .select("*", { count: "exact", head: true })
+      .eq("target_user_id", currentUserId)
+      .eq("sender_role", "admin")
+      .eq("is_read", false);
 
     setUnreadCount(count || 0);
   };
 
   const markAsRead = async () => {
     await supabase
-      .from('admin_user_messages')
+      .from("admin_user_messages")
       .update({ is_read: true })
-      .eq('target_user_id', currentUserId)
-      .eq('sender_role', 'admin')
-      .eq('is_read', false);
+      .eq("target_user_id", currentUserId)
+      .eq("sender_role", "admin")
+      .eq("is_read", false);
 
     setUnreadCount(0);
   };
@@ -110,19 +114,19 @@ export function UserAdminChat({ currentUserId, userName, embedded = false }: Use
     if (!newMessage.trim()) return;
     setIsSending(true);
     try {
-      const { error } = await supabase.from('admin_user_messages').insert({
+      const { error } = await supabase.from("admin_user_messages").insert({
         admin_id: currentUserId,
-        target_group: 'direct',
+        target_group: "direct",
         target_user_id: currentUserId,
-        sender_role: 'user',
+        sender_role: "user",
         sender_id: currentUserId,
         message: newMessage.trim(),
       });
       if (error) throw error;
-      setNewMessage('');
+      setNewMessage("");
       fetchMessages();
     } catch (err: any) {
-      toast.error(err.message || 'Failed to send message');
+      toast.error(err.message || "Failed to send message");
     } finally {
       setIsSending(false);
     }
@@ -145,20 +149,20 @@ export function UserAdminChat({ currentUserId, userName, embedded = false }: Use
               <div
                 key={msg.id}
                 className={cn(
-                  'max-w-[85%] p-2 sm:p-2.5 rounded-xl text-xs sm:text-sm',
-                  msg.sender_role === 'user'
-                    ? 'ml-auto bg-primary text-primary-foreground rounded-br-sm'
-                    : 'mr-auto bg-muted rounded-bl-sm'
+                  "max-w-[85%] p-2 sm:p-2.5 rounded-xl text-xs sm:text-sm",
+                  msg.sender_role === "user"
+                    ? "ml-auto bg-primary text-primary-foreground rounded-br-sm"
+                    : "mr-auto bg-muted rounded-bl-sm",
                 )}
               >
-                {msg.sender_role === 'admin' && (
+                {msg.sender_role === "admin" && (
                   <p className="text-[10px] sm:text-xs font-semibold mb-0.5 flex items-center gap-1">
                     <Shield className="h-2.5 w-2.5 sm:h-3 sm:w-3" /> Admin
                   </p>
                 )}
                 <p className="break-words">{msg.message}</p>
                 <p className="text-[9px] sm:text-xs opacity-60 mt-1">
-                  {format(new Date(msg.created_at), 'MMM dd, hh:mm a')}
+                  {format(new Date(msg.created_at), "MMM dd, hh:mm a")}
                 </p>
               </div>
             ))}
@@ -175,7 +179,7 @@ export function UserAdminChat({ currentUserId, userName, embedded = false }: Use
             rows={1}
             className="resize-none flex-1 min-h-[36px] max-h-[72px] text-xs sm:text-sm"
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
+              if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
                 sendMessage();
               }
@@ -187,7 +191,11 @@ export function UserAdminChat({ currentUserId, userName, embedded = false }: Use
             onClick={sendMessage}
             disabled={!newMessage.trim() || isSending}
           >
-            {isSending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+            {isSending ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Send className="h-3.5 w-3.5" />
+            )}
           </Button>
         </div>
       </div>
@@ -200,9 +208,9 @@ export function UserAdminChat({ currentUserId, userName, embedded = false }: Use
       <button
         onClick={() => setIsOpen(true)}
         className={cn(
-          'fixed bottom-20 right-3 z-40 w-12 h-12 sm:w-14 sm:h-14 rounded-full shadow-lg flex items-center justify-center transition-all',
-          'bg-primary text-primary-foreground hover:scale-105 active:scale-95',
-          isOpen && 'hidden'
+          "fixed bottom-20 right-3 z-40 w-12 h-12 sm:w-14 sm:h-14 rounded-full shadow-lg flex items-center justify-center transition-all",
+          "bg-primary text-primary-foreground hover:scale-105 active:scale-95",
+          isOpen && "hidden",
         )}
       >
         <Shield className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -225,7 +233,10 @@ export function UserAdminChat({ currentUserId, userName, embedded = false }: Use
                 <p className="text-[10px] sm:text-xs opacity-80">Messages kept for 1 week</p>
               </div>
             </div>
-            <button onClick={() => setIsOpen(false)} className="p-1 rounded-full hover:bg-white/20 transition-colors">
+            <button
+              onClick={() => setIsOpen(false)}
+              className="p-1 rounded-full hover:bg-white/20 transition-colors"
+            >
               <X className="h-4 w-4" />
             </button>
           </div>
@@ -244,20 +255,20 @@ export function UserAdminChat({ currentUserId, userName, embedded = false }: Use
                 <div
                   key={msg.id}
                   className={cn(
-                    'max-w-[85%] p-2 sm:p-2.5 rounded-xl text-xs sm:text-sm',
-                    msg.sender_role === 'user'
-                      ? 'ml-auto bg-primary text-primary-foreground rounded-br-sm'
-                      : 'mr-auto bg-muted rounded-bl-sm'
+                    "max-w-[85%] p-2 sm:p-2.5 rounded-xl text-xs sm:text-sm",
+                    msg.sender_role === "user"
+                      ? "ml-auto bg-primary text-primary-foreground rounded-br-sm"
+                      : "mr-auto bg-muted rounded-bl-sm",
                   )}
                 >
-                  {msg.sender_role === 'admin' && (
+                  {msg.sender_role === "admin" && (
                     <p className="text-[10px] sm:text-xs font-semibold mb-0.5 flex items-center gap-1">
                       <Shield className="h-2.5 w-2.5 sm:h-3 sm:w-3" /> Admin
                     </p>
                   )}
                   <p className="break-words">{msg.message}</p>
                   <p className="text-[9px] sm:text-xs opacity-60 mt-1">
-                    {format(new Date(msg.created_at), 'MMM dd, hh:mm a')}
+                    {format(new Date(msg.created_at), "MMM dd, hh:mm a")}
                   </p>
                 </div>
               ))}
@@ -274,7 +285,7 @@ export function UserAdminChat({ currentUserId, userName, embedded = false }: Use
               rows={1}
               className="resize-none flex-1 min-h-[36px] max-h-[72px] text-xs sm:text-sm"
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
+                if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
                   sendMessage();
                 }
@@ -286,7 +297,11 @@ export function UserAdminChat({ currentUserId, userName, embedded = false }: Use
               onClick={sendMessage}
               disabled={!newMessage.trim() || isSending}
             >
-              {isSending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+              {isSending ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Send className="h-3.5 w-3.5" />
+              )}
             </Button>
           </div>
         </div>

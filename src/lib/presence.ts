@@ -6,19 +6,19 @@
  */
 
 export type PresenceStatus =
-  | "online"        // app open, last_seen < 60s
-  | "active"        // last_seen < 2m
-  | "typing"        // ephemeral; only set per-chat
-  | "away"          // online flag true but last_seen ≥ 5m
-  | "busy"          // manual busy
-  | "in_call"       // active_call_count > 0
-  | "offline";      // is_online=false or last_seen expired
+  | "online" // app open, last_seen < 60s
+  | "active" // last_seen < 2m
+  | "typing" // ephemeral; only set per-chat
+  | "away" // online flag true but last_seen ≥ 5m
+  | "busy" // manual busy
+  | "in_call" // active_call_count > 0
+  | "offline"; // is_online=false or last_seen expired
 
 export interface UserStatusRow {
   user_id: string;
   is_online: boolean | null;
   last_seen: string | null;
-  status: string | null;             // 'available' | 'busy' | ...
+  status: string | null; // 'available' | 'busy' | ...
   status_text?: string | null;
   active_call_count?: number | null;
   active_chat_count?: number | null;
@@ -33,7 +33,7 @@ const STALE_WINDOW_MS = 10 * 60 * 1000;
 
 export function derivePresence(
   row: UserStatusRow | null | undefined,
-  opts?: { isTyping?: boolean; now?: number }
+  opts?: { isTyping?: boolean; now?: number },
 ): { status: PresenceStatus; lastSeen: Date | null } {
   const now = opts?.now ?? Date.now();
   if (!row) return { status: "offline", lastSeen: null };
@@ -74,9 +74,12 @@ export function formatLastSeen(d: Date | null, now: number = Date.now()): string
 
   const seen = new Date(d);
   const today = new Date(now);
-  const yesterday = new Date(now); yesterday.setDate(yesterday.getDate() - 1);
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
   const sameDay = (a: Date, b: Date) =>
-    a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate();
 
   const time = seen.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
   if (sameDay(seen, today)) return `Last seen today at ${time}`;
@@ -92,7 +95,7 @@ export function formatLastSeen(d: Date | null, now: number = Date.now()): string
  */
 export function isVisibilityStatusChange(
   payload: { eventType?: string; new?: Record<string, unknown>; old?: Record<string, unknown> },
-  snapshot: Map<string, string>
+  snapshot: Map<string, string>,
 ): boolean {
   const event = payload.eventType;
   const row = (payload.new || payload.old) as

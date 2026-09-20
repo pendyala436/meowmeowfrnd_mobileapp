@@ -13,9 +13,7 @@ const LOGO_BASE_HUE = 335;
 
 function readPrimaryHue(): number {
   if (typeof document === "undefined") return LOGO_BASE_HUE;
-  const raw = getComputedStyle(document.documentElement)
-    .getPropertyValue("--primary")
-    .trim();
+  const raw = getComputedStyle(document.documentElement).getPropertyValue("--primary").trim();
   const hue = parseFloat(raw);
   return Number.isFinite(hue) ? hue : LOGO_BASE_HUE;
 }
@@ -32,7 +30,7 @@ const MeowLogo = ({ className, size = "md" }: MeowLogoProps) => {
     setPrimaryHue(readPrimaryHue());
   }, [themeId, resolvedMode]);
 
-  const hueRotate = ((primaryHue - LOGO_BASE_HUE) % 360 + 360) % 360;
+  const hueRotate = (((primaryHue - LOGO_BASE_HUE) % 360) + 360) % 360;
 
   const sizeClasses = {
     sm: "w-12 h-12",

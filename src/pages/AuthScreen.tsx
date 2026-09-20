@@ -15,104 +15,108 @@ const AuroraBackground = lazy(() => import("@/components/AuroraBackground"));
 
 // Inline translations for instant render - no async loading needed
 const translations: Record<string, string> = {
-  'app.name': 'MEOW MEOW FRND APP',
-  'app.tagline': 'Real People. Real Connections',
-  'auth.email': 'Email',
-  'auth.password': 'Password',
-  'auth.login': 'Login',
-  'auth.signup': 'Sign Up',
-  'auth.forgotPassword': 'Forgot Password?',
-  'auth.noAccount': 'No account?',
-  'auth.emailRequired': 'Email is required',
-  'auth.invalidCredentials': 'Invalid email format',
-  'auth.passwordRequired': 'Password is required',
-  'auth.passwordTooShort': 'Password must be at least 8 characters',
-  'common.loading': 'Loading...',
+  "app.name": "MEOW MEOW FRND APP",
+  "app.tagline": "Real People. Real Connections",
+  "auth.email": "Email",
+  "auth.password": "Password",
+  "auth.login": "Login",
+  "auth.signup": "Sign Up",
+  "auth.forgotPassword": "Forgot Password?",
+  "auth.noAccount": "No account?",
+  "auth.emailRequired": "Email is required",
+  "auth.invalidCredentials": "Invalid email format",
+  "auth.passwordRequired": "Password is required",
+  "auth.passwordTooShort": "Password must be at least 8 characters",
+  "common.loading": "Loading...",
 };
 
 const t = (key: string, fallback?: string) => translations[key] || fallback || key;
 
 // Memoized form inputs for better performance
-const EmailInput = memo(({ 
-  value, 
-  onChange, 
-  error, 
-  placeholder 
-}: { 
-  value: string; 
-  onChange: (v: string) => void; 
-  error?: string; 
-  placeholder: string;
-}) => (
-  <div className="space-y-2">
-    <Label htmlFor="email" className="text-sm font-semibold text-white">
-      {placeholder}
-    </Label>
-    <div className="relative">
-      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/70" />
-      <Input
-        id="email"
-        type="email"
-        placeholder={placeholder}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className={cn(
-          "h-12 pl-10 rounded-xl border-2 transition-all bg-white/10 backdrop-blur-sm text-white placeholder:text-white/60",
-          error ? "border-destructive" : "border-input focus:border-primary"
-        )}
-      />
+const EmailInput = memo(
+  ({
+    value,
+    onChange,
+    error,
+    placeholder,
+  }: {
+    value: string;
+    onChange: (v: string) => void;
+    error?: string;
+    placeholder: string;
+  }) => (
+    <div className="space-y-2">
+      <Label htmlFor="email" className="text-sm font-semibold text-white">
+        {placeholder}
+      </Label>
+      <div className="relative">
+        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/70" />
+        <Input
+          id="email"
+          type="email"
+          placeholder={placeholder}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className={cn(
+            "h-12 pl-10 rounded-xl border-2 transition-all bg-white/10 backdrop-blur-sm text-white placeholder:text-white/60",
+            error ? "border-destructive" : "border-input focus:border-primary",
+          )}
+        />
+      </div>
+      {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
-    {error && <p className="text-xs text-destructive">{error}</p>}
-  </div>
-));
+  ),
+);
 
-EmailInput.displayName = 'EmailInput';
+EmailInput.displayName = "EmailInput";
 
-const PasswordInput = memo(({ 
-  value, 
-  onChange, 
-  error, 
-  placeholder,
-  showPassword,
-  onToggleShow 
-}: { 
-  value: string; 
-  onChange: (v: string) => void; 
-  error?: string; 
-  placeholder: string;
-  showPassword: boolean;
-  onToggleShow: () => void;
-}) => (
-  <div className="space-y-2">
-    <Label htmlFor="password" className="text-sm font-semibold text-white">
-      {placeholder}
-    </Label>
-    <div className="relative">
-      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/70" />
-      <Input
-        id="password"
-        type={showPassword ? "text" : "password"}
-        placeholder={placeholder}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className={cn(
-          "h-12 pl-10 pr-10 rounded-xl border-2 transition-all bg-white/10 backdrop-blur-sm text-white placeholder:text-white/60",
-          error ? "border-destructive" : "border-input focus:border-primary"
-        )}
-      />
-      <button
-        type="button"
-        onClick={onToggleShow}
-        className="absolute right-3 top-1/2 -translate-y-1/2 text-white/70 hover:text-white transition-colors"
-      >
-        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-      </button>
+const PasswordInput = memo(
+  ({
+    value,
+    onChange,
+    error,
+    placeholder,
+    showPassword,
+    onToggleShow,
+  }: {
+    value: string;
+    onChange: (v: string) => void;
+    error?: string;
+    placeholder: string;
+    showPassword: boolean;
+    onToggleShow: () => void;
+  }) => (
+    <div className="space-y-2">
+      <Label htmlFor="password" className="text-sm font-semibold text-white">
+        {placeholder}
+      </Label>
+      <div className="relative">
+        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/70" />
+        <Input
+          id="password"
+          type={showPassword ? "text" : "password"}
+          placeholder={placeholder}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className={cn(
+            "h-12 pl-10 pr-10 rounded-xl border-2 transition-all bg-white/10 backdrop-blur-sm text-white placeholder:text-white/60",
+            error ? "border-destructive" : "border-input focus:border-primary",
+          )}
+        />
+        <button
+          type="button"
+          onClick={onToggleShow}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-white/70 hover:text-white transition-colors"
+        >
+          {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+        </button>
+      </div>
+      {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
-    {error && <p className="text-xs text-destructive">{error}</p>}
-  </div>
-));
+  ),
+);
 
-PasswordInput.displayName = 'PasswordInput';
+PasswordInput.displayName = "PasswordInput";
 
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 60_000; // 60 seconds
@@ -132,11 +136,11 @@ const AuthScreen = () => {
   // Use centralized auth state to handle redirects
   const { user, isReady } = useAuthReady();
   const hasRedirected = useRef(false);
-  
+
   useEffect(() => {
     if (!isReady || !user || hasRedirected.current) return;
     hasRedirected.current = true;
-    
+
     // User is logged in — route through gender check + CAPTCHA like a fresh login
     const redirectUser = async () => {
       try {
@@ -144,7 +148,7 @@ const AuthScreen = () => {
 
         const ctxPromise = preloadUserContext(user.id);
         const ctxTimeout = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error("Context timeout")), 6000)
+          setTimeout(() => reject(new Error("Context timeout")), 6000),
         );
 
         let context: Awaited<ReturnType<typeof preloadUserContext>>;
@@ -197,7 +201,6 @@ const AuthScreen = () => {
     return () => clearInterval(interval);
   }, [lockoutUntil]);
 
-
   const validateEmail = useCallback((email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
@@ -207,22 +210,26 @@ const AuthScreen = () => {
     // Rate limiting check
     if (lockoutUntil && Date.now() < lockoutUntil) {
       const { toast } = await import("@/hooks/use-toast");
-      toast({ title: "Too many attempts", description: `Please wait ${lockoutCountdown} seconds before trying again.`, variant: "destructive" });
+      toast({
+        title: "Too many attempts",
+        description: `Please wait ${lockoutCountdown} seconds before trying again.`,
+        variant: "destructive",
+      });
       return;
     }
 
     const newErrors: { email?: string; password?: string } = {};
 
     if (!email.trim()) {
-      newErrors.email = t('auth.emailRequired');
+      newErrors.email = t("auth.emailRequired");
     } else if (!validateEmail(email)) {
-      newErrors.email = t('auth.invalidCredentials');
+      newErrors.email = t("auth.invalidCredentials");
     }
 
     if (!password) {
-      newErrors.password = t('auth.passwordRequired');
+      newErrors.password = t("auth.passwordRequired");
     } else if (password.length < 8) {
-      newErrors.password = t('auth.passwordTooShort');
+      newErrors.password = t("auth.passwordTooShort");
     }
 
     setErrors(newErrors);
@@ -246,7 +253,7 @@ const AuthScreen = () => {
         import("@/hooks/use-toast"),
         import("@/hooks/useOptimizedAuth"),
       ]);
-      
+
       // Login with retry for transient DB timeouts (504/500)
       let authData: any = null;
       let lastError: any = null;
@@ -260,7 +267,7 @@ const AuthScreen = () => {
             // Retry on server/timeout errors, NOT on auth errors (wrong password etc.)
             if ((status === 504 || status === 500 || status === 503) && attempt < MAX_RETRIES) {
               console.warn(`[Auth] Login attempt ${attempt} failed with ${status}, retrying...`);
-              await new Promise(r => setTimeout(r, 1000 * attempt)); // backoff
+              await new Promise((r) => setTimeout(r, 1000 * attempt)); // backoff
               lastError = error;
               continue;
             }
@@ -270,9 +277,17 @@ const AuthScreen = () => {
             if (newCount >= MAX_LOGIN_ATTEMPTS) {
               const lockUntil = Date.now() + LOCKOUT_DURATION_MS;
               setLockoutUntil(lockUntil);
-              toast({ title: "Account locked", description: "Too many failed attempts. Please wait 60 seconds.", variant: "destructive" });
+              toast({
+                title: "Account locked",
+                description: "Too many failed attempts. Please wait 60 seconds.",
+                variant: "destructive",
+              });
             } else {
-              toast({ title: classifyError(error).title, description: `${classifyError(error).message} (${MAX_LOGIN_ATTEMPTS - newCount} attempts remaining)`, variant: "destructive" });
+              toast({
+                title: classifyError(error).title,
+                description: `${classifyError(error).message} (${MAX_LOGIN_ATTEMPTS - newCount} attempts remaining)`,
+                variant: "destructive",
+              });
             }
             setIsLoading(false);
             return;
@@ -283,14 +298,16 @@ const AuthScreen = () => {
           lastError = networkErr;
           if (attempt < MAX_RETRIES) {
             console.warn(`[Auth] Login attempt ${attempt} network error, retrying...`);
-            await new Promise(r => setTimeout(r, 1000 * attempt));
+            await new Promise((r) => setTimeout(r, 1000 * attempt));
             continue;
           }
         }
       }
 
       if (!authData?.user) {
-        const msg = lastError ? "Server is busy. Please try again in a moment." : "Login failed. Please try again.";
+        const msg = lastError
+          ? "Server is busy. Please try again in a moment."
+          : "Login failed. Please try again.";
         toast({ title: "Login Error", description: msg, variant: "destructive" });
         setIsLoading(false);
         return;
@@ -312,12 +329,12 @@ const AuthScreen = () => {
       let context: Awaited<ReturnType<typeof preloadUserContext>>;
       try {
         const contextPromise = preloadUserContext(authData.user.id);
-        const timeoutPromise = new Promise<never>((_, reject) => 
-          setTimeout(() => reject(new Error('Context timeout')), 8000)
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("Context timeout")), 8000),
         );
         context = await Promise.race([contextPromise, timeoutPromise]);
       } catch (ctxErr) {
-        console.warn('[Auth] Context fetch failed/timeout, using fallback navigation:', ctxErr);
+        console.warn("[Auth] Context fetch failed/timeout, using fallback navigation:", ctxErr);
         sessionStorage.setItem("postCaptchaRedirect", "/dashboard");
         navigate("/captcha");
         return;
@@ -348,7 +365,11 @@ const AuthScreen = () => {
       navigate("/captcha");
     } catch (error: any) {
       const { toast } = await import("@/hooks/use-toast");
-      toast({ title: classifyError(error).title, description: classifyError(error).message, variant: "destructive" });
+      toast({
+        title: classifyError(error).title,
+        description: classifyError(error).message,
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -356,26 +377,28 @@ const AuthScreen = () => {
 
   // Debounced live email-format validation (AJAX-style UX)
   const emailDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const handleEmailChange = useCallback((value: string) => {
-    setEmail(value);
-    setErrors(prev => ({ ...prev, email: undefined }));
-    if (emailDebounceRef.current) clearTimeout(emailDebounceRef.current);
-    emailDebounceRef.current = setTimeout(() => {
-      const v = value.trim();
-      if (!v) return;
-      const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-      if (!ok) setErrors(prev => ({ ...prev, email: t('auth.invalidCredentials') }));
-    }, 500);
-  }, [t]);
-
+  const handleEmailChange = useCallback(
+    (value: string) => {
+      setEmail(value);
+      setErrors((prev) => ({ ...prev, email: undefined }));
+      if (emailDebounceRef.current) clearTimeout(emailDebounceRef.current);
+      emailDebounceRef.current = setTimeout(() => {
+        const v = value.trim();
+        if (!v) return;
+        const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+        if (!ok) setErrors((prev) => ({ ...prev, email: t("auth.invalidCredentials") }));
+      }, 500);
+    },
+    [t],
+  );
 
   const handlePasswordChange = useCallback((value: string) => {
     setPassword(value);
-    setErrors(prev => ({ ...prev, password: undefined }));
+    setErrors((prev) => ({ ...prev, password: undefined }));
   }, []);
 
   const toggleShowPassword = useCallback(() => {
-    setShowPassword(prev => !prev);
+    setShowPassword((prev) => !prev);
   }, []);
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -386,22 +409,33 @@ const AuthScreen = () => {
   }, []);
 
   return (
-    <div ref={scrollRef} className="min-h-screen flex flex-col relative bg-background overflow-y-auto">
-      <Suspense fallback={<div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background to-secondary/30" />}>
+    <div
+      ref={scrollRef}
+      className="min-h-screen flex flex-col relative bg-background overflow-y-auto"
+    >
+      <Suspense
+        fallback={
+          <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background to-secondary/30" />
+        }
+      >
         <AuroraBackground />
       </Suspense>
-      
+
       {/* Header */}
       <header className="px-6 pt-4 pb-2 sm:pt-8 sm:pb-4 relative z-10">
         <div className="text-center">
-          <Suspense fallback={<div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-2 sm:mb-4 bg-primary/20 rounded-full animate-pulse" />}>
+          <Suspense
+            fallback={
+              <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-2 sm:mb-4 bg-primary/20 rounded-full animate-pulse" />
+            }
+          >
             <MeowLogo size="lg" className="mx-auto mb-2 sm:mb-4" />
           </Suspense>
           <h1 className="font-logo text-2xl sm:text-4xl text-white mb-1 sm:mb-2 drop-shadow-sm">
-            {t('app.name', 'MEOW MEOW FRND APP')}
+            {t("app.name", "MEOW MEOW FRND APP")}
           </h1>
           <p className="text-white/80 text-sm sm:text-lg">
-            {t('app.tagline', 'Real People. Real Connections')}
+            {t("app.tagline", "Real People. Real Connections")}
           </p>
         </div>
       </header>
@@ -410,18 +444,18 @@ const AuthScreen = () => {
       <main className="flex-1 flex flex-col items-center justify-start sm:justify-center px-4 sm:px-6 pb-6 sm:pb-8 relative z-10">
         <Card className="w-full max-w-md p-3 sm:p-6 glass-panel shadow-lg animate-slide-up">
           <div className="space-y-3 sm:space-y-6">
-            <EmailInput 
+            <EmailInput
               value={email}
               onChange={handleEmailChange}
               error={errors.email}
-              placeholder={t('auth.email')}
+              placeholder={t("auth.email")}
             />
 
             <PasswordInput
               value={password}
               onChange={handlePasswordChange}
               error={errors.password}
-              placeholder={t('auth.password')}
+              placeholder={t("auth.password")}
               showPassword={showPassword}
               onToggleShow={toggleShowPassword}
             />
@@ -433,7 +467,7 @@ const AuthScreen = () => {
                 onClick={() => navigate("/forgot-password")}
                 className="text-sm text-white/90 hover:text-white underline-offset-2 hover:underline transition-colors"
               >
-                {t('auth.forgotPassword')}
+                {t("auth.forgotPassword")}
               </button>
             </div>
 
@@ -459,13 +493,13 @@ const AuthScreen = () => {
                   {isLoading ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin mr-1" />
-                      <span className="truncate">{t('common.loading')}</span>
+                      <span className="truncate">{t("common.loading")}</span>
                     </>
                   ) : lockoutUntil && lockoutCountdown > 0 ? (
                     <span className="truncate">Locked ({lockoutCountdown}s)</span>
                   ) : (
                     <>
-                      <span className="truncate">{t('auth.login')}</span>
+                      <span className="truncate">{t("auth.login")}</span>
                       <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                     </>
                   )}
@@ -477,7 +511,7 @@ const AuthScreen = () => {
                   onClick={() => navigate("/register")}
                   disabled={isLoading}
                 >
-                  <span className="truncate">{t('auth.signup')}</span>
+                  <span className="truncate">{t("auth.signup")}</span>
                 </Button>
               </div>
               <a

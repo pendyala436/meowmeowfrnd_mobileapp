@@ -1,6 +1,6 @@
 /**
  * useNativeApp.ts
- * 
+ *
  * PURPOSE: Detect native app environment (iOS/Android via Capacitor)
  * and provide platform-specific utilities.
  */
@@ -35,17 +35,18 @@ export function useNativeApp(): NativeAppInfo {
     const detectPlatform = () => {
       const userAgent = navigator.userAgent.toLowerCase();
       const isCapacitor = !!(window as { Capacitor?: unknown }).Capacitor;
-      
+
       // Detect platform
-      const isIOS = /iphone|ipad|ipod/.test(userAgent) || 
+      const isIOS =
+        /iphone|ipad|ipod/.test(userAgent) ||
         (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
       const isAndroid = /android/.test(userAgent);
-      
+
       // Detect notch (iPhone X and later)
-      const hasNotch = isIOS && (
-        window.screen.height >= 812 || // iPhone X, XS, 11 Pro, 12 mini, 13 mini
-        window.screen.width >= 812 // Landscape
-      );
+      const hasNotch =
+        isIOS &&
+        (window.screen.height >= 812 || // iPhone X, XS, 11 Pro, 12 mini, 13 mini
+          window.screen.width >= 812); // Landscape
 
       // Get safe area insets from CSS environment variables
       const computedStyle = getComputedStyle(document.documentElement);
@@ -71,7 +72,7 @@ export function useNativeApp(): NativeAppInfo {
 
     detectPlatform();
     window.addEventListener("resize", detectPlatform);
-    
+
     return () => window.removeEventListener("resize", detectPlatform);
   }, []);
 

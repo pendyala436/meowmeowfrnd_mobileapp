@@ -4,24 +4,24 @@
  * Each earning event (chat/audio/video/group/gift) writes one wallet_transactions row,
  * so the subscription fires for every credit as well as every recharge / debit.
  */
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { ArrowLeft, Wallet, TrendingUp, IndianRupee } from 'lucide-react';
-import { getWomenBalance } from '@/services/ledger-wallet.service';
-import { StatementTab } from '@/components/StatementTab';
-import { useAppSettings } from '@/hooks/useAppSettings';
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { ArrowLeft, Wallet, TrendingUp, IndianRupee } from "lucide-react";
+import { getWomenBalance } from "@/services/ledger-wallet.service";
+import { StatementTab } from "@/components/StatementTab";
+import { useAppSettings } from "@/hooks/useAppSettings";
 
 const WomenWalletScreen = () => {
   const navigate = useNavigate();
   const [balance, setBalance] = useState(0);
   const [todayEarnings, setTodayEarnings] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const userIdRef = useRef('');
+  const userIdRef = useRef("");
   const { settings } = useAppSettings();
   const showStatements = !!settings.statementsTabVisible;
 
@@ -30,37 +30,58 @@ const WomenWalletScreen = () => {
       const walletData = await getWomenBalance(uid);
       setBalance(walletData.balance);
       setTodayEarnings(walletData.todayEarnings);
-    } catch { /* fallback */ }
+    } catch {
+      /* fallback */
+    }
   }, []);
 
   useEffect(() => {
     let channel: ReturnType<typeof supabase.channel> | null = null;
 
     (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { navigate('/'); return; }
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        navigate("/");
+        return;
+      }
       userIdRef.current = user.id;
       await loadData(user.id);
       setIsLoading(false);
 
       channel = supabase
-        .channel('wallet-women-realtime')
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'wallet_transactions',
-          filter: `user_id=eq.${user.id}`,
-        }, () => { loadData(user.id); })
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'wallets',
-          filter: `user_id=eq.${user.id}`,
-        }, () => { loadData(user.id); })
+        .channel("wallet-women-realtime")
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "wallet_transactions",
+            filter: `user_id=eq.${user.id}`,
+          },
+          () => {
+            loadData(user.id);
+          },
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "wallets",
+            filter: `user_id=eq.${user.id}`,
+          },
+          () => {
+            loadData(user.id);
+          },
+        )
         .subscribe();
     })();
 
-    return () => { channel?.unsubscribe(); };
+    return () => {
+      channel?.unsubscribe();
+    };
   }, [navigate, loadData]);
 
   if (isLoading) {
@@ -74,7 +95,12 @@ const WomenWalletScreen = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <div className="sticky top-0 z-40 bg-primary text-primary-foreground px-4 py-3 flex items-center gap-3">
-        <Button variant="ghost" size="icon" className="text-primary-foreground" onClick={() => navigate(-1)}>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-primary-foreground"
+          onClick={() => navigate(-1)}
+        >
           <ArrowLeft className="w-5 h-5" />
         </Button>
         <h1 className="text-lg font-semibold flex-1">Wallet</h1>
@@ -105,7 +131,8 @@ const WomenWalletScreen = () => {
             Withdraw
           </Button>
           <p className="text-[11px] text-primary-foreground/80 mt-2 text-center leading-snug">
-            Self-withdrawal is not available. Payouts are processed only by the admin as per the payout schedule.
+            Self-withdrawal is not available. Payouts are processed only by the admin as per the
+            payout schedule.
           </p>
         </Card>
       </div>
@@ -113,7 +140,9 @@ const WomenWalletScreen = () => {
       {showStatements && (
         <Tabs defaultValue="statement" className="flex-1 flex flex-col">
           <TabsList className="mx-4 mb-2">
-            <TabsTrigger value="statement" className="flex-1">Statement</TabsTrigger>
+            <TabsTrigger value="statement" className="flex-1">
+              Statement
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="statement" className="flex-1">
             <StatementTab userId={userIdRef.current} gender="female" />

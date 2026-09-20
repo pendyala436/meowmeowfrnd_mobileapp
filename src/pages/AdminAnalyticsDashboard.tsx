@@ -178,20 +178,30 @@ const AdminAnalyticsDashboard = () => {
         setChartData(chartDataPoints);
       } else {
         // Fallback: Direct queries when RPC fails or returns unexpected format
-        console.warn("[Analytics] RPC failed or returned unexpected format, using fallback queries");
-        const [
-          usersRes, activeRes, matchesRes, msgsRes,
-          maleRes, femaleRes,
-        ] = await Promise.allSettled([
-          supabase.from("profiles").select("*", { count: "exact", head: true }),
-          supabase.from("user_status").select("*", { count: "exact", head: true }).eq("is_online", true),
-          supabase.from("matches").select("*", { count: "exact", head: true }),
-          supabase.from("chat_messages").select("*", { count: "exact", head: true }),
-          supabase.from("profiles").select("*", { count: "exact", head: true }).eq("gender", "male"),
-          supabase.from("profiles").select("*", { count: "exact", head: true }).eq("gender", "female"),
-        ]);
+        console.warn(
+          "[Analytics] RPC failed or returned unexpected format, using fallback queries",
+        );
+        const [usersRes, activeRes, matchesRes, msgsRes, maleRes, femaleRes] =
+          await Promise.allSettled([
+            supabase.from("profiles").select("*", { count: "exact", head: true }),
+            supabase
+              .from("user_status")
+              .select("*", { count: "exact", head: true })
+              .eq("is_online", true),
+            supabase.from("matches").select("*", { count: "exact", head: true }),
+            supabase.from("chat_messages").select("*", { count: "exact", head: true }),
+            supabase
+              .from("profiles")
+              .select("*", { count: "exact", head: true })
+              .eq("gender", "male"),
+            supabase
+              .from("profiles")
+              .select("*", { count: "exact", head: true })
+              .eq("gender", "female"),
+          ]);
 
-        const gc = (r: PromiseSettledResult<any>) => r.status === 'fulfilled' && !r.value.error ? (r.value.count || 0) : 0;
+        const gc = (r: PromiseSettledResult<any>) =>
+          r.status === "fulfilled" && !r.value.error ? r.value.count || 0 : 0;
         const totalUsers = gc(usersRes);
         const totalMatches = gc(matchesRes);
 
@@ -214,7 +224,11 @@ const AdminAnalyticsDashboard = () => {
         setGenderDistribution([
           { name: "Male", value: gc(maleRes), color: CHART_COLORS.male },
           { name: "Female", value: gc(femaleRes), color: CHART_COLORS.female },
-          { name: "Other", value: Math.max(0, totalUsers - gc(maleRes) - gc(femaleRes)), color: CHART_COLORS.accent },
+          {
+            name: "Other",
+            value: Math.max(0, totalUsers - gc(maleRes) - gc(femaleRes)),
+            color: CHART_COLORS.accent,
+          },
         ]);
         setChartData([]);
       }
@@ -229,14 +243,10 @@ const AdminAnalyticsDashboard = () => {
 
   // Reduced realtime subscriptions - only subscribe to tables that materially affect analytics
   useMultipleRealtimeSubscriptions(
-    [
-      "profiles",
-      "wallet_transactions",
-      "matches",
-    ],
+    ["profiles", "wallet_transactions", "matches"],
     fetchAnalytics,
     true,
-    3000 // 3s debounce - analytics doesn't need instant updates
+    3000, // 3s debounce - analytics doesn't need instant updates
   );
 
   useEffect(() => {
@@ -263,7 +273,7 @@ const AdminAnalyticsDashboard = () => {
       ["Conversion Rate", `${analytics.conversionRate.toFixed(2)}%`],
     ];
 
-    const csvContent = csvData.map(row => row.join(",")).join("\n");
+    const csvContent = csvData.map((row) => row.join(",")).join("\n");
     const blob = new Blob([csvContent], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -274,57 +284,70 @@ const AdminAnalyticsDashboard = () => {
     toast.success("Analytics exported successfully!");
   };
 
-  const StatCard = useCallback(({ 
-    title, 
-    value, 
-    icon: Icon, 
-    trend, 
-    trendValue,
-    color = "primary"
-  }: {
-    title: string;
-    value: string | number;
-    icon: React.ElementType;
-    trend?: "up" | "down";
-    trendValue?: string;
-    color?: string;
-  }) => (
-    <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-      <div className={cn(
-        "absolute top-0 right-0 w-20 h-20 rounded-full opacity-10 -translate-y-1/2 translate-x-1/2",
-        color === "primary" && "bg-primary",
-        color === "success" && "bg-success",
-        color === "warning" && "bg-warning",
-        color === "danger" && "bg-destructive",
-      )} />
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground">{title}</p>
-            <p className="text-3xl font-bold mt-1 animate-fade-in">{value}</p>
-            {trend && trendValue && (
-              <div className={cn(
-                "flex items-center gap-1 mt-2 text-sm",
-                trend === "up" ? "text-success" : "text-destructive"
-              )}>
-                {trend === "up" ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
-                <span>{trendValue}</span>
-              </div>
-            )}
+  const StatCard = useCallback(
+    ({
+      title,
+      value,
+      icon: Icon,
+      trend,
+      trendValue,
+      color = "primary",
+    }: {
+      title: string;
+      value: string | number;
+      icon: React.ElementType;
+      trend?: "up" | "down";
+      trendValue?: string;
+      color?: string;
+    }) => (
+      <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+        <div
+          className={cn(
+            "absolute top-0 right-0 w-20 h-20 rounded-full opacity-10 -translate-y-1/2 translate-x-1/2",
+            color === "primary" && "bg-primary",
+            color === "success" && "bg-success",
+            color === "warning" && "bg-warning",
+            color === "danger" && "bg-destructive",
+          )}
+        />
+        <CardContent className="p-6">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">{title}</p>
+              <p className="text-3xl font-bold mt-1 animate-fade-in">{value}</p>
+              {trend && trendValue && (
+                <div
+                  className={cn(
+                    "flex items-center gap-1 mt-2 text-sm",
+                    trend === "up" ? "text-success" : "text-destructive",
+                  )}
+                >
+                  {trend === "up" ? (
+                    <TrendingUp className="h-4 w-4" />
+                  ) : (
+                    <TrendingDown className="h-4 w-4" />
+                  )}
+                  <span>{trendValue}</span>
+                </div>
+              )}
+            </div>
+            <div
+              className={cn(
+                "p-3 rounded-lg",
+                color === "primary" && "bg-primary/10 text-primary",
+                color === "success" && "bg-success/10 text-success",
+                color === "warning" && "bg-warning/10 text-warning",
+                color === "danger" && "bg-destructive/10 text-destructive",
+              )}
+            >
+              <Icon className="h-6 w-6" />
+            </div>
           </div>
-          <div className={cn(
-            "p-3 rounded-lg",
-            color === "primary" && "bg-primary/10 text-primary",
-            color === "success" && "bg-success/10 text-success",
-            color === "warning" && "bg-warning/10 text-warning",
-            color === "danger" && "bg-destructive/10 text-destructive",
-          )}>
-            <Icon className="h-6 w-6" />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  ), []);
+        </CardContent>
+      </Card>
+    ),
+    [],
+  );
 
   if (adminLoading || !isAdmin) {
     return (
@@ -379,12 +402,7 @@ const AdminAnalyticsDashboard = () => {
               <SelectItem value="90">Last 90 days</SelectItem>
             </SelectContent>
           </Select>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleRefresh}
-            disabled={refreshing}
-          >
+          <Button variant="outline" size="icon" onClick={handleRefresh} disabled={refreshing}>
             <RefreshCw className={cn("h-4 w-4", refreshing && "animate-spin")} />
           </Button>
           <Button onClick={handleExport} className="gap-2">
@@ -400,7 +418,9 @@ const AdminAnalyticsDashboard = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <StatCard
             title="Total Deposits (Men)"
-            value={analytics.menRecharges < 0 ? "N/A" : `₹${analytics.menRecharges.toLocaleString()}`}
+            value={
+              analytics.menRecharges < 0 ? "N/A" : `₹${analytics.menRecharges.toLocaleString()}`
+            }
             icon={IndianRupee}
             color="success"
           />
@@ -412,13 +432,19 @@ const AdminAnalyticsDashboard = () => {
           />
           <StatCard
             title="Women Earnings"
-            value={analytics.womenEarnings < 0 ? "N/A" : `₹${analytics.womenEarnings.toLocaleString()}`}
+            value={
+              analytics.womenEarnings < 0 ? "N/A" : `₹${analytics.womenEarnings.toLocaleString()}`
+            }
             icon={IndianRupee}
             color="danger"
           />
           <StatCard
             title="Total Withdrawals (Women)"
-            value={analytics.womenWithdrawals < 0 ? "N/A" : `₹${analytics.womenWithdrawals.toLocaleString()}`}
+            value={
+              analytics.womenWithdrawals < 0
+                ? "N/A"
+                : `₹${analytics.womenWithdrawals.toLocaleString()}`
+            }
             icon={Wallet}
             color="warning"
           />
@@ -741,7 +767,9 @@ const AdminAnalyticsDashboard = () => {
               <div className="p-4 rounded-lg bg-muted/50">
                 <p className="text-sm text-muted-foreground">Avg Messages/User</p>
                 <p className="text-lg font-semibold">
-                  {analytics.totalUsers ? (analytics.messagesCount / analytics.totalUsers).toFixed(1) : 0}
+                  {analytics.totalUsers
+                    ? (analytics.messagesCount / analytics.totalUsers).toFixed(1)
+                    : 0}
                 </p>
               </div>
               <div className="p-4 rounded-lg bg-muted/50">

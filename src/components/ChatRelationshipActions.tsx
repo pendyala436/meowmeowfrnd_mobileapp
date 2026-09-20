@@ -92,7 +92,7 @@ export const ChatRelationshipActions = ({
         .from("user_friends")
         .select("id, status, user_id")
         .or(
-          `and(user_id.eq.${currentUserId},friend_id.eq.${targetUserId}),and(user_id.eq.${targetUserId},friend_id.eq.${currentUserId})`
+          `and(user_id.eq.${currentUserId},friend_id.eq.${targetUserId}),and(user_id.eq.${targetUserId},friend_id.eq.${currentUserId})`,
         )
         .maybeSingle();
 
@@ -104,7 +104,12 @@ export const ChatRelationshipActions = ({
           pendingRecordId: friendData.id,
         });
       } else {
-        setFriendshipStatus({ isFriend: false, isPending: false, isRequested: false, pendingRecordId: null });
+        setFriendshipStatus({
+          isFriend: false,
+          isPending: false,
+          isRequested: false,
+          pendingRecordId: null,
+        });
       }
     } catch (error) {
       console.error("Error loading user relationship:", error);
@@ -119,8 +124,12 @@ export const ChatRelationshipActions = ({
     if (!currentUserId || !targetUserId) return;
     const channel = supabase
       .channel(`chat-relationship-${currentUserId}-${targetUserId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "user_blocks" }, () => loadUserRelationship())
-      .on("postgres_changes", { event: "*", schema: "public", table: "user_friends" }, () => loadUserRelationship())
+      .on("postgres_changes", { event: "*", schema: "public", table: "user_blocks" }, () =>
+        loadUserRelationship(),
+      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "user_friends" }, () =>
+        loadUserRelationship(),
+      )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
@@ -129,10 +138,16 @@ export const ChatRelationshipActions = ({
 
   // ============= RPC HELPER =============
   const callRpc = async (
-    fnName: "send_friend_request" | "accept_friend_request" | "reject_friend_request" |
-            "cancel_friend_request" | "unfriend_user" | "block_user" | "unblock_user",
+    fnName:
+      | "send_friend_request"
+      | "accept_friend_request"
+      | "reject_friend_request"
+      | "cancel_friend_request"
+      | "unfriend_user"
+      | "block_user"
+      | "unblock_user",
     params: Record<string, string>,
-    successTitle: string
+    successTitle: string,
   ): Promise<boolean> => {
     setIsLoading(true);
     try {
@@ -140,14 +155,22 @@ export const ChatRelationshipActions = ({
       if (error) throw error;
       const result = data as unknown as { success: boolean; error?: string; message?: string };
       if (!result?.success) {
-        toast({ title: "Error", description: result?.error || "Action failed", variant: "destructive" });
+        toast({
+          title: "Error",
+          description: result?.error || "Action failed",
+          variant: "destructive",
+        });
         return false;
       }
       toast({ title: successTitle, description: result.message });
       await loadUserRelationship();
       return true;
     } catch (err: any) {
-      toast({ title: "Error", description: err.message || "Action failed", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: err.message || "Action failed",
+        variant: "destructive",
+      });
       return false;
     } finally {
       setIsLoading(false);
@@ -160,17 +183,29 @@ export const ChatRelationshipActions = ({
 
   const handleAcceptFriendRequest = async () => {
     if (!friendshipStatus.pendingRecordId) return;
-    await callRpc("accept_friend_request", { p_request_id: friendshipStatus.pendingRecordId }, "Friend Added!");
+    await callRpc(
+      "accept_friend_request",
+      { p_request_id: friendshipStatus.pendingRecordId },
+      "Friend Added!",
+    );
   };
 
   const handleRejectFriendRequest = async () => {
     if (!friendshipStatus.pendingRecordId) return;
-    await callRpc("reject_friend_request", { p_request_id: friendshipStatus.pendingRecordId }, "Request Rejected");
+    await callRpc(
+      "reject_friend_request",
+      { p_request_id: friendshipStatus.pendingRecordId },
+      "Request Rejected",
+    );
   };
 
   const handleCancelRequest = async () => {
     if (!friendshipStatus.pendingRecordId) return;
-    await callRpc("cancel_friend_request", { p_request_id: friendshipStatus.pendingRecordId }, "Request Canceled");
+    await callRpc(
+      "cancel_friend_request",
+      { p_request_id: friendshipStatus.pendingRecordId },
+      "Request Canceled",
+    );
   };
 
   const handleUnfriend = async () => {
@@ -347,8 +382,8 @@ export const ChatRelationshipActions = ({
             <AlertDialogTitle>Block {targetUserName}?</AlertDialogTitle>
             <AlertDialogDescription>
               This will end any active chats and video calls immediately.
-              {friendshipStatus.isFriend && " Your friendship will also be removed."}{" "}
-              They won't be able to message you or call you until unblocked.
+              {friendshipStatus.isFriend && " Your friendship will also be removed."} They won't be
+              able to message you or call you until unblocked.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

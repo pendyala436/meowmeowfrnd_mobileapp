@@ -1,12 +1,15 @@
-declare module 'virtual:pwa-register/react' {
-  import type { Dispatch, SetStateAction } from 'react';
+declare module "virtual:pwa-register/react" {
+  import type { Dispatch, SetStateAction } from "react";
 
   export interface RegisterSWOptions {
     immediate?: boolean;
     onNeedRefresh?: () => void;
     onOfflineReady?: () => void;
     onRegistered?: (registration: ServiceWorkerRegistration | undefined) => void;
-    onRegisteredSW?: (swScriptUrl: string, registration: ServiceWorkerRegistration | undefined) => void;
+    onRegisteredSW?: (
+      swScriptUrl: string,
+      registration: ServiceWorkerRegistration | undefined,
+    ) => void;
     onRegisterError?: (error: Error) => void;
   }
 
@@ -17,13 +20,16 @@ declare module 'virtual:pwa-register/react' {
   };
 }
 
-declare module 'virtual:pwa-register' {
+declare module "virtual:pwa-register" {
   export interface RegisterSWOptions {
     immediate?: boolean;
     onNeedRefresh?: () => void;
     onOfflineReady?: () => void;
     onRegistered?: (registration: ServiceWorkerRegistration | undefined) => void;
-    onRegisteredSW?: (swScriptUrl: string, registration: ServiceWorkerRegistration | undefined) => void;
+    onRegisteredSW?: (
+      swScriptUrl: string,
+      registration: ServiceWorkerRegistration | undefined,
+    ) => void;
     onRegisterError?: (error: Error) => void;
   }
 

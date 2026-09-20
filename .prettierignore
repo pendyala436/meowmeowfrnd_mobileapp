@@ -1,0 +1,23 @@
+# Generated / vendor / non-app trees
+dist
+dev-dist
+node_modules
+coverage
+android
+ios
+flutter
+twa
+electron
+docs
+themes
+supabase/migrations
+supabase/all-migrations-combined.sql
+testkyc
+rajeshrajesh
+.lovable
+*.min.js
+bun.lock
+package-lock.json
+src/integrations/supabase/types.ts
+src/themes
+*.md

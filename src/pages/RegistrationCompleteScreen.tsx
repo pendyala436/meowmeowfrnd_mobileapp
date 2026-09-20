@@ -4,14 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import MeowLogo from "@/components/MeowLogo";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  PartyPopper, 
-  LayoutDashboard, 
-  Share2, 
+import {
+  PartyPopper,
+  LayoutDashboard,
+  Share2,
   CheckCircle2,
   Sparkles,
   Copy,
-  Check
+  Check,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -79,8 +79,10 @@ const RegistrationCompleteScreen = () => {
 
   const finalizeRegistration = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
       if (!session?.user) return;
       const user = session.user;
 
@@ -115,7 +117,7 @@ const RegistrationCompleteScreen = () => {
       title: "Welcome!",
       description: "Redirecting to your dashboard...",
     });
-    
+
     // Women are auto-approved — go straight to dashboard
     if (userGender === "female") {
       navigate("/women-dashboard");
@@ -150,7 +152,9 @@ const RegistrationCompleteScreen = () => {
       }
     } catch (error) {
       console.error("Error sharing:", error);
-      toast.error("Sharing failed", { description: "Unable to share via your device. Please copy the link manually." });
+      toast.error("Sharing failed", {
+        description: "Unable to share via your device. Please copy the link manually.",
+      });
     }
   };
 
@@ -183,7 +187,7 @@ const RegistrationCompleteScreen = () => {
 
       {/* Main Content */}
       <main className="flex-1 flex items-center justify-center p-6">
-        <Card 
+        <Card
           className={`w-full max-w-lg p-8 space-y-8 bg-card/80 backdrop-blur-sm border-border/50 shadow-xl transition-all duration-700 ${
             isVisible ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-8 scale-95"
           }`}
@@ -199,21 +203,20 @@ const RegistrationCompleteScreen = () => {
           </div>
 
           {/* Success Message */}
-          <div 
+          <div
             className={`text-center space-y-4 transition-all duration-500 delay-200 ${
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
             }`}
           >
-            <h1 className="text-3xl font-bold text-foreground">
-              You're All Set! 🎉
-            </h1>
+            <h1 className="text-3xl font-bold text-foreground">You're All Set! 🎉</h1>
             <p className="text-muted-foreground text-lg leading-relaxed">
-              Congratulations! Your registration is complete. Start exploring and make meaningful connections.
+              Congratulations! Your registration is complete. Start exploring and make meaningful
+              connections.
             </p>
           </div>
 
           {/* Success Checklist */}
-          <div 
+          <div
             className={`space-y-3 transition-all duration-500 delay-300 ${
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
             }`}
@@ -236,7 +239,7 @@ const RegistrationCompleteScreen = () => {
           </div>
 
           {/* Action Buttons */}
-          <div 
+          <div
             className={`space-y-3 transition-all duration-500 delay-500 ${
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
             }`}
@@ -272,7 +275,7 @@ const RegistrationCompleteScreen = () => {
           </div>
 
           {/* Welcome Note */}
-          <p 
+          <p
             className={`text-center text-sm text-muted-foreground transition-all duration-500 delay-700 ${
               isVisible ? "opacity-100" : "opacity-0"
             }`}

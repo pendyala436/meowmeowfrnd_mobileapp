@@ -1,47 +1,60 @@
 /**
  * InstallApp.tsx
- * 
+ *
  * PURPOSE: Dedicated page for installing the PWA with instructions for all platforms
  * Includes device-specific instructions for iOS/Android mobile and tablet
  */
 
-import { usePWA } from '@/hooks/usePWA';
-import { useNativeApp } from '@/hooks/useNativeApp';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
-  Download, 
-  Smartphone, 
-  Share, 
-  PlusSquare, 
-  Chrome, 
+import { usePWA } from "@/hooks/usePWA";
+import { useNativeApp } from "@/hooks/useNativeApp";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Download,
+  Smartphone,
+  Share,
+  PlusSquare,
+  Chrome,
   CheckCircle2,
   ArrowLeft,
   Bell,
   WifiOff,
   Zap,
   Tablet,
-  Monitor
-} from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { MobileLayout, MobileContent, MobileHeader } from '@/components/MobileLayout';
-import MeowLogo from '@/components/MeowLogo';
-import { Badge } from '@/components/ui/badge';
+  Monitor,
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { MobileLayout, MobileContent, MobileHeader } from "@/components/MobileLayout";
+import MeowLogo from "@/components/MeowLogo";
+import { Badge } from "@/components/ui/badge";
 
 export default function InstallApp() {
   const navigate = useNavigate();
-  const { isInstallable, isInstalled, isIOS, isAndroid, install, isPushSupported, requestPushPermission } = usePWA();
+  const {
+    isInstallable,
+    isInstalled,
+    isIOS,
+    isAndroid,
+    install,
+    isPushSupported,
+    requestPushPermission,
+  } = usePWA();
   const { isNative } = useNativeApp();
 
   // Detect device type
-  const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+  const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
   const isTabletUA = /iPad|Android(?!.*Mobile)/i.test(ua);
   const isMobileUA = /iPhone|Android.*Mobile/i.test(ua);
-  
-  const isTablet = isTabletUA || (!isMobileUA && typeof window !== 'undefined' && window.innerWidth >= 768 && window.innerWidth < 1024);
+
+  const isTablet =
+    isTabletUA ||
+    (!isMobileUA &&
+      typeof window !== "undefined" &&
+      window.innerWidth >= 768 &&
+      window.innerWidth < 1024);
   const isMobile = isMobileUA;
 
-  const deviceType = isTablet ? 'tablet' : isMobile ? 'mobile' : 'desktop';
+  const deviceType = isTablet ? "tablet" : isMobile ? "mobile" : "desktop";
 
   const handleInstall = async () => {
     await install();
@@ -99,9 +112,9 @@ export default function InstallApp() {
                 </p>
               </div>
               <Badge variant="secondary" className="capitalize">
-                {deviceType === 'mobile' && <Smartphone className="h-3 w-3 mr-1" />}
-                {deviceType === 'tablet' && <Tablet className="h-3 w-3 mr-1" />}
-                {deviceType === 'desktop' && <Monitor className="h-3 w-3 mr-1" />}
+                {deviceType === "mobile" && <Smartphone className="h-3 w-3 mr-1" />}
+                {deviceType === "tablet" && <Tablet className="h-3 w-3 mr-1" />}
+                {deviceType === "desktop" && <Monitor className="h-3 w-3 mr-1" />}
                 {deviceType}
               </Badge>
             </CardContent>
@@ -114,9 +127,7 @@ export default function InstallApp() {
                   <Bell className="h-5 w-5 text-primary" />
                   Enable Notifications
                 </CardTitle>
-                <CardDescription>
-                  Get notified about new messages and matches
-                </CardDescription>
+                <CardDescription>Get notified about new messages and matches</CardDescription>
               </CardHeader>
               <CardContent>
                 <Button onClick={requestPushPermission} className="w-full">
@@ -167,14 +178,12 @@ export default function InstallApp() {
             <MeowLogo size="lg" />
           </div>
           <h1 className="text-2xl font-bold mb-2 font-display">Install Meow MEOW FRND APP</h1>
-          <p className="text-muted-foreground">
-            Get the full app experience on your {deviceType}
-          </p>
+          <p className="text-muted-foreground">Get the full app experience on your {deviceType}</p>
           <Badge variant="outline" className="mt-2 capitalize">
-            {deviceType === 'mobile' && <Smartphone className="h-3 w-3 mr-1" />}
-            {deviceType === 'tablet' && <Tablet className="h-3 w-3 mr-1" />}
-            {deviceType === 'desktop' && <Monitor className="h-3 w-3 mr-1" />}
-            {isIOS ? 'iOS' : isAndroid ? 'Android' : 'Desktop'} {deviceType}
+            {deviceType === "mobile" && <Smartphone className="h-3 w-3 mr-1" />}
+            {deviceType === "tablet" && <Tablet className="h-3 w-3 mr-1" />}
+            {deviceType === "desktop" && <Monitor className="h-3 w-3 mr-1" />}
+            {isIOS ? "iOS" : isAndroid ? "Android" : "Desktop"} {deviceType}
           </Badge>
         </div>
 
@@ -231,9 +240,7 @@ export default function InstallApp() {
                 <Smartphone className="h-5 w-5 text-primary" />
                 Install on iPhone
               </CardTitle>
-              <CardDescription>
-                Follow these steps in Safari browser
-              </CardDescription>
+              <CardDescription>Follow these steps in Safari browser</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-start gap-4">
@@ -283,9 +290,7 @@ export default function InstallApp() {
                 <Tablet className="h-5 w-5 text-primary" />
                 Install on iPad
               </CardTitle>
-              <CardDescription>
-                Follow these steps in Safari browser
-              </CardDescription>
+              <CardDescription>Follow these steps in Safari browser</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-start gap-4">
@@ -335,9 +340,7 @@ export default function InstallApp() {
                 <Smartphone className="h-5 w-5 text-primary" />
                 Install on Android Phone
               </CardTitle>
-              <CardDescription>
-                Follow these steps in Chrome browser
-              </CardDescription>
+              <CardDescription>Follow these steps in Chrome browser</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-start gap-4">
@@ -386,9 +389,7 @@ export default function InstallApp() {
                 <Tablet className="h-5 w-5 text-primary" />
                 Install on Android Tablet
               </CardTitle>
-              <CardDescription>
-                Follow these steps in Chrome browser
-              </CardDescription>
+              <CardDescription>Follow these steps in Chrome browser</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-start gap-4">
@@ -437,9 +438,7 @@ export default function InstallApp() {
                 <Monitor className="h-5 w-5 text-primary" />
                 Install on Desktop
               </CardTitle>
-              <CardDescription>
-                Follow these steps in Chrome, Edge, or Brave
-              </CardDescription>
+              <CardDescription>Follow these steps in Chrome, Edge, or Brave</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-start gap-4">
@@ -481,11 +480,11 @@ export default function InstallApp() {
 
         {/* Note about browser requirements */}
         <p className="text-xs text-center text-muted-foreground px-4">
-          {isIOS 
+          {isIOS
             ? "Make sure you're using Safari browser for best installation experience on iOS devices."
             : isAndroid
-            ? "Use Chrome, Edge, or Samsung Internet for best results on Android devices."
-            : "Use Chrome, Edge, or Brave browser for the best installation experience."}
+              ? "Use Chrome, Edge, or Samsung Internet for best results on Android devices."
+              : "Use Chrome, Edge, or Brave browser for the best installation experience."}
         </p>
       </MobileContent>
     </MobileLayout>

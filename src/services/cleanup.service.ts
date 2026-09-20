@@ -6,15 +6,15 @@ import { supabase } from "@/integrations/supabase/client";
  */
 export const triggerDataCleanup = async (): Promise<{ success: boolean; error?: string }> => {
   try {
-    const { data, error } = await supabase.functions.invoke('data-cleanup', {
+    const { data, error } = await supabase.functions.invoke("data-cleanup", {
       body: {},
     });
 
     if (error) throw error;
     return { success: data?.success ?? true, error: data?.error };
   } catch (error) {
-    console.error('Data cleanup error:', error);
-    return { success: false, error: classifyError(error, 'run cleanup').message };
+    console.error("Data cleanup error:", error);
+    return { success: false, error: classifyError(error, "run cleanup").message };
   }
 };
 
@@ -23,15 +23,15 @@ export const triggerDataCleanup = async (): Promise<{ success: boolean; error?: 
  */
 export const triggerGroupCleanup = async (): Promise<{ success: boolean; error?: string }> => {
   try {
-    const { data, error } = await supabase.functions.invoke('group-cleanup', {
+    const { data, error } = await supabase.functions.invoke("group-cleanup", {
       body: {},
     });
 
     if (error) throw error;
     return { success: data?.success ?? true, error: data?.error };
   } catch (error) {
-    console.error('Group cleanup error:', error);
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    console.error("Group cleanup error:", error);
+    return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
   }
 };
 
@@ -40,15 +40,15 @@ export const triggerGroupCleanup = async (): Promise<{ success: boolean; error?:
  */
 export const triggerVideoCleanup = async (): Promise<{ success: boolean; error?: string }> => {
   try {
-    const { data, error } = await supabase.functions.invoke('video-cleanup', {
+    const { data, error } = await supabase.functions.invoke("video-cleanup", {
       body: {},
     });
 
     if (error) throw error;
     return { success: data?.success ?? true, error: data?.error };
   } catch (error) {
-    console.error('Video cleanup error:', error);
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    console.error("Video cleanup error:", error);
+    return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
   }
 };
 
@@ -57,8 +57,8 @@ export const triggerVideoCleanup = async (): Promise<{ success: boolean; error?:
  */
 export const verifyPhoto = async (
   imageBase64: string,
-  expectedGender?: 'male' | 'female',
-  userId?: string
+  expectedGender?: "male" | "female",
+  userId?: string,
 ): Promise<{
   verified: boolean;
   detectedGender?: string;
@@ -67,12 +67,12 @@ export const verifyPhoto = async (
   genderMatches?: boolean;
 }> => {
   try {
-    const { data, error } = await supabase.functions.invoke('verify-photo', {
+    const { data, error } = await supabase.functions.invoke("verify-photo", {
       body: {
         imageBase64,
         expectedGender,
         userId,
-        verificationType: 'selfie',
+        verificationType: "selfie",
       },
     });
 
@@ -86,8 +86,8 @@ export const verifyPhoto = async (
       genderMatches: data?.genderMatches ?? data?.gender_matches,
     };
   } catch (error) {
-    console.error('Photo verification error:', error);
-    return { verified: false, reason: 'Photo verification failed. Please try again.' };
+    console.error("Photo verification error:", error);
+    return { verified: false, reason: "Photo verification failed. Please try again." };
   }
 };
 

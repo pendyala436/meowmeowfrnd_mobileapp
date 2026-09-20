@@ -4,7 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { ArrowLeft, Lock, Eye, EyeOff, Check, X, Loader2, AlertCircle, ChevronUp, ChevronDown } from "lucide-react";
+import {
+  ArrowLeft,
+  Lock,
+  Eye,
+  EyeOff,
+  Check,
+  X,
+  Loader2,
+  AlertCircle,
+  ChevronUp,
+  ChevronDown,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { classifyError } from "@/lib/errors";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,7 +27,7 @@ const PasswordResetScreen = () => {
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const scrollRef = useRef<HTMLElement | null>(null);
-  
+
   const [resetToken, setResetToken] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [tokenValid, setTokenValid] = useState<boolean | null>(null);
@@ -34,7 +45,8 @@ const PasswordResetScreen = () => {
   const hasNumber = /[0-9]/.test(password);
   const hasSymbol = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
   const passwordsMatch = password === confirmPassword && confirmPassword.length > 0;
-  const isPasswordValid = hasMinLength && hasUppercase && hasLowercase && hasNumber && hasSymbol && passwordsMatch;
+  const isPasswordValid =
+    hasMinLength && hasUppercase && hasLowercase && hasNumber && hasSymbol && passwordsMatch;
 
   useEffect(() => {
     const token = searchParams.get("token");
@@ -80,13 +92,20 @@ const PasswordResetScreen = () => {
       });
       if (error) throw error;
       if (data?.success) {
-        toast({ title: "Password Reset Successful", description: "Your password has been updated. Redirecting to login..." });
+        toast({
+          title: "Password Reset Successful",
+          description: "Your password has been updated. Redirecting to login...",
+        });
         navigate("/password-reset-success");
       } else {
         throw new Error(data?.error || "Failed to reset password");
       }
     } catch (error: any) {
-      toast({ title: "Error", description: classifyError(error, "reset your password").message, variant: "destructive" });
+      toast({
+        title: "Error",
+        description: classifyError(error, "reset your password").message,
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -98,7 +117,11 @@ const PasswordResetScreen = () => {
 
   const PasswordRequirement = ({ met, text }: { met: boolean; text: string }) => (
     <div className="flex items-center gap-2 text-sm">
-      {met ? <Check className="w-4 h-4 text-accent" /> : <X className="w-4 h-4 text-muted-foreground" />}
+      {met ? (
+        <Check className="w-4 h-4 text-accent" />
+      ) : (
+        <X className="w-4 h-4 text-muted-foreground" />
+      )}
       <span className={met ? "text-accent" : "text-muted-foreground"}>{text}</span>
     </div>
   );
@@ -141,7 +164,12 @@ const PasswordResetScreen = () => {
       <AuroraBackground />
       <header className="px-6 pt-3 pb-1 relative z-10">
         <div className="flex items-center gap-4">
-          <Button variant="auroraGhost" size="icon" onClick={() => navigate("/forgot-password")} className="shrink-0">
+          <Button
+            variant="auroraGhost"
+            size="icon"
+            onClick={() => navigate("/forgot-password")}
+            className="shrink-0"
+          >
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="flex-1 text-center pr-10">
@@ -150,7 +178,10 @@ const PasswordResetScreen = () => {
         </div>
       </header>
 
-      <main ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto overscroll-contain flex flex-col items-center justify-start px-4 pb-16 relative z-10 scrollbar-thin scrollbar-thumb-primary/50 scrollbar-track-transparent">
+      <main
+        ref={scrollRef}
+        className="flex-1 min-h-0 overflow-y-auto overscroll-contain flex flex-col items-center justify-start px-4 pb-16 relative z-10 scrollbar-thin scrollbar-thumb-primary/50 scrollbar-track-transparent"
+      >
         <Card className="w-full max-w-md p-4 bg-card/70 backdrop-blur-xl border border-primary/20 shadow-[0_0_40px_hsl(var(--primary)/0.1)] animate-slide-up">
           <CardHeader className="space-y-1 text-center p-0 pb-2">
             <div className="w-10 h-10 mx-auto bg-primary/10 rounded-xl flex items-center justify-center mb-1">
@@ -166,15 +197,34 @@ const PasswordResetScreen = () => {
                 <Lock className="w-4 h-4 text-primary" /> New Password
               </Label>
               <div className="relative">
-                <Input id="password" type={showPassword ? "text" : "password"} placeholder="Enter new password" value={password} onChange={(e) => setPassword(e.target.value)} className="pr-10 h-11 rounded-xl border-2 bg-background/50" />
-                <Button type="button" variant="ghost" size="icon" className="absolute right-0 top-0 h-full px-3 hover:bg-transparent" onClick={() => setShowPassword(!showPassword)}>
-                  {showPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter new password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pr-10 h-11 rounded-xl border-2 bg-background/50"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-muted-foreground" />
+                  )}
                 </Button>
               </div>
             </div>
 
             <div className="space-y-0.5 p-2 rounded-xl bg-muted/30 border border-border/50">
-              <p className="text-xs font-medium text-muted-foreground mb-1">Password Requirements:</p>
+              <p className="text-xs font-medium text-muted-foreground mb-1">
+                Password Requirements:
+              </p>
               <PasswordRequirement met={hasMinLength} text="At least 8 characters" />
               <PasswordRequirement met={hasUppercase} text="One uppercase letter" />
               <PasswordRequirement met={hasLowercase} text="One lowercase letter" />
@@ -183,20 +233,44 @@ const PasswordResetScreen = () => {
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="confirmPassword" className="flex items-center gap-2 text-sm font-semibold">
+              <Label
+                htmlFor="confirmPassword"
+                className="flex items-center gap-2 text-sm font-semibold"
+              >
                 <Lock className="w-4 h-4 text-primary" /> Confirm Password
               </Label>
               <div className="relative">
-                <Input id="confirmPassword" type={showConfirmPassword ? "text" : "password"} placeholder="Confirm new password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className={`pr-10 h-11 rounded-xl border-2 bg-background/50 ${confirmPassword && !passwordsMatch ? "border-destructive" : ""}`} />
-                <Button type="button" variant="ghost" size="icon" className="absolute right-0 top-0 h-full px-3 hover:bg-transparent" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
-                  {showConfirmPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
+                <Input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Confirm new password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className={`pr-10 h-11 rounded-xl border-2 bg-background/50 ${confirmPassword && !passwordsMatch ? "border-destructive" : ""}`}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-muted-foreground" />
+                  )}
                 </Button>
               </div>
               {confirmPassword && !passwordsMatch && (
-                <p className="text-sm text-destructive flex items-center gap-1"><X className="w-4 h-4" /> Passwords do not match</p>
+                <p className="text-sm text-destructive flex items-center gap-1">
+                  <X className="w-4 h-4" /> Passwords do not match
+                </p>
               )}
               {passwordsMatch && (
-                <p className="text-sm text-accent flex items-center gap-1"><Check className="w-4 h-4" /> Passwords match</p>
+                <p className="text-sm text-accent flex items-center gap-1">
+                  <Check className="w-4 h-4" /> Passwords match
+                </p>
               )}
             </div>
 
@@ -206,17 +280,43 @@ const PasswordResetScreen = () => {
               </p>
             </div>
 
-            <Button onClick={handleResetPassword} disabled={!isPasswordValid || isLoading} variant="aurora" size="lg" className="w-full">
-              {isLoading ? (<><Loader2 className="w-5 h-5 animate-spin mr-2" /> Resetting Password...</>) : "Reset Password"}
+            <Button
+              onClick={handleResetPassword}
+              disabled={!isPasswordValid || isLoading}
+              variant="aurora"
+              size="lg"
+              className="w-full"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" /> Resetting Password...
+                </>
+              ) : (
+                "Reset Password"
+              )}
             </Button>
           </CardContent>
         </Card>
       </main>
       <div className="absolute right-3 bottom-4 z-20 flex flex-col gap-2">
-        <Button type="button" variant="auroraGhost" size="icon" aria-label="Scroll up" onClick={() => scrollForm("up")} className="h-9 w-9 rounded-full bg-card/80 backdrop-blur-md shadow-lg">
+        <Button
+          type="button"
+          variant="auroraGhost"
+          size="icon"
+          aria-label="Scroll up"
+          onClick={() => scrollForm("up")}
+          className="h-9 w-9 rounded-full bg-card/80 backdrop-blur-md shadow-lg"
+        >
           <ChevronUp className="h-4 w-4" />
         </Button>
-        <Button type="button" variant="auroraGhost" size="icon" aria-label="Scroll down" onClick={() => scrollForm("down")} className="h-9 w-9 rounded-full bg-card/80 backdrop-blur-md shadow-lg">
+        <Button
+          type="button"
+          variant="auroraGhost"
+          size="icon"
+          aria-label="Scroll down"
+          onClick={() => scrollForm("down")}
+          className="h-9 w-9 rounded-full bg-card/80 backdrop-blur-md shadow-lg"
+        >
           <ChevronDown className="h-4 w-4" />
         </Button>
       </div>

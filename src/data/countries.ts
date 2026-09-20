@@ -251,4 +251,4 @@ export const countries = [
   { code: "ZW", name: "Zimbabwe", flag: "🇿🇼" },
 ];
 
-export type Country = typeof countries[number];
+export type Country = (typeof countries)[number];

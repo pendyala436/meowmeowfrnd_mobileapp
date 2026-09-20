@@ -155,7 +155,11 @@ describe("fetchCallLanguage", () => {
 
   it("aggregates profile and language tables", async () => {
     fromMock
-      .mockReturnValueOnce(chain({ data: { primary_language: "Hindi", preferred_language: "English", language: null } }))
+      .mockReturnValueOnce(
+        chain({
+          data: { primary_language: "Hindi", preferred_language: "English", language: null },
+        }),
+      )
       .mockReturnValueOnce(chain({ data: [{ language_name: "Bengali" }] }))
       .mockReturnValueOnce(chain({ data: null }))
       .mockReturnValueOnce(chain({ data: null }));
@@ -168,8 +172,12 @@ describe("fetchCallLanguage", () => {
     fromMock
       .mockReturnValueOnce(chain({ data: null }))
       .mockReturnValueOnce(chain({ data: [] }))
-      .mockReturnValueOnce(chain({ data: { primary_language: "Tamil", preferred_language: "English" } }))
-      .mockReturnValueOnce(chain({ data: { primary_language: "Bengali", preferred_language: "English" } }));
+      .mockReturnValueOnce(
+        chain({ data: { primary_language: "Tamil", preferred_language: "English" } }),
+      )
+      .mockReturnValueOnce(
+        chain({ data: { primary_language: "Bengali", preferred_language: "English" } }),
+      );
 
     await expect(fetchCallLanguage("user-2")).resolves.toBe("Tamil");
   });

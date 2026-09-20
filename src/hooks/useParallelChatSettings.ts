@@ -36,9 +36,10 @@ export const useParallelChatSettings = (userId?: string): UseParallelChatSetting
           .maybeSingle();
 
         if (appSettings?.setting_value) {
-          const value = typeof appSettings.setting_value === 'number' 
-            ? appSettings.setting_value 
-            : Number(appSettings.setting_value);
+          const value =
+            typeof appSettings.setting_value === "number"
+              ? appSettings.setting_value
+              : Number(appSettings.setting_value);
           if (value >= 1 && value <= 5) {
             setMaxChats(value);
           }
@@ -54,7 +55,9 @@ export const useParallelChatSettings = (userId?: string): UseParallelChatSetting
         }
       } catch (error) {
         console.error("Error loading parallel chat settings:", error);
-      toast.error("Settings unavailable", { description: "Unable to load your chat settings. Default settings will be used." });
+        toast.error("Settings unavailable", {
+          description: "Unable to load your chat settings. Default settings will be used.",
+        });
         // Fall back to localStorage on error
         try {
           const storedSettings = localStorage.getItem(`${STORAGE_KEY}_${userId}`);
@@ -75,66 +78,74 @@ export const useParallelChatSettings = (userId?: string): UseParallelChatSetting
     loadSettings();
   }, [userId]);
 
-  const setMaxParallelChats = useCallback(async (count: number) => {
-    if (count < 1 || count > 5) {
-      console.error("Max parallel chats must be between 1 and 5");
-      toast.error("Invalid setting", { description: "Parallel chats must be set between 1 and 5." });
-      return;
-    }
+  const setMaxParallelChats = useCallback(
+    async (count: number) => {
+      if (count < 1 || count > 5) {
+        console.error("Max parallel chats must be between 1 and 5");
+        toast.error("Invalid setting", {
+          description: "Parallel chats must be set between 1 and 5.",
+        });
+        return;
+      }
 
-    setMaxChats(count);
+      setMaxChats(count);
 
-    if (!userId) {
-      localStorage.setItem(`${STORAGE_KEY}_anonymous`, JSON.stringify({ maxParallelChats: count }));
-      return;
-    }
+      if (!userId) {
+        localStorage.setItem(
+          `${STORAGE_KEY}_anonymous`,
+          JSON.stringify({ maxParallelChats: count }),
+        );
+        return;
+      }
 
-    // Save to localStorage immediately for responsiveness
-    localStorage.setItem(`${STORAGE_KEY}_${userId}`, JSON.stringify({ maxParallelChats: count }));
+      // Save to localStorage immediately for responsiveness
+      localStorage.setItem(`${STORAGE_KEY}_${userId}`, JSON.stringify({ maxParallelChats: count }));
 
-    // Try to save to database
-    try {
-      const settingKey = `user_${userId}_parallel_chats`;
-      
-      // Check if setting exists
-      const { data: existing } = await supabase
-        .from("app_settings")
-        .select("id")
-        .eq("setting_key", settingKey)
-        .maybeSingle();
+      // Try to save to database
+      try {
+        const settingKey = `user_${userId}_parallel_chats`;
 
-      if (existing) {
-        // Update existing
-        await supabase
+        // Check if setting exists
+        const { data: existing } = await supabase
           .from("app_settings")
-          .update({ 
-            setting_value: count,
-            updated_at: new Date().toISOString()
-          })
-          .eq("setting_key", settingKey);
-      } else {
-        // Insert new
-        await supabase
-          .from("app_settings")
-          .insert({
+          .select("id")
+          .eq("setting_key", settingKey)
+          .maybeSingle();
+
+        if (existing) {
+          // Update existing
+          await supabase
+            .from("app_settings")
+            .update({
+              setting_value: count,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("setting_key", settingKey);
+        } else {
+          // Insert new
+          await supabase.from("app_settings").insert({
             setting_key: settingKey,
             setting_value: count,
             setting_type: "number",
             category: "user_preferences",
             description: "Maximum parallel chat windows preference",
-            is_public: false
+            is_public: false,
           });
+        }
+      } catch (error) {
+        console.error("Error saving parallel chat settings to database:", error);
+        toast.error("Settings not saved", {
+          description: "Unable to save your parallel chat settings. Please try again.",
+        });
+        // Settings are still saved in localStorage, so this is not critical
       }
-    } catch (error) {
-      console.error("Error saving parallel chat settings to database:", error);
-      toast.error("Settings not saved", { description: "Unable to save your parallel chat settings. Please try again." });
-      // Settings are still saved in localStorage, so this is not critical
-    }
-  }, [userId]);
+    },
+    [userId],
+  );
 
   return {
     maxParallelChats,
     setMaxParallelChats,
-    isLoading
+    isLoading,
   };
 };

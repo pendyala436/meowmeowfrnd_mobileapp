@@ -62,10 +62,9 @@ export function GroupCallBillingTester() {
           Group Call Billing — Live Test (5 min)
         </CardTitle>
         <CardDescription>
-          Runs 5 simulated minutes of <code>private_group_call</code> billing through the
-          canonical <code>bill_session_minute</code> RPC and verifies wallet debits, credits,
-          and statement visibility. Auto-picks a male user with sufficient balance and the
-          first female host.
+          Runs 5 simulated minutes of <code>private_group_call</code> billing through the canonical{" "}
+          <code>bill_session_minute</code> RPC and verifies wallet debits, credits, and statement
+          visibility. Auto-picks a male user with sufficient balance and the first female host.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -83,9 +82,7 @@ export function GroupCallBillingTester() {
         {report && (
           <div className="space-y-3 rounded-md border p-3 text-sm">
             {report.error && (
-              <div className="rounded bg-destructive/10 p-2 text-destructive">
-                {report.error}
-              </div>
+              <div className="rounded bg-destructive/10 p-2 text-destructive">{report.error}</div>
             )}
 
             {report.success && (

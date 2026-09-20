@@ -1,5 +1,5 @@
 import { classifyError, ERROR_MESSAGES } from "@/lib/errors";
-import { moderateMessage } from '@/lib/content-moderation';
+import { moderateMessage } from "@/lib/content-moderation";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,7 @@ import {
   TrendingUp,
   Wallet,
   AlertTriangle,
-  MoreHorizontal
+  MoreHorizontal,
 } from "lucide-react";
 import { ChatRelationshipActions } from "@/components/ChatRelationshipActions";
 import { SendGiftButton } from "@/components/SendGiftButton";
@@ -78,7 +78,7 @@ const MiniChatWindow = ({
   userGender,
   ratePerMinute,
   onClose,
-  windowWidthClass = "w-72"
+  windowWidthClass = "w-72",
 }: MiniChatWindowProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -97,18 +97,18 @@ const MiniChatWindow = ({
   const [earningRate, setEarningRate] = useState(2);
   const [inactiveWarning, setInactiveWarning] = useState<string | null>(null);
   const [sessionStarted, setSessionStarted] = useState(false);
-  
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const heartbeatRef = useRef<NodeJS.Timeout | null>(null);
   const inactivityRef = useRef<NodeJS.Timeout | null>(null);
   const logoutTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const billingPauseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   const sessionStartedRef = useRef(false);
   const billingStartedRef = useRef(false);
   const tempToRealIdRef = useRef<Map<string, string>>(new Map());
-  
+
   const [isBillingPaused, setIsBillingPaused] = useState(false);
   const [lastUserMessageTime, setLastUserMessageTime] = useState<number>(Date.now());
   const [lastPartnerMessageTime, setLastPartnerMessageTime] = useState<number>(Date.now());
@@ -116,7 +116,7 @@ const MiniChatWindow = ({
   // Derive canonical man/woman IDs for billing RPC (used by idle effect + startBilling)
   const manId = userGender === "male" ? currentUserId : partnerId;
   const womanId = userGender === "female" ? currentUserId : partnerId;
-  
+
   // Free chat tracking for women chatting with no-balance men
   const [isFreeChatMode, setIsFreeChatMode] = useState(false);
   const [freeChatRemainingSeconds, setFreeChatRemainingSeconds] = useState(300);
@@ -134,10 +134,8 @@ const MiniChatWindow = ({
     if (isBlocked) {
       toast({
         title: "Chat Ended",
-        description: isBlockedByThem 
-          ? "This user has blocked you" 
-          : "You have blocked this user",
-        variant: "destructive"
+        description: isBlockedByThem ? "This user has blocked you" : "You have blocked this user",
+        variant: "destructive",
       });
       handleClose();
     }
@@ -154,14 +152,16 @@ const MiniChatWindow = ({
           .select("rate_per_minute, women_earning_rate")
           .eq("is_active", true)
           .maybeSingle();
-        
+
         if (pricing) {
           setEarningRate(pricing.women_earning_rate || ratePerMinute * 0.5);
         }
 
         if (userGender === "male") {
           // Canonical SoT RPC instead of stale wallets.balance
-          const { data: walletRpc } = await supabase.rpc("get_men_wallet_balance", { p_user_id: currentUserId });
+          const { data: walletRpc } = await supabase.rpc("get_men_wallet_balance", {
+            p_user_id: currentUserId,
+          });
           const balance = Number((walletRpc as Record<string, number> | null)?.balance) || 0;
           setWalletBalance(balance);
         } else {
@@ -173,7 +173,7 @@ const MiniChatWindow = ({
             .eq("user_id", currentUserId)
             .gt("amount", 0)
             .gte("created_at", `${today}T00:00:00`);
-          
+
           const total = earnings?.reduce((acc, e) => acc + Number(e.amount), 0) || 0;
           setTodayEarnings(total);
         }
@@ -181,25 +181,29 @@ const MiniChatWindow = ({
         // Check if this is a free chat (woman chatting with no-balance man)
         if (userGender === "female") {
           // Canonical SoT RPC for partner (male) balance
-          const { data: partnerWalletRpc } = await supabase.rpc("get_men_wallet_balance", { p_user_id: partnerId });
-          const partnerBalance = Number((partnerWalletRpc as Record<string, number> | null)?.balance) || 0;
+          const { data: partnerWalletRpc } = await supabase.rpc("get_men_wallet_balance", {
+            p_user_id: partnerId,
+          });
+          const partnerBalance =
+            Number((partnerWalletRpc as Record<string, number> | null)?.balance) || 0;
           if (partnerBalance <= 0) {
             // Check free chat status
             const { data: freeChatStatus } = await supabase.rpc("check_free_chat_status", {
               p_woman_id: currentUserId,
               p_man_id: partnerId,
             });
-            
+
             if (freeChatStatus?.blocked) {
               toast({
                 title: "Free Chat Expired",
-                description: "You've used your 5-minute free chat with this user. Ask them to recharge!",
+                description:
+                  "You've used your 5-minute free chat with this user. Ask them to recharge!",
                 variant: "destructive",
               });
               onClose();
               return;
             }
-            
+
             setIsFreeChatMode(true);
             setFreeChatRemainingSeconds(freeChatStatus?.remaining_seconds ?? 300);
             freeChatElapsedRef.current = freeChatStatus?.seconds_used ?? 0;
@@ -211,7 +215,11 @@ const MiniChatWindow = ({
         }
       } catch (error) {
         console.error("Error loading initial data:", error);
-        toast({ title: "Chat unavailable", description: ERROR_MESSAGES.chat.loadFailed, variant: "destructive" });
+        toast({
+          title: "Chat unavailable",
+          description: ERROR_MESSAGES.chat.loadFailed,
+          variant: "destructive",
+        });
       }
     };
 
@@ -226,26 +234,31 @@ const MiniChatWindow = ({
     const sessionChannel = supabase
       .channel(`session-status-mini-${sessionId}`)
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'active_chat_sessions',
-          filter: `id=eq.${sessionId}`
+          event: "UPDATE",
+          schema: "public",
+          table: "active_chat_sessions",
+          filter: `id=eq.${sessionId}`,
         },
         (payload: any) => {
           const session = payload.new;
-          if (session.status === 'ended') {
+          if (session.status === "ended") {
             let message = "Chat session ended";
-            if (session.end_reason === 'user_closed' || session.end_reason === 'user_ended' || session.end_reason === 'man_closed' || session.end_reason === 'woman_closed') {
+            if (
+              session.end_reason === "user_closed" ||
+              session.end_reason === "user_ended" ||
+              session.end_reason === "man_closed" ||
+              session.end_reason === "woman_closed"
+            ) {
               message = `${partnerName} ended the chat`;
-            } else if (session.end_reason === 'inactivity_timeout') {
+            } else if (session.end_reason === "inactivity_timeout") {
               message = "Chat ended due to inactivity";
-            } else if (session.end_reason === 'insufficient_balance') {
+            } else if (session.end_reason === "insufficient_balance") {
               message = "Chat ended - insufficient balance";
-            } else if (session.end_reason === 'user_blocked') {
+            } else if (session.end_reason === "user_blocked") {
               message = "Chat ended - user blocked";
-            } else if (session.end_reason === 'auto_timeout') {
+            } else if (session.end_reason === "auto_timeout") {
               message = "Chat request expired - no response";
             }
             toast({
@@ -254,7 +267,7 @@ const MiniChatWindow = ({
             });
             onClose();
           }
-        }
+        },
       )
       .subscribe();
 
@@ -276,8 +289,8 @@ const MiniChatWindow = ({
   }, [messages, isMinimized]);
 
   useEffect(() => {
-    const hasSentMessage = messages.some(m => m.senderId === currentUserId);
-    const hasReceivedMessage = messages.some(m => m.senderId !== currentUserId);
+    const hasSentMessage = messages.some((m) => m.senderId === currentUserId);
+    const hasReceivedMessage = messages.some((m) => m.senderId !== currentUserId);
     if (hasSentMessage && hasReceivedMessage && !billingStartedRef.current) {
       billingStartedRef.current = true;
       setBillingStarted(true);
@@ -331,8 +344,14 @@ const MiniChatWindow = ({
 
       // PAUSE: both idle ≥ 2 min and billing currently running
       if (bothIdleMs >= IDLE_PAUSE_MS && heartbeatRef.current) {
-        if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
-        if (heartbeatRef.current) { clearInterval(heartbeatRef.current); heartbeatRef.current = null; }
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+        if (heartbeatRef.current) {
+          clearInterval(heartbeatRef.current);
+          heartbeatRef.current = null;
+        }
 
         // Settle: round UP any leftover seconds to a full chargeable minute.
         if (billingStartTimeRef.current > 0) {
@@ -340,7 +359,9 @@ const MiniChatWindow = ({
           if (elapsedSec >= 1) {
             try {
               await billFinalPartialMinute(sessionId || chatId, "chat", elapsedSec, manId, womanId);
-            } catch (e) { console.error("Pause partial billing error:", e); }
+            } catch (e) {
+              console.error("Pause partial billing error:", e);
+            }
           }
         }
         billingStartTimeRef.current = 0;
@@ -359,18 +380,25 @@ const MiniChatWindow = ({
     }, 1000);
 
     return () => clearInterval(tick);
-  }, [lastUserMessageTime, lastPartnerMessageTime, billingStarted, sessionId, chatId, manId, womanId]);
-
+  }, [
+    lastUserMessageTime,
+    lastPartnerMessageTime,
+    billingStarted,
+    sessionId,
+    chatId,
+    manId,
+    womanId,
+  ]);
 
   // Free chat timer: 5-min countdown for women chatting with no-balance men
   useEffect(() => {
     if (!isFreeChatMode || !billingStarted) return;
-    
+
     freeChatTimerRef.current = setInterval(async () => {
       freeChatElapsedRef.current += 10; // update every 10 seconds
       const remaining = Math.max(300 - freeChatElapsedRef.current, 0);
       setFreeChatRemainingSeconds(remaining);
-      
+
       // Persist to DB every 10 seconds
       try {
         const { data } = await supabase.rpc("update_free_chat_usage", {
@@ -378,62 +406,47 @@ const MiniChatWindow = ({
           p_man_id: partnerId,
           p_seconds: 10,
         });
-        
+
         if (data?.blocked) {
           // 5 minutes up — auto-close and send recharge message
           if (freeChatTimerRef.current) clearInterval(freeChatTimerRef.current);
-          
+
           await supabase.from("chat_messages").insert({
             chat_id: chatId,
             sender_id: currentUserId,
             receiver_id: partnerId,
-            message: "⏰ Free chat time is over! Please recharge your wallet to continue chatting. 💳",
+            message:
+              "⏰ Free chat time is over! Please recharge your wallet to continue chatting. 💳",
           });
-          
+
           toast({
             title: "Free Chat Ended",
-            description: "5-minute free chat with this user has ended. They need to recharge to chat again.",
+            description:
+              "5-minute free chat with this user has ended. They need to recharge to chat again.",
           });
-          
+
           try {
             await supabase
               .from("active_chat_sessions")
-              .update({ status: "ended", ended_at: new Date().toISOString(), end_reason: "free_chat_expired" })
+              .update({
+                status: "ended",
+                ended_at: new Date().toISOString(),
+                end_reason: "free_chat_expired",
+              })
               .eq("id", sessionId);
           } catch {}
-          
+
           onClose();
         }
       } catch (err) {
         console.error("[FreeChat] Error updating usage:", err);
       }
     }, 10000); // every 10 seconds
-    
+
     return () => {
       if (freeChatTimerRef.current) clearInterval(freeChatTimerRef.current);
     };
   }, [isFreeChatMode, billingStarted, currentUserId, partnerId, chatId, sessionId, onClose]);
-
-  // Translate history messages in background using live Lingva translation
-          } catch {
-            return null;
-          }
-        })
-      );
-
-      setMessages(prev => prev.map(m => {
-        const translation = results
-          .filter((r): r is PromiseFulfilledResult<any> => r.status === 'fulfilled')
-          .map(r => r.value)
-          .find(r => r && r.id === m.id);
-        if (translation) {
-          return { ...m, ...translation };
-        }
-        return m;
-      }));
-    }
-  }, []);
-
 
   const loadMessages = async () => {
     const { data } = await supabase
@@ -443,43 +456,81 @@ const MiniChatWindow = ({
       .order("created_at", { ascending: true })
       .limit(50);
 
-    if (data) {
-      const formattedMessages: Message[] = data.map((m) => ({
-        id: m.id,
-        senderId: m.sender_id,
-        message: m.message,
-        createdAt: m.created_at
-      }));
-      setMessages(formattedMessages);
+    if (!data) return;
 
-      // Always translate history messages for native display + English subtitles
-      const langToUse = currentUserLanguage || 'English';
+    const formattedMessages: Message[] = data.map((m) => ({
+      id: m.id,
+      senderId: m.sender_id,
+      message: m.message,
+      createdAt: m.created_at,
+    }));
+    setMessages(formattedMessages);
+
+    const langToUse = currentUserLanguage || "English";
+    if (languagesMatch(langToUse, partnerLanguage)) return;
+
+    const results = await Promise.allSettled(
+      formattedMessages.map(async (msg) => {
+        try {
+          if (msg.senderId === currentUserId) return null;
+          if (!isTranslatableChatText(msg.message)) return null;
+          const result = await translateForViewer(msg.message, langToUse, partnerLanguage);
+          return {
+            id: msg.id,
+            translatedMessage: result.nativeText,
+            englishText: result.englishText,
+            isTranslated: result.nativeText !== msg.message,
+            isTranslating: false,
+          };
+        } catch {
+          return null;
+        }
+      }),
+    );
+
+    const translations = results.flatMap((r) =>
+      r.status === "fulfilled" && r.value ? [r.value] : [],
+    );
+
+    setMessages((prev) =>
+      prev.map((m) => {
+        const translation = translations.find((r) => r.id === m.id);
+        if (translation) {
+          return { ...m, ...translation };
+        }
+        return m;
+      }),
+    );
   };
 
   const subscribeToMessages = () => {
     const channel = supabase
       .channel(`mini-chat-${chatId}`)
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'chat_messages',
-          filter: `chat_id=eq.${chatId}`
+          event: "INSERT",
+          schema: "public",
+          table: "chat_messages",
+          filter: `chat_id=eq.${chatId}`,
         },
         async (payload: any) => {
           const newMsg = payload.new;
           const isPartnerMessage = newMsg.sender_id !== currentUserId;
-          
-          setMessages(prev => {
-            const existingRealIndex = prev.findIndex(m => m.id === newMsg.id);
+
+          setMessages((prev) => {
+            const existingRealIndex = prev.findIndex((m) => m.id === newMsg.id);
             if (existingRealIndex >= 0) return prev;
-            
+
             // For own messages, find and replace temp message, preserving translation
             if (newMsg.sender_id === currentUserId) {
-              const tempIdx = prev.findIndex(m =>
-                m.id.startsWith('temp-') && m.senderId === newMsg.sender_id &&
-                Math.abs(new Date(m.createdAt).getTime() - new Date(newMsg.created_at).getTime()) < 5000
+              const tempIdx = prev.findIndex(
+                (m) =>
+                  m.id.startsWith("temp-") &&
+                  m.senderId === newMsg.sender_id &&
+                  Math.abs(
+                    new Date(m.createdAt).getTime() - new Date(newMsg.created_at).getTime(),
+                  ) < 5000,
               );
               if (tempIdx !== -1) {
                 const tempMsg = prev[tempIdx];
@@ -493,46 +544,63 @@ const MiniChatWindow = ({
                   englishText: tempMsg.englishText,
                   isTranslated: tempMsg.isTranslated,
                   isTranslating: tempMsg.isTranslating,
-                  createdAt: newMsg.created_at
+                  createdAt: newMsg.created_at,
                 };
                 return updated;
               }
             }
-            
-            const filtered = prev.filter(m => 
-              !(m.id.startsWith('temp-') && m.senderId === newMsg.sender_id && 
-                Math.abs(new Date(m.createdAt).getTime() - new Date(newMsg.created_at).getTime()) < 5000)
+
+            const filtered = prev.filter(
+              (m) =>
+                !(
+                  m.id.startsWith("temp-") &&
+                  m.senderId === newMsg.sender_id &&
+                  Math.abs(
+                    new Date(m.createdAt).getTime() - new Date(newMsg.created_at).getTime(),
+                  ) < 5000
+                ),
             );
-            
-            return [...filtered, {
-              id: newMsg.id,
-              senderId: newMsg.sender_id,
-              message: newMsg.message,
-              createdAt: newMsg.created_at
-            }];
+
+            return [
+              ...filtered,
+              {
+                id: newMsg.id,
+                senderId: newMsg.sender_id,
+                message: newMsg.message,
+                createdAt: newMsg.created_at,
+              },
+            ];
           });
 
-          if (isPartnerMessage && isTranslatableChatText(newMsg.message) && !languagesMatch(currentUserLanguage, partnerLanguage)) {
+          if (
+            isPartnerMessage &&
+            isTranslatableChatText(newMsg.message) &&
+            !languagesMatch(currentUserLanguage, partnerLanguage)
+          ) {
             const langToUse = currentUserLanguage || "English";
-            void translateForViewer(newMsg.message, langToUse, partnerLanguage).then((result) => {
-              setMessages((prev) => prev.map((m) =>
-                m.id === newMsg.id
-                  ? {
-                      ...m,
-                      translatedMessage: result.nativeText,
-                      englishText: result.englishText,
-                      isTranslated: result.nativeText !== newMsg.message,
-                      isTranslating: false,
-                    }
-                  : m
-              ));
-            }).catch(() => {});
+            void translateForViewer(newMsg.message, langToUse, partnerLanguage)
+              .then((result) => {
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.id === newMsg.id
+                      ? {
+                          ...m,
+                          translatedMessage: result.nativeText,
+                          englishText: result.englishText,
+                          isTranslated: result.nativeText !== newMsg.message,
+                          isTranslating: false,
+                        }
+                      : m,
+                  ),
+                );
+              })
+              .catch(() => {});
           }
 
           if (isMinimized && isPartnerMessage) {
-            setUnreadCount(prev => prev + 1);
+            setUnreadCount((prev) => prev + 1);
           }
-        }
+        },
       )
       .subscribe();
 
@@ -546,26 +614,33 @@ const MiniChatWindow = ({
 
   // (manId/womanId moved above near top of component)
 
-
   const startBilling = () => {
     // Clear any existing intervals to prevent orphaned timers on resume
-    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
-    if (heartbeatRef.current) { clearInterval(heartbeatRef.current); heartbeatRef.current = null; }
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    if (heartbeatRef.current) {
+      clearInterval(heartbeatRef.current);
+      heartbeatRef.current = null;
+    }
 
     billingStartTimeRef.current = Date.now();
     billedMinutesRef.current = 0;
 
     timerRef.current = setInterval(() => {
-      setElapsedSeconds(prev => prev + 1);
+      setElapsedSeconds((prev) => prev + 1);
     }, 1000);
 
     // Per-minute heartbeat: keeps server activity AND bills 1 minute via canonical RPC
     heartbeatRef.current = setInterval(async () => {
       try {
         // Server activity ping (keeps session alive, partner online tracking)
-        supabase.functions.invoke("chat-manager", {
-          body: { action: "heartbeat", chat_id: chatId }
-        }).catch((e) => console.error("Heartbeat error:", e));
+        supabase.functions
+          .invoke("chat-manager", {
+            body: { action: "heartbeat", chat_id: chatId },
+          })
+          .catch((e) => console.error("Heartbeat error:", e));
 
         // Canonical billing — 1 full minute per tick, idempotent on minute_idx
         const minuteIdx = billedMinutesRef.current;
@@ -573,9 +648,9 @@ const MiniChatWindow = ({
         if (r.success && !r.duplicate_skipped) {
           billedMinutesRef.current = minuteIdx + 1;
           if (userGender === "female") {
-            setTotalEarned(prev => prev + (r.earned ?? 0));
+            setTotalEarned((prev) => prev + (r.earned ?? 0));
           } else {
-            setWalletBalance(prev => Math.max(0, prev - (r.charged ?? 0)));
+            setWalletBalance((prev) => Math.max(0, prev - (r.charged ?? 0)));
           }
         } else if (r.error?.includes("Insufficient balance")) {
           toast({
@@ -598,12 +673,12 @@ const MiniChatWindow = ({
     setIsSending(true); // CHT-03 FIX: prevent double-send
 
     const messageText = newMessage.trim();
-    
+
     if (messageText.length > MAX_MESSAGE_LENGTH) {
       toast({
         title: "Message too long",
         description: `Messages must be under ${MAX_MESSAGE_LENGTH} characters`,
-        variant: "destructive"
+        variant: "destructive",
       });
       setIsSending(false);
       return;
@@ -615,7 +690,7 @@ const MiniChatWindow = ({
       toast({
         title: "Message Blocked",
         description: moderationResult.reason,
-        variant: "destructive"
+        variant: "destructive",
       });
       setIsSending(false);
       return;
@@ -635,36 +710,34 @@ const MiniChatWindow = ({
       senderId: currentUserId,
       message: messageText,
       isTranslating: false,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
-    setMessages(prev => [...prev, optimisticMessage]);
+    setMessages((prev) => [...prev, optimisticMessage]);
 
     try {
-      const { error } = await supabase
-        .from("chat_messages")
-        .insert({
-          chat_id: chatId,
-          sender_id: currentUserId,
-          receiver_id: partnerId,
-          message: messageText
-        });
+      const { error } = await supabase.from("chat_messages").insert({
+        chat_id: chatId,
+        sender_id: currentUserId,
+        receiver_id: partnerId,
+        message: messageText,
+      });
 
       if (error) {
         console.error("Error sending message:", error);
-        setMessages(prev => prev.filter(m => m.id !== tempId));
+        setMessages((prev) => prev.filter((m) => m.id !== tempId));
         toast({
           title: "Error",
           description: "Failed to send message",
-          variant: "destructive"
+          variant: "destructive",
         });
       }
     } catch (error) {
       console.error("Error sending message:", error);
-      setMessages(prev => prev.filter(m => m.id !== tempId));
+      setMessages((prev) => prev.filter((m) => m.id !== tempId));
       toast({
         title: "Error",
         description: "Failed to send message",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsSending(false); // CHT-03 FIX: always reset
@@ -691,8 +764,14 @@ const MiniChatWindow = ({
 
   const handleClose = async () => {
     // Stop billing timers immediately
-    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
-    if (heartbeatRef.current) { clearInterval(heartbeatRef.current); heartbeatRef.current = null; }
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    if (heartbeatRef.current) {
+      clearInterval(heartbeatRef.current);
+      heartbeatRef.current = null;
+    }
 
     // Final settlement: round UP any leftover seconds to a full chargeable minute.
     // Ensures sub-1-minute chats and partial-minute closes (e.g. 1m12s) are billed.
@@ -707,20 +786,23 @@ const MiniChatWindow = ({
       }
     }
 
-    
     try {
       // Call chat-manager end_chat for proper final billing and cleanup
       await supabase.functions.invoke("chat-manager", {
-        body: { 
-          action: "end_chat", 
-          chat_id: chatId, 
+        body: {
+          action: "end_chat",
+          chat_id: chatId,
           end_reason: userGender === "male" ? "man_closed" : "woman_closed",
-          user_id: currentUserId
-        }
+          user_id: currentUserId,
+        },
       });
     } catch (error) {
       console.error("Error closing chat via chat-manager:", error);
-      toast({ title: "Chat not closed", description: "Unable to close this chat session properly.", variant: "destructive" });
+      toast({
+        title: "Chat not closed",
+        description: "Unable to close this chat session properly.",
+        variant: "destructive",
+      });
       // Fallback: directly update session
       try {
         await supabase
@@ -728,7 +810,7 @@ const MiniChatWindow = ({
           .update({
             status: "ended",
             ended_at: new Date().toISOString(),
-            end_reason: userGender === "male" ? "man_closed" : "woman_closed"
+            end_reason: userGender === "male" ? "man_closed" : "woman_closed",
           })
           .eq("id", sessionId);
       } catch (fallbackError) {
@@ -742,18 +824,18 @@ const MiniChatWindow = ({
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
-    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   };
 
   const estimatedCost = billingStarted ? (elapsedSeconds / 60) * ratePerMinute : 0;
-  const estimatedEarning = billingStarted ? totalEarned + ((elapsedSeconds / 60) * earningRate) : 0;
+  const estimatedEarning = billingStarted ? totalEarned + (elapsedSeconds / 60) * earningRate : 0;
 
   return (
-    <Card 
+    <Card
       className={cn(
         "flex flex-col shadow-xl border-2 transition-all duration-200",
         isMinimized ? "w-56 h-12" : `${windowWidthClass} h-80`,
-        isPartnerOnline ? "border-primary/30" : "border-muted"
+        isPartnerOnline ? "border-primary/30" : "border-muted",
       )}
     >
       {inactiveWarning && (
@@ -762,8 +844,8 @@ const MiniChatWindow = ({
           <span>{inactiveWarning}</span>
         </div>
       )}
-      
-      <div 
+
+      <div
         className="flex items-center justify-between p-2 bg-gradient-to-r from-primary/10 to-transparent border-b cursor-pointer"
         onClick={toggleMinimize}
       >
@@ -775,10 +857,12 @@ const MiniChatWindow = ({
                 {partnerName.charAt(0)}
               </AvatarFallback>
             </Avatar>
-            <div className={cn(
-              "absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-background",
-              isPartnerOnline ? "bg-green-500" : "bg-muted-foreground"
-            )} />
+            <div
+              className={cn(
+                "absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-background",
+                isPartnerOnline ? "bg-green-500" : "bg-muted-foreground",
+              )}
+            />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1">
@@ -789,13 +873,19 @@ const MiniChatWindow = ({
                 </Badge>
               )}
               {userGender === "female" && todayEarnings > 0 && (
-                <Badge variant="outline" className="h-3.5 text-[8px] px-1 gap-0.5 border-green-500/30 text-green-600">
+                <Badge
+                  variant="outline"
+                  className="h-3.5 text-[8px] px-1 gap-0.5 border-green-500/30 text-green-600"
+                >
                   <TrendingUp className="h-2 w-2" />₹{todayEarnings.toFixed(2)}
                 </Badge>
               )}
             </div>
             {isFreeChatMode && (
-              <Badge variant="outline" className="text-[9px] h-4 px-1 border-amber-400 text-amber-600">
+              <Badge
+                variant="outline"
+                className="text-[9px] h-4 px-1 border-amber-400 text-amber-600"
+              >
                 ⏱ Free {Math.ceil(freeChatRemainingSeconds / 60)} min
               </Badge>
             )}
@@ -807,9 +897,7 @@ const MiniChatWindow = ({
             )}
           </div>
           {unreadCount > 0 && isMinimized && (
-            <Badge className="h-4 min-w-[16px] text-[9px] px-1 bg-primary">
-              {unreadCount}
-            </Badge>
+            <Badge className="h-4 min-w-[16px] text-[9px] px-1 bg-primary">{unreadCount}</Badge>
           )}
         </div>
         <div className="flex items-center gap-0.5">
@@ -817,15 +905,18 @@ const MiniChatWindow = ({
             variant="ghost"
             size="icon"
             className="h-5 w-5"
-            onClick={(e) => { e.stopPropagation(); setAreButtonsExpanded(!areButtonsExpanded); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setAreButtonsExpanded(!areButtonsExpanded);
+            }}
             title={areButtonsExpanded ? "Hide actions" : "Show actions"}
           >
             <MoreHorizontal className="h-2.5 w-2.5" />
           </Button>
-          
+
           {areButtonsExpanded && (
             <>
-              {userGender === 'male' && (
+              {userGender === "male" && (
                 <SendGiftButton
                   senderUserId={currentUserId}
                   recipientUserId={partnerId}
@@ -843,21 +934,31 @@ const MiniChatWindow = ({
                 variant="ghost"
                 size="icon"
                 className="h-5 w-5"
-                onClick={(e) => { e.stopPropagation(); openFullChat(); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openFullChat();
+                }}
                 title="Open full chat"
               >
                 <Maximize2 className="h-2.5 w-2.5" />
               </Button>
             </>
           )}
-          
+
           <Button
             variant="ghost"
             size="icon"
             className="h-5 w-5"
-            onClick={(e) => { e.stopPropagation(); toggleMinimize(); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleMinimize();
+            }}
           >
-            {isMinimized ? <ChevronUp className="h-2.5 w-2.5" /> : <ChevronDown className="h-2.5 w-2.5" />}
+            {isMinimized ? (
+              <ChevronUp className="h-2.5 w-2.5" />
+            ) : (
+              <ChevronDown className="h-2.5 w-2.5" />
+            )}
           </Button>
           <Button
             variant="ghost"
@@ -888,68 +989,86 @@ const MiniChatWindow = ({
               )}
               {messages.map((msg) => {
                 const isOwn = msg.senderId === currentUserId;
-                const senderName = isOwn ? (currentUserName || "You") : partnerName;
+                const senderName = isOwn ? currentUserName || "You" : partnerName;
                 const senderLang = isOwn ? currentUserLanguage : partnerLanguage;
                 return (
                   <div
                     key={msg.id}
-                    className={cn(
-                      "flex flex-col",
-                      isOwn ? "items-end" : "items-start"
-                    )}
+                    className={cn("flex flex-col", isOwn ? "items-end" : "items-start")}
                   >
                     {/* Sender/Receiver name with distinct colors */}
-                    <span className={cn(
-                      "text-[9px] font-semibold mb-0.5 px-1",
-                      isOwn
-                        ? "text-primary"
-                        : "text-emerald-600 dark:text-emerald-400"
-                    )}>
+                    <span
+                      className={cn(
+                        "text-[9px] font-semibold mb-0.5 px-1",
+                        isOwn ? "text-primary" : "text-emerald-600 dark:text-emerald-400",
+                      )}
+                    >
                       {senderName}
-                      {senderLang && <span className="text-muted-foreground/60 font-normal"> • {senderLang}</span>}
+                      {senderLang && (
+                        <span className="text-muted-foreground/60 font-normal">
+                          {" "}
+                          • {senderLang}
+                        </span>
+                      )}
                     </span>
                     <div
                       className={cn(
                         "max-w-[85%] px-2 py-1 rounded-xl text-[11px] shadow-sm border",
                         isOwn
                           ? "bg-primary/5 border-primary/20 rounded-br-sm"
-                          : "bg-emerald-50 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-800 rounded-bl-sm"
+                          : "bg-emerald-50 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-800 rounded-bl-sm",
                       )}
                     >
                       {msg.isTranslating ? (
                         <>
-                          <p className={cn(
-                            "unicode-text",
-                            isOwn
-                              ? "text-primary dark:text-primary"
-                              : "text-emerald-800 dark:text-emerald-200"
-                          )} dir="auto">
+                          <p
+                            className={cn(
+                              "unicode-text",
+                              isOwn
+                                ? "text-primary dark:text-primary"
+                                : "text-emerald-800 dark:text-emerald-200",
+                            )}
+                            dir="auto"
+                          >
                             {msg.message}
                           </p>
                           <div className="flex items-center gap-1 py-0.5">
                             <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
-                            <span className="text-muted-foreground text-[10px]">Translating...</span>
+                            <span className="text-muted-foreground text-[10px]">
+                              Translating...
+                            </span>
                           </div>
                         </>
                       ) : (
                         <>
-                          <p className={cn(
-                            "unicode-text",
-                            isOwn
-                              ? "text-primary dark:text-primary"
-                              : "text-emerald-800 dark:text-emerald-200"
-                          )} dir="auto">
+                          <p
+                            className={cn(
+                              "unicode-text",
+                              isOwn
+                                ? "text-primary dark:text-primary"
+                                : "text-emerald-800 dark:text-emerald-200",
+                            )}
+                            dir="auto"
+                          >
                             {msg.message}
                           </p>
-                          {!isOwn && msg.translatedMessage && msg.translatedMessage.toLowerCase() !== msg.message.toLowerCase() && (
-                            <p className="text-[9px] text-muted-foreground/60 italic mt-0.5" dir="auto">
-                              {msg.translatedMessage}
-                            </p>
-                          )}
+                          {!isOwn &&
+                            msg.translatedMessage &&
+                            msg.translatedMessage.toLowerCase() !== msg.message.toLowerCase() && (
+                              <p
+                                className="text-[9px] text-muted-foreground/60 italic mt-0.5"
+                                dir="auto"
+                              >
+                                {msg.translatedMessage}
+                              </p>
+                            )}
                         </>
                       )}
                       <span className="text-[8px] text-muted-foreground/50 block mt-0.5">
-                        {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(msg.createdAt).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                       </span>
                     </div>
                   </div>

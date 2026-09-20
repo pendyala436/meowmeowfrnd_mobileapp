@@ -17,8 +17,8 @@ const ProgressIndicator = ({ currentStep, totalSteps, className }: ProgressIndic
             i < currentStep
               ? "w-8 gradient-primary"
               : i === currentStep
-              ? "w-8 bg-primary/40"
-              : "w-2 bg-muted"
+                ? "w-8 bg-primary/40"
+                : "w-2 bg-muted",
           )}
         />
       ))}

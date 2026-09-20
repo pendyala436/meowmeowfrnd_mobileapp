@@ -36,33 +36,33 @@ export const AdminMessagesWidget = ({ currentUserId }: AdminMessagesWidgetProps)
 
       // Fetch from admin_broadcast_messages (broadcast + direct)
       const { data: broadcastMsgs } = await supabase
-        .from('admin_broadcast_messages')
-        .select('*')
+        .from("admin_broadcast_messages")
+        .select("*")
         .or(`is_broadcast.eq.true,recipient_id.eq.${currentUserId}`)
-        .gte('created_at', sevenDaysAgo.toISOString())
-        .order('created_at', { ascending: false })
+        .gte("created_at", sevenDaysAgo.toISOString())
+        .order("created_at", { ascending: false })
         .limit(50);
 
       // Also fetch from admin_user_messages (admin-sent messages to this user or broadcasts)
       const { data: adminUserMsgs } = await supabase
-        .from('admin_user_messages')
-        .select('id, message, sender_role, target_group, target_user_id, is_read, created_at')
-        .eq('sender_role', 'admin')
+        .from("admin_user_messages")
+        .select("id, message, sender_role, target_group, target_user_id, is_read, created_at")
+        .eq("sender_role", "admin")
         .or(`target_user_id.eq.${currentUserId},target_user_id.is.null`)
-        .gte('created_at', sevenDaysAgo.toISOString())
-        .order('created_at', { ascending: false })
+        .gte("created_at", sevenDaysAgo.toISOString())
+        .order("created_at", { ascending: false })
         .limit(50);
 
       // Merge both sources, dedup by id
       const allMessages: AdminMessage[] = [];
       const seenIds = new Set<string>();
 
-      for (const msg of (broadcastMsgs || [])) {
+      for (const msg of broadcastMsgs || []) {
         if (!seenIds.has(msg.id)) {
           seenIds.add(msg.id);
           allMessages.push({
             id: msg.id,
-            subject: msg.subject || 'Admin Message',
+            subject: msg.subject || "Admin Message",
             message: msg.message,
             is_broadcast: msg.is_broadcast,
             is_read: msg.is_read,
@@ -72,27 +72,33 @@ export const AdminMessagesWidget = ({ currentUserId }: AdminMessagesWidgetProps)
         }
       }
 
-      for (const msg of (adminUserMsgs || [])) {
+      for (const msg of adminUserMsgs || []) {
         if (!seenIds.has(msg.id)) {
           seenIds.add(msg.id);
           allMessages.push({
             id: msg.id,
-            subject: msg.target_user_id ? 'Message from Admin' : `Broadcast to ${msg.target_group || 'all'}`,
+            subject: msg.target_user_id
+              ? "Message from Admin"
+              : `Broadcast to ${msg.target_group || "all"}`,
             message: msg.message,
             is_broadcast: !msg.target_user_id,
             is_read: msg.is_read,
             created_at: msg.created_at,
-            admin_id: '',
+            admin_id: "",
           });
         }
       }
 
       // Sort by date desc
-      allMessages.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      allMessages.sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      );
       setMessages(allMessages.slice(0, 50));
     } catch (err) {
-      console.error('Error loading admin messages:', err);
-      toast.error('Messages unavailable', { description: 'Unable to load admin messages. Please refresh.' });
+      console.error("Error loading admin messages:", err);
+      toast.error("Messages unavailable", {
+        description: "Unable to load admin messages. Please refresh.",
+      });
     } finally {
       setLoading(false);
     }
@@ -105,14 +111,12 @@ export const AdminMessagesWidget = ({ currentUserId }: AdminMessagesWidgetProps)
     const channel = supabase
       .channel(`admin-messages-${currentUserId}`)
       .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'admin_broadcast_messages' },
-        () => loadMessages()
+        "postgres_changes",
+        { event: "*", schema: "public", table: "admin_broadcast_messages" },
+        () => loadMessages(),
       )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'admin_user_messages' },
-        () => loadMessages()
+      .on("postgres_changes", { event: "*", schema: "public", table: "admin_user_messages" }, () =>
+        loadMessages(),
       )
       .subscribe();
 
@@ -125,16 +129,14 @@ export const AdminMessagesWidget = ({ currentUserId }: AdminMessagesWidgetProps)
   const markAsRead = async (messageId: string) => {
     // Try both tables since messages come from either source
     await Promise.all([
-      supabase.from('admin_broadcast_messages').update({ is_read: true }).eq('id', messageId),
-      supabase.from('admin_user_messages').update({ is_read: true }).eq('id', messageId),
+      supabase.from("admin_broadcast_messages").update({ is_read: true }).eq("id", messageId),
+      supabase.from("admin_user_messages").update({ is_read: true }).eq("id", messageId),
     ]);
 
-    setMessages(prev =>
-      prev.map(m => (m.id === messageId ? { ...m, is_read: true } : m))
-    );
+    setMessages((prev) => prev.map((m) => (m.id === messageId ? { ...m, is_read: true } : m)));
   };
 
-  const unreadCount = messages.filter(m => !m.is_read).length;
+  const unreadCount = messages.filter((m) => !m.is_read).length;
 
   if (loading) {
     return (
@@ -156,7 +158,10 @@ export const AdminMessagesWidget = ({ currentUserId }: AdminMessagesWidgetProps)
             <Megaphone className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary shrink-0" />
             <span className="truncate">Admin Messages</span>
             {unreadCount > 0 && (
-              <Badge variant="destructive" className="text-[9px] sm:text-[10px] px-1 py-0 h-3.5 sm:h-4 min-w-[14px]">
+              <Badge
+                variant="destructive"
+                className="text-[9px] sm:text-[10px] px-1 py-0 h-3.5 sm:h-4 min-w-[14px]"
+              >
                 {unreadCount}
               </Badge>
             )}
@@ -187,9 +192,7 @@ export const AdminMessagesWidget = ({ currentUserId }: AdminMessagesWidgetProps)
                     key={msg.id}
                     className={cn(
                       "p-2 sm:p-2.5 rounded-lg border transition-all cursor-pointer",
-                      msg.is_read
-                        ? "border-border bg-muted/30"
-                        : "border-primary/40 bg-primary/5"
+                      msg.is_read ? "border-border bg-muted/30" : "border-primary/40 bg-primary/5",
                     )}
                     onClick={() => {
                       if (!msg.is_read) markAsRead(msg.id);
@@ -197,10 +200,12 @@ export const AdminMessagesWidget = ({ currentUserId }: AdminMessagesWidgetProps)
                     }}
                   >
                     <div className="flex items-start gap-1.5 sm:gap-2">
-                      <div className={cn(
-                        "mt-0.5 shrink-0 rounded-full p-0.5 sm:p-1",
-                        msg.is_broadcast ? "bg-primary/10" : "bg-accent/10"
-                      )}>
+                      <div
+                        className={cn(
+                          "mt-0.5 shrink-0 rounded-full p-0.5 sm:p-1",
+                          msg.is_broadcast ? "bg-primary/10" : "bg-accent/10",
+                        )}
+                      >
                         {msg.is_broadcast ? (
                           <Megaphone className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-primary" />
                         ) : (
@@ -209,10 +214,12 @@ export const AdminMessagesWidget = ({ currentUserId }: AdminMessagesWidgetProps)
                       </div>
                       <div className="flex-1 min-w-0 overflow-hidden">
                         <div className="flex items-center justify-between gap-1.5">
-                          <p className={cn(
-                            "text-[11px] sm:text-xs font-medium truncate",
-                            msg.is_read ? "text-foreground" : "text-foreground font-semibold"
-                          )}>
+                          <p
+                            className={cn(
+                              "text-[11px] sm:text-xs font-medium truncate",
+                              msg.is_read ? "text-foreground" : "text-foreground font-semibold",
+                            )}
+                          >
                             {msg.subject}
                           </p>
                           {!msg.is_read && (

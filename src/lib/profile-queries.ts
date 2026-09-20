@@ -1,9 +1,9 @@
 /**
  * Secure profile query helpers
- * 
+ *
  * Uses get_public_profiles RPC to fetch other users' profiles
  * without exposing sensitive fields (email, phone, coordinates, DOB).
- * 
+ *
  * Self-queries still use direct profiles table access (owner policy).
  */
 import { supabase } from "@/integrations/supabase/client";
@@ -55,16 +55,16 @@ export interface PublicProfile {
  */
 export async function fetchPublicProfiles(userIds: string[]): Promise<PublicProfile[]> {
   if (!userIds.length) return [];
-  
-  const { data, error } = await supabase.rpc('get_public_profiles', {
+
+  const { data, error } = await supabase.rpc("get_public_profiles", {
     user_ids: userIds,
   });
-  
+
   if (error) {
-    console.error('Error fetching public profiles:', error);
+    console.error("Error fetching public profiles:", error);
     return [];
   }
-  
+
   return (data || []) as PublicProfile[];
 }
 

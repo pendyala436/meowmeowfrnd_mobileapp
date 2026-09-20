@@ -8,18 +8,13 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import MeowLogo from "@/components/MeowLogo";
 import ProgressIndicator from "@/components/ProgressIndicator";
 import PhoneInputWithCode from "@/components/PhoneInputWithCode";
 import AuroraBackground from "@/components/AuroraBackground";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-
 
 type Gender = "male" | "female" | "non-binary" | "prefer-not-to-say" | "";
 
@@ -42,7 +37,7 @@ const BasicInfoScreen = () => {
   const [dob, setDob] = useState<Date | undefined>(undefined);
   const [gender, setGender] = useState<Gender>("");
   const [calendarOpen, setCalendarOpen] = useState(false);
-  
+
   // Validation states
   const [errors, setErrors] = useState<{
     email?: string;
@@ -80,7 +75,7 @@ const BasicInfoScreen = () => {
   const checkAvailability = useCallback(
     async (
       checkEmail: string | null,
-      checkPhone: string | null
+      checkPhone: string | null,
     ): Promise<{ emailExists: boolean; phoneExists: boolean }> => {
       try {
         const { data, error } = await supabase.rpc("check_signup_availability", {
@@ -98,7 +93,7 @@ const BasicInfoScreen = () => {
         return { emailExists: false, phoneExists: false };
       }
     },
-    []
+    [],
   );
 
   // Check email uniqueness (format + backend)
@@ -115,7 +110,7 @@ const BasicInfoScreen = () => {
         setCheckingEmail(false);
       }
     },
-    [checkAvailability]
+    [checkAvailability],
   );
 
   // Check phone uniqueness (format + backend across all profile tables)
@@ -126,13 +121,14 @@ const BasicInfoScreen = () => {
       setCheckingPhone(true);
       try {
         const { phoneExists } = await checkAvailability(null, value.trim());
-        if (phoneExists) return "Mobile number already exists. Please try a different mobile number.";
+        if (phoneExists)
+          return "Mobile number already exists. Please try a different mobile number.";
         return undefined;
       } finally {
         setCheckingPhone(false);
       }
     },
-    [checkAvailability]
+    [checkAvailability],
   );
 
   // Debounced live (AJAX-style) email uniqueness check while typing
@@ -179,7 +175,6 @@ const BasicInfoScreen = () => {
     return () => clearTimeout(handle);
   }, [phone, checkPhoneUniqueness, touched.phone]);
 
-
   // Validate full name
   const validateFullName = (value: string) => {
     if (!value.trim()) return "Full name is required";
@@ -215,7 +210,7 @@ const BasicInfoScreen = () => {
   // Handle field blur
   const handleBlur = async (field: "email" | "fullName" | "dob" | "gender" | "phone") => {
     setTouched((prev) => ({ ...prev, [field]: true }));
-    
+
     let error: string | undefined;
     if (field === "email") {
       error = await checkEmailUniqueness(email);
@@ -317,7 +312,7 @@ const BasicInfoScreen = () => {
       title: "Looking great! 🌟",
       description: "Your basic info has been saved.",
     });
-    
+
     // Store data for next screens
     sessionStorage.setItem("userEmail", email);
     sessionStorage.setItem("userGender", gender);
@@ -326,7 +321,7 @@ const BasicInfoScreen = () => {
     if (dob) {
       sessionStorage.setItem("userDob", dob.toISOString());
     }
-    
+
     // Navigate to personal details screen
     navigate("/personal-details");
   };
@@ -344,7 +339,7 @@ const BasicInfoScreen = () => {
   return (
     <div className="min-h-screen flex flex-col relative bg-background text-foreground">
       <AuroraBackground />
-      
+
       {/* Header */}
       <header className="px-6 pt-8 pb-4 relative z-10">
         <div className="flex items-center gap-4 mb-4">
@@ -369,261 +364,260 @@ const BasicInfoScreen = () => {
           <div className="text-center mb-8 animate-fade-in">
             <MeowLogo size="sm" className="mx-auto mb-4" />
             <h1 className="font-display text-2xl font-bold text-foreground mb-2 drop-shadow-sm">
-              {t('tellUsAboutYou', 'Tell us about you')}
+              {t("tellUsAboutYou", "Tell us about you")}
             </h1>
             <p className="text-muted-foreground text-sm max-w-xs mx-auto">
-              {t('helpUsPersonalize', 'Help us personalize your experience')}
+              {t("helpUsPersonalize", "Help us personalize your experience")}
             </p>
           </div>
 
           {/* Form Card */}
           <div className="bg-card/70 backdrop-blur-xl rounded-3xl p-6 border border-primary/20 shadow-[0_0_40px_hsl(var(--primary)/0.1)]">
             <div className="space-y-6">
-            {/* Gender Selection */}
-            <div 
-              className={cn(
-                "space-y-3 transition-all",
-                shakeField === "gender" && "animate-shake"
-              )}
-            >
-              <label className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                <Heart className="w-4 h-4 text-primary" />
-                {t('gender', 'Gender')}
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                {genderOptions.map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => {
-                      setGender(option.value as Gender);
-                      setTouched((prev) => ({ ...prev, gender: true }));
-                      setErrors((prev) => ({ ...prev, gender: undefined }));
-                    }}
-                    className={cn(
-                      "flex items-center gap-2 p-3 rounded-xl border-2 transition-all",
-                      "hover:border-primary/50 hover:bg-primary/5",
-                      "focus:outline-none focus:ring-2 focus:ring-primary/20",
-                      gender === option.value
-                        ? "border-primary bg-primary/10 shadow-soft"
-                        : "border-input bg-background/50",
-                      errors.gender && touched.gender && !gender
-                        ? "border-destructive/50"
-                        : ""
-                    )}
-                  >
-                    <span className="text-xl">{option.emoji}</span>
-                    <span className={cn(
-                      "text-sm font-medium",
-                      gender === option.value ? "text-primary" : "text-foreground"
-                    )}>
-                      {option.label}
-                    </span>
-                  </button>
-                ))}
-              </div>
-              {errors.gender && touched.gender && (
-                <p className="text-xs text-destructive flex items-center gap-1 animate-fade-in">
-                  <span className="inline-block w-1 h-1 rounded-full bg-destructive" />
-                  {errors.gender}
-                </p>
-              )}
-            </div>
-            
-            {/* Email */}
-            <div 
-              className={cn(
-                "space-y-2 transition-all",
-                shakeField === "email" && "animate-shake"
-              )}
-            >
-              <label className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                <Mail className="w-4 h-4 text-primary" />
-                {t('email', 'Email')}
-              </label>
-              <Input
-                type="email"
-                placeholder={t('enterYourEmail', 'Enter your email')}
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  if (touched.email) {
-                    const error = validateEmail(e.target.value);
-                    setErrors((prev) => ({ ...prev, email: error }));
-                  }
-                }}
-                onBlur={() => handleBlur("email")}
+              {/* Gender Selection */}
+              <div
                 className={cn(
-                  "h-12 rounded-xl border-2 transition-all focus:ring-2 focus:ring-primary/20",
-                  errors.email && touched.email 
-                    ? "border-destructive focus:border-destructive" 
-                    : "border-input focus:border-primary"
+                  "space-y-3 transition-all",
+                  shakeField === "gender" && "animate-shake",
                 )}
-              />
-              {errors.email && touched.email && (
-                <p className="text-xs text-destructive flex items-center gap-1 animate-fade-in">
-                  <span className="inline-block w-1 h-1 rounded-full bg-destructive" />
-                  {errors.email}
-                </p>
-              )}
-            </div>
-
-            {/* Phone Number with Country Code */}
-            <div 
-              className={cn(
-                "space-y-2 transition-all",
-                shakeField === "phone" && "animate-shake"
-              )}
-            >
-              <label className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                <Phone className="w-4 h-4 text-primary" />
-                {t('phoneNumber', 'Phone Number')}
-              </label>
-              <PhoneInputWithCode
-                value={phone}
-                onChange={(value) => {
-                  setPhone(value);
-                  if (touched.phone) {
-                    const error = validatePhone(value);
-                    setErrors((prev) => ({ ...prev, phone: error }));
-                  }
-                }}
-                onBlur={() => handleBlur("phone")}
-                error={!!(errors.phone && touched.phone)}
-                placeholder="Enter phone number"
-                defaultCountryCode="IN"
-              />
-              {errors.phone && touched.phone && (
-                <p className="text-xs text-destructive flex items-center gap-1 animate-fade-in">
-                  <span className="inline-block w-1 h-1 rounded-full bg-destructive" />
-                  {errors.phone}
-                </p>
-              )}
-            </div>
-
-            {/* Full Name */}
-            <div 
-              className={cn(
-                "space-y-2 transition-all",
-                shakeField === "fullName" && "animate-shake"
-              )}
-            >
-              <label className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                <User className="w-4 h-4 text-primary" />
-                {t('fullName', 'Full Name')}
-              </label>
-              <Input
-                type="text"
-                placeholder={t('enterYourFullName', 'Enter your full name')}
-                value={fullName}
-                onChange={(e) => {
-                  setFullName(e.target.value);
-                  if (touched.fullName) {
-                    const error = validateFullName(e.target.value);
-                    setErrors((prev) => ({ ...prev, fullName: error }));
-                  }
-                }}
-                onBlur={() => handleBlur("fullName")}
-                className={cn(
-                  "h-12 rounded-xl border-2 transition-all focus:ring-2 focus:ring-primary/20",
-                  errors.fullName && touched.fullName 
-                    ? "border-destructive focus:border-destructive" 
-                    : "border-input focus:border-primary"
-                )}
-              />
-              {errors.fullName && touched.fullName && (
-                <p className="text-xs text-destructive flex items-center gap-1 animate-fade-in">
-                  <span className="inline-block w-1 h-1 rounded-full bg-destructive" />
-                  {errors.fullName}
-                </p>
-              )}
-            </div>
-
-            {/* Date of Birth */}
-            <div 
-              className={cn(
-                "space-y-2 transition-all",
-                shakeField === "dob" && "animate-shake"
-              )}
-            >
-              <label className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                <Calendar className="w-4 h-4 text-primary" />
-                {t('dateOfBirth', 'Date of Birth')}
-                {getAgeDisplay() && (
-                  <span className="ml-auto text-xs font-normal text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                    {getAgeDisplay()} {t('yearsOld', 'years old')}
-                  </span>
-                )}
-              </label>
-              <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full h-12 rounded-xl border-2 justify-start text-left font-normal transition-all",
-                      !dob && "text-muted-foreground",
-                      errors.dob && touched.dob 
-                        ? "border-destructive focus:border-destructive" 
-                        : "border-input focus:border-primary hover:border-primary/50"
-                    )}
-                    onClick={() => setCalendarOpen(true)}
-                  >
-                    <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                    {dob ? format(dob, "MMMM d, yyyy") : t('selectYourBirthday', 'Select your birthday')}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 z-50" align="center">
-                  <CalendarComponent
-                    mode="single"
-                    selected={dob}
-                    onSelect={(date) => {
-                      setDob(date);
-                      setCalendarOpen(false);
-                      setTouched((prev) => ({ ...prev, dob: true }));
-                      const error = validateDob(date);
-                      setErrors((prev) => ({ ...prev, dob: error }));
-                      if (error) triggerShake("dob");
-                    }}
-                    defaultMonth={defaultMonth}
-                    disabled={(date) =>
-                      date > new Date() || date < new Date("1900-01-01")
-                    }
-                    initialFocus
-                    className="p-3 pointer-events-auto bg-popover rounded-xl"
-                    captionLayout="dropdown-buttons"
-                    fromYear={1920}
-                    toYear={new Date().getFullYear() - 18}
-                  />
-                </PopoverContent>
-              </Popover>
-              {errors.dob && touched.dob && (
-                <p className="text-xs text-destructive flex items-center gap-1 animate-fade-in">
-                  <span className="inline-block w-1 h-1 rounded-full bg-destructive" />
-                  {errors.dob}
-                </p>
-              )}
-            </div>
-
-            {/* CTA Button inside Form Card */}
-            <div className="mt-6">
-              <Button
-                variant="aurora"
-                size="xl"
-                className="w-full group"
-                onClick={handleNext}
-                disabled={!isComplete || isSubmitting || checkingEmail || checkingPhone}
               >
-                {isSubmitting ? "Checking..." : "Continue"}
-                {!isSubmitting && <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />}
-              </Button>
-              
-              <p className="text-center text-xs text-muted-foreground mt-4">
-                Your information is securely stored and never shared
-              </p>
+                <label className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <Heart className="w-4 h-4 text-primary" />
+                  {t("gender", "Gender")}
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  {genderOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => {
+                        setGender(option.value as Gender);
+                        setTouched((prev) => ({ ...prev, gender: true }));
+                        setErrors((prev) => ({ ...prev, gender: undefined }));
+                      }}
+                      className={cn(
+                        "flex items-center gap-2 p-3 rounded-xl border-2 transition-all",
+                        "hover:border-primary/50 hover:bg-primary/5",
+                        "focus:outline-none focus:ring-2 focus:ring-primary/20",
+                        gender === option.value
+                          ? "border-primary bg-primary/10 shadow-soft"
+                          : "border-input bg-background/50",
+                        errors.gender && touched.gender && !gender ? "border-destructive/50" : "",
+                      )}
+                    >
+                      <span className="text-xl">{option.emoji}</span>
+                      <span
+                        className={cn(
+                          "text-sm font-medium",
+                          gender === option.value ? "text-primary" : "text-foreground",
+                        )}
+                      >
+                        {option.label}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+                {errors.gender && touched.gender && (
+                  <p className="text-xs text-destructive flex items-center gap-1 animate-fade-in">
+                    <span className="inline-block w-1 h-1 rounded-full bg-destructive" />
+                    {errors.gender}
+                  </p>
+                )}
+              </div>
+
+              {/* Email */}
+              <div
+                className={cn(
+                  "space-y-2 transition-all",
+                  shakeField === "email" && "animate-shake",
+                )}
+              >
+                <label className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <Mail className="w-4 h-4 text-primary" />
+                  {t("email", "Email")}
+                </label>
+                <Input
+                  type="email"
+                  placeholder={t("enterYourEmail", "Enter your email")}
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (touched.email) {
+                      const error = validateEmail(e.target.value);
+                      setErrors((prev) => ({ ...prev, email: error }));
+                    }
+                  }}
+                  onBlur={() => handleBlur("email")}
+                  className={cn(
+                    "h-12 rounded-xl border-2 transition-all focus:ring-2 focus:ring-primary/20",
+                    errors.email && touched.email
+                      ? "border-destructive focus:border-destructive"
+                      : "border-input focus:border-primary",
+                  )}
+                />
+                {errors.email && touched.email && (
+                  <p className="text-xs text-destructive flex items-center gap-1 animate-fade-in">
+                    <span className="inline-block w-1 h-1 rounded-full bg-destructive" />
+                    {errors.email}
+                  </p>
+                )}
+              </div>
+
+              {/* Phone Number with Country Code */}
+              <div
+                className={cn(
+                  "space-y-2 transition-all",
+                  shakeField === "phone" && "animate-shake",
+                )}
+              >
+                <label className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <Phone className="w-4 h-4 text-primary" />
+                  {t("phoneNumber", "Phone Number")}
+                </label>
+                <PhoneInputWithCode
+                  value={phone}
+                  onChange={(value) => {
+                    setPhone(value);
+                    if (touched.phone) {
+                      const error = validatePhone(value);
+                      setErrors((prev) => ({ ...prev, phone: error }));
+                    }
+                  }}
+                  onBlur={() => handleBlur("phone")}
+                  error={!!(errors.phone && touched.phone)}
+                  placeholder="Enter phone number"
+                  defaultCountryCode="IN"
+                />
+                {errors.phone && touched.phone && (
+                  <p className="text-xs text-destructive flex items-center gap-1 animate-fade-in">
+                    <span className="inline-block w-1 h-1 rounded-full bg-destructive" />
+                    {errors.phone}
+                  </p>
+                )}
+              </div>
+
+              {/* Full Name */}
+              <div
+                className={cn(
+                  "space-y-2 transition-all",
+                  shakeField === "fullName" && "animate-shake",
+                )}
+              >
+                <label className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <User className="w-4 h-4 text-primary" />
+                  {t("fullName", "Full Name")}
+                </label>
+                <Input
+                  type="text"
+                  placeholder={t("enterYourFullName", "Enter your full name")}
+                  value={fullName}
+                  onChange={(e) => {
+                    setFullName(e.target.value);
+                    if (touched.fullName) {
+                      const error = validateFullName(e.target.value);
+                      setErrors((prev) => ({ ...prev, fullName: error }));
+                    }
+                  }}
+                  onBlur={() => handleBlur("fullName")}
+                  className={cn(
+                    "h-12 rounded-xl border-2 transition-all focus:ring-2 focus:ring-primary/20",
+                    errors.fullName && touched.fullName
+                      ? "border-destructive focus:border-destructive"
+                      : "border-input focus:border-primary",
+                  )}
+                />
+                {errors.fullName && touched.fullName && (
+                  <p className="text-xs text-destructive flex items-center gap-1 animate-fade-in">
+                    <span className="inline-block w-1 h-1 rounded-full bg-destructive" />
+                    {errors.fullName}
+                  </p>
+                )}
+              </div>
+
+              {/* Date of Birth */}
+              <div
+                className={cn("space-y-2 transition-all", shakeField === "dob" && "animate-shake")}
+              >
+                <label className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <Calendar className="w-4 h-4 text-primary" />
+                  {t("dateOfBirth", "Date of Birth")}
+                  {getAgeDisplay() && (
+                    <span className="ml-auto text-xs font-normal text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                      {getAgeDisplay()} {t("yearsOld", "years old")}
+                    </span>
+                  )}
+                </label>
+                <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full h-12 rounded-xl border-2 justify-start text-left font-normal transition-all",
+                        !dob && "text-muted-foreground",
+                        errors.dob && touched.dob
+                          ? "border-destructive focus:border-destructive"
+                          : "border-input focus:border-primary hover:border-primary/50",
+                      )}
+                      onClick={() => setCalendarOpen(true)}
+                    >
+                      <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                      {dob
+                        ? format(dob, "MMMM d, yyyy")
+                        : t("selectYourBirthday", "Select your birthday")}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 z-50" align="center">
+                    <CalendarComponent
+                      mode="single"
+                      selected={dob}
+                      onSelect={(date) => {
+                        setDob(date);
+                        setCalendarOpen(false);
+                        setTouched((prev) => ({ ...prev, dob: true }));
+                        const error = validateDob(date);
+                        setErrors((prev) => ({ ...prev, dob: error }));
+                        if (error) triggerShake("dob");
+                      }}
+                      defaultMonth={defaultMonth}
+                      disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                      initialFocus
+                      className="p-3 pointer-events-auto bg-popover rounded-xl"
+                      captionLayout="dropdown-buttons"
+                      fromYear={1920}
+                      toYear={new Date().getFullYear() - 18}
+                    />
+                  </PopoverContent>
+                </Popover>
+                {errors.dob && touched.dob && (
+                  <p className="text-xs text-destructive flex items-center gap-1 animate-fade-in">
+                    <span className="inline-block w-1 h-1 rounded-full bg-destructive" />
+                    {errors.dob}
+                  </p>
+                )}
+              </div>
+
+              {/* CTA Button inside Form Card */}
+              <div className="mt-6">
+                <Button
+                  variant="aurora"
+                  size="xl"
+                  className="w-full group"
+                  onClick={handleNext}
+                  disabled={!isComplete || isSubmitting || checkingEmail || checkingPhone}
+                >
+                  {isSubmitting ? "Checking..." : "Continue"}
+                  {!isSubmitting && (
+                    <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+                  )}
+                </Button>
+
+                <p className="text-center text-xs text-muted-foreground mt-4">
+                  Your information is securely stored and never shared
+                </p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
       </main>
 
       {/* Decorative Elements */}

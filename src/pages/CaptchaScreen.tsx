@@ -13,7 +13,6 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { markCaptchaVerified } from "@/components/ProtectedRoute";
 
-
 type Op = "+" | "-";
 
 export const generateChallenge = () => {
@@ -71,7 +70,9 @@ const CaptchaScreen = () => {
       const dest = sessionStorage.getItem("postCaptchaRedirect") || "/dashboard";
       sessionStorage.removeItem("postCaptchaRedirect");
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         const uid = session?.user?.id;
         if (uid) {
           markCaptchaVerified(uid);
@@ -83,7 +84,6 @@ const CaptchaScreen = () => {
       }
       toast({ title: "Verified", description: "Redirecting to your dashboard..." });
       navigate(dest, { replace: true });
-
     } else {
       const next = attempts + 1;
       setAttempts(next);
@@ -109,14 +109,22 @@ const CaptchaScreen = () => {
 
   return (
     <div className="min-h-screen flex flex-col relative bg-background overflow-y-auto">
-      <Suspense fallback={<div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background to-secondary/30" />}>
+      <Suspense
+        fallback={
+          <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background to-secondary/30" />
+        }
+      >
         <AuroraBackground />
       </Suspense>
 
       {/* Header — matches AuthScreen */}
       <header className="px-6 pt-4 pb-2 sm:pt-8 sm:pb-4 relative z-10">
         <div className="text-center">
-          <Suspense fallback={<div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-2 sm:mb-4 bg-primary/20 rounded-full animate-pulse" />}>
+          <Suspense
+            fallback={
+              <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-2 sm:mb-4 bg-primary/20 rounded-full animate-pulse" />
+            }
+          >
             <MeowLogo size="lg" className="mx-auto mb-2 sm:mb-4" />
           </Suspense>
           <h1 className="font-display text-2xl sm:text-4xl font-bold text-primary mb-1 sm:mb-2 drop-shadow-sm">
@@ -176,12 +184,10 @@ const CaptchaScreen = () => {
                 onKeyDown={onKeyDown}
                 className={cn(
                   "h-12 rounded-xl border-2 transition-all bg-background/50 backdrop-blur-sm text-center text-lg tabular-nums",
-                  error ? "border-destructive" : "border-input focus:border-primary"
+                  error ? "border-destructive" : "border-input focus:border-primary",
                 )}
               />
-              {error && (
-                <p className="text-xs text-destructive text-center">{error}</p>
-              )}
+              {error && <p className="text-xs text-destructive text-center">{error}</p>}
               {attempts > 0 && attempts < MAX_ATTEMPTS && !error && (
                 <p className="text-xs text-muted-foreground text-center">
                   {MAX_ATTEMPTS - attempts} attempts remaining

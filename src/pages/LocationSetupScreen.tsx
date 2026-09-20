@@ -25,7 +25,7 @@ const LocationSetupScreen = () => {
   const [isDetecting, setIsDetecting] = useState(false);
   const [locationDetected, setLocationDetected] = useState(false);
   const [pinDropped, setPinDropped] = useState(false);
-  
+
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
   const [country, setCountry] = useState("");
@@ -33,16 +33,18 @@ const LocationSetupScreen = () => {
   const [village, setVillage] = useState("");
   const [manualMode, setManualMode] = useState(false);
 
-  const countryOptions = countries.map(c => ({
+  const countryOptions = countries.map((c) => ({
     value: c.code,
     label: c.name,
-    icon: c.flag
+    icon: c.flag,
   }));
 
-  const stateOptions = country ? getStatesForCountry(country).map(s => ({
-    value: s.code,
-    label: s.name
-  })) : [];
+  const stateOptions = country
+    ? getStatesForCountry(country).map((s) => ({
+        value: s.code,
+        label: s.name,
+      }))
+    : [];
 
   const countryHasStates = country ? hasStates(country) : false;
 
@@ -53,7 +55,11 @@ const LocationSetupScreen = () => {
     setVillage("");
   };
 
-  const reverseGeocode = async (lat: number, lng: number, retries = 2): Promise<{ countryCode: string; stateValue: string; villageValue: string } | null> => {
+  const reverseGeocode = async (
+    lat: number,
+    lng: number,
+    retries = 2,
+  ): Promise<{ countryCode: string; stateValue: string; villageValue: string } | null> => {
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
         // Rate-limit: wait 1.1s before retries to respect Nominatim's 1 req/sec limit
@@ -65,15 +71,15 @@ const LocationSetupScreen = () => {
           `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1&accept-language=en`,
           {
             headers: {
-              'User-Agent': 'MeowMeow-App/1.0'
-            }
-          }
+              "User-Agent": "MeowMeow-App/1.0",
+            },
+          },
         );
 
         if (response.status === 429) {
           console.warn(`Nominatim rate limited (attempt ${attempt + 1}/${retries + 1})`);
           if (attempt < retries) continue;
-          throw new Error('Rate limit exceeded');
+          throw new Error("Rate limit exceeded");
         }
 
         if (!response.ok) throw new Error(`Geocoding failed: ${response.status}`);
@@ -83,14 +89,22 @@ const LocationSetupScreen = () => {
 
         const countryCode = address.country_code?.toUpperCase() || "";
         const stateValue = address.state || address.province || address.region || "";
-        const villageValue = address.village || address.town || address.city ||
-                            address.municipality || address.suburb || address.neighbourhood || "";
+        const villageValue =
+          address.village ||
+          address.town ||
+          address.city ||
+          address.municipality ||
+          address.suburb ||
+          address.neighbourhood ||
+          "";
 
         return { countryCode, stateValue, villageValue };
       } catch (error) {
         if (attempt === retries) {
-          console.error('Reverse geocoding error:', error);
-          toast.error('Location lookup failed', { description: 'Unable to determine your location name. Please enter it manually.' });
+          console.error("Reverse geocoding error:", error);
+          toast.error("Location lookup failed", {
+            description: "Unable to determine your location name. Please enter it manually.",
+          });
           return null;
         }
       }
@@ -110,32 +124,33 @@ const LocationSetupScreen = () => {
     }
 
     setIsDetecting(true);
-    
+
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
-        
+
         setLatitude(lat);
         setLongitude(lng);
-        
+
         // Use OpenStreetMap Nominatim for reverse geocoding
         const geocodeResult = await reverseGeocode(lat, lng);
-        
+
         if (geocodeResult) {
           const { countryCode, stateValue, villageValue } = geocodeResult;
-          
+
           // Auto-fill country if found in our country list
-          const matchedCountry = countries.find(c => c.code === countryCode);
+          const matchedCountry = countries.find((c) => c.code === countryCode);
           if (matchedCountry) {
             setCountry(matchedCountry.code);
-            
+
             // Try to match state
             if (stateValue) {
               const statesForCountry = getStatesForCountry(matchedCountry.code);
               const matchedState = statesForCountry.find(
-                s => s.name.toLowerCase() === stateValue.toLowerCase() ||
-                     s.code.toLowerCase() === stateValue.toLowerCase()
+                (s) =>
+                  s.name.toLowerCase() === stateValue.toLowerCase() ||
+                  s.code.toLowerCase() === stateValue.toLowerCase(),
               );
               if (matchedState) {
                 setState(matchedState.code);
@@ -144,16 +159,16 @@ const LocationSetupScreen = () => {
               }
             }
           }
-          
+
           // Set village/town
           if (villageValue) {
             setVillage(villageValue);
           }
-          
+
           toast({
             title: "Location detected",
-            description: villageValue 
-              ? `Found: ${villageValue}${stateValue ? `, ${stateValue}` : ''}`
+            description: villageValue
+              ? `Found: ${villageValue}${stateValue ? `, ${stateValue}` : ""}`
               : "Location found. Please verify below.",
           });
         } else {
@@ -162,14 +177,14 @@ const LocationSetupScreen = () => {
             description: "Please select your country and state below.",
           });
         }
-        
+
         setLocationDetected(true);
-        
+
         // Trigger pin drop animation
         setTimeout(() => {
           setPinDropped(true);
         }, 500);
-        
+
         setIsDetecting(false);
       },
       (error) => {
@@ -185,8 +200,8 @@ const LocationSetupScreen = () => {
       {
         enableHighAccuracy: true,
         timeout: 10000,
-        maximumAge: 0
-      }
+        maximumAge: 0,
+      },
     );
   }, [toast]);
 
@@ -223,9 +238,11 @@ const LocationSetupScreen = () => {
   return (
     <div className="min-h-screen flex flex-col relative bg-background text-foreground">
       {/* Aurora Background */}
-      <Suspense fallback={
-        <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background to-secondary/30" />
-      }>
+      <Suspense
+        fallback={
+          <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background to-secondary/30" />
+        }
+      >
         <AuroraBackground />
       </Suspense>
 
@@ -254,15 +271,13 @@ const LocationSetupScreen = () => {
               <Globe className="w-8 h-8 text-primary" />
             </div>
             <h1 className="text-2xl font-display font-bold text-foreground">Your Location</h1>
-            <p className="text-muted-foreground">
-              Help us personalize your experience
-            </p>
+            <p className="text-muted-foreground">Help us personalize your experience</p>
           </div>
 
           {/* Map Placeholder */}
-          <div 
+          <div
             className={`relative w-full h-48 rounded-xl overflow-hidden bg-gradient-to-br from-primary/20 via-accent/10 to-secondary/20 border border-border/50 transition-all duration-700 ${
-              locationDetected ? 'scale-100' : 'scale-95 opacity-80'
+              locationDetected ? "scale-100" : "scale-95 opacity-80"
             }`}
           >
             {/* Grid pattern for map effect */}
@@ -270,7 +285,13 @@ const LocationSetupScreen = () => {
               <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
                 <defs>
                   <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
-                    <path d="M 20 0 L 0 0 0 20" fill="none" stroke="currentColor" strokeWidth="0.5" className="text-primary/30" />
+                    <path
+                      d="M 20 0 L 0 0 0 20"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="0.5"
+                      className="text-primary/30"
+                    />
                   </pattern>
                 </defs>
                 <rect width="100%" height="100%" fill="url(#grid)" />
@@ -281,7 +302,10 @@ const LocationSetupScreen = () => {
             {locationDetected && (
               <>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-32 h-32 rounded-full bg-primary/10 animate-ping" style={{ animationDuration: '2s' }} />
+                  <div
+                    className="w-32 h-32 rounded-full bg-primary/10 animate-ping"
+                    style={{ animationDuration: "2s" }}
+                  />
                 </div>
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="w-24 h-24 rounded-full bg-primary/20 animate-pulse" />
@@ -290,20 +314,23 @@ const LocationSetupScreen = () => {
             )}
 
             {/* Location Pin with drop animation */}
-            <div 
+            <div
               className={`absolute inset-0 flex items-center justify-center transition-all duration-500 ${
-                pinDropped 
-                  ? 'translate-y-0 opacity-100' 
-                  : locationDetected 
-                    ? '-translate-y-full opacity-0' 
-                    : 'opacity-50'
+                pinDropped
+                  ? "translate-y-0 opacity-100"
+                  : locationDetected
+                    ? "-translate-y-full opacity-0"
+                    : "opacity-50"
               }`}
             >
-              <div className={`relative ${pinDropped ? 'animate-bounce' : ''}`} style={{ animationIterationCount: 2 }}>
-                <MapPin 
+              <div
+                className={`relative ${pinDropped ? "animate-bounce" : ""}`}
+                style={{ animationIterationCount: 2 }}
+              >
+                <MapPin
                   className={`w-12 h-12 text-primary drop-shadow-lg transition-transform duration-300 ${
-                    pinDropped ? 'scale-110' : 'scale-100'
-                  }`} 
+                    pinDropped ? "scale-110" : "scale-100"
+                  }`}
                   fill="currentColor"
                 />
                 {pinDropped && (
@@ -346,7 +373,7 @@ const LocationSetupScreen = () => {
             <div className="flex items-center gap-3">
               <div className="h-px flex-1 bg-border" />
               <span className="text-xs text-muted-foreground uppercase tracking-wider">
-                {locationDetected ? 'Confirm or edit' : 'Or enter manually'}
+                {locationDetected ? "Confirm or edit" : "Or enter manually"}
               </span>
               <div className="h-px flex-1 bg-border" />
             </div>

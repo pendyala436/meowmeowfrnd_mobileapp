@@ -11,23 +11,30 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { languages } from "@/data/languages";
-import { 
-  ArrowLeft, 
-  Plus, 
-  Pencil, 
-  Trash2, 
-  Search, 
-  Languages, 
+import {
+  ArrowLeft,
+  Plus,
+  Pencil,
+  Trash2,
+  Search,
+  Languages,
   Globe2,
   GripVertical,
   X,
   Check,
   Filter,
-  Home
+  Home,
 } from "lucide-react";
 
 interface LanguageGroup {
@@ -43,7 +50,7 @@ interface LanguageGroup {
 
 const AdminLanguageGroups = () => {
   const navigate = useNavigate();
-  
+
   const { isAdmin, isLoading: adminLoading } = useAdminAccess();
   const [groups, setGroups] = useState<LanguageGroup[]>([]);
   const [loading, setLoading] = useState(true);
@@ -81,7 +88,7 @@ const AdminLanguageGroups = () => {
   // Real-time subscription for language groups
   useRealtimeSubscription({
     table: "language_groups",
-    onUpdate: loadGroups
+    onUpdate: loadGroups,
   });
 
   useEffect(() => {
@@ -116,7 +123,7 @@ const AdminLanguageGroups = () => {
       group.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (group.description?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
       group.languages.some((code) =>
-        getLanguageName(code).toLowerCase().includes(searchTerm.toLowerCase())
+        getLanguageName(code).toLowerCase().includes(searchTerm.toLowerCase()),
       );
     const matchesFilter = filterActive === null || group.is_active === filterActive;
     return matchesSearch && matchesFilter;
@@ -126,10 +133,7 @@ const AdminLanguageGroups = () => {
   // present in saved groups or in the current form (e.g., regional variants
   // like en-US, hi-IN that aren't in the base list).
   const extraCodes = Array.from(
-    new Set([
-      ...groups.flatMap((g) => g.languages),
-      ...formLanguages,
-    ])
+    new Set([...groups.flatMap((g) => g.languages), ...formLanguages]),
   ).filter((code) => !languages.some((l) => l.code === code));
 
   const allLanguages = [
@@ -145,7 +149,7 @@ const AdminLanguageGroups = () => {
     (lang) =>
       lang.name.toLowerCase().includes(languageSearch.toLowerCase()) ||
       lang.nativeName.toLowerCase().includes(languageSearch.toLowerCase()) ||
-      lang.code.toLowerCase().includes(languageSearch.toLowerCase())
+      lang.code.toLowerCase().includes(languageSearch.toLowerCase()),
   );
 
   const openCreateDialog = () => {
@@ -172,7 +176,7 @@ const AdminLanguageGroups = () => {
 
   const toggleLanguage = (code: string) => {
     setFormLanguages((prev) =>
-      prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]
+      prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code],
     );
   };
 
@@ -227,10 +231,7 @@ const AdminLanguageGroups = () => {
     if (!confirm(`Delete "${group.name}"? This action cannot be undone.`)) return;
 
     try {
-      const { error } = await supabase
-        .from("language_groups")
-        .delete()
-        .eq("id", group.id);
+      const { error } = await supabase.from("language_groups").delete().eq("id", group.id);
 
       if (error) throw error;
       toast.success("Success", { description: "Language group deleted" });
@@ -266,9 +267,11 @@ const AdminLanguageGroups = () => {
 
   if (loading) {
     return (
-      <AdminNav><div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
-      </div></AdminNav>
+      <AdminNav>
+        <div className="flex items-center justify-center py-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+        </div>
+      </AdminNav>
     );
   }
 
@@ -392,9 +395,7 @@ const AdminLanguageGroups = () => {
                           )}
                         </CardTitle>
                         {group.description && (
-                          <CardDescription className="mt-1">
-                            {group.description}
-                          </CardDescription>
+                          <CardDescription className="mt-1">{group.description}</CardDescription>
                         )}
                       </div>
                     </div>
@@ -403,11 +404,7 @@ const AdminLanguageGroups = () => {
                         checked={group.is_active}
                         onCheckedChange={() => toggleGroupActive(group)}
                       />
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => openEditDialog(group)}
-                      >
+                      <Button variant="ghost" size="icon" onClick={() => openEditDialog(group)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
                       <Button
@@ -494,18 +491,12 @@ const AdminLanguageGroups = () => {
             </div>
 
             <div className="flex items-center gap-2">
-              <Switch
-                id="active"
-                checked={formIsActive}
-                onCheckedChange={setFormIsActive}
-              />
+              <Switch id="active" checked={formIsActive} onCheckedChange={setFormIsActive} />
               <Label htmlFor="active">Active (visible for matching)</Label>
             </div>
 
             <div className="space-y-2">
-              <Label>
-                Languages * ({formLanguages.length} selected)
-              </Label>
+              <Label>Languages * ({formLanguages.length} selected)</Label>
 
               {/* Selected Languages */}
               {formLanguages.length > 0 && (
@@ -538,28 +529,30 @@ const AdminLanguageGroups = () => {
               {/* Available Languages */}
               <ScrollArea className="h-48 border rounded-lg">
                 <div className="p-2 grid grid-cols-2 gap-1">
-                  {(languageSearch ? filteredLanguages : filteredLanguages.slice(0, 100)).map((lang) => (
-                    <button
-                      key={lang.code}
-                      type="button"
-                      onClick={() => toggleLanguage(lang.code)}
-                      className={`flex items-center gap-2 p-2 rounded text-left text-sm transition-colors ${
-                        formLanguages.includes(lang.code)
-                          ? "bg-primary/10 text-primary"
-                          : "hover:bg-muted"
-                      }`}
-                    >
-                      {formLanguages.includes(lang.code) ? (
-                        <Check className="h-4 w-4 flex-shrink-0" />
-                      ) : (
-                        <div className="h-4 w-4 flex-shrink-0" />
-                      )}
-                      <span className="truncate">{lang.name}</span>
-                      <span className="text-xs text-muted-foreground truncate">
-                        {lang.nativeName}
-                      </span>
-                    </button>
-                  ))}
+                  {(languageSearch ? filteredLanguages : filteredLanguages.slice(0, 100)).map(
+                    (lang) => (
+                      <button
+                        key={lang.code}
+                        type="button"
+                        onClick={() => toggleLanguage(lang.code)}
+                        className={`flex items-center gap-2 p-2 rounded text-left text-sm transition-colors ${
+                          formLanguages.includes(lang.code)
+                            ? "bg-primary/10 text-primary"
+                            : "hover:bg-muted"
+                        }`}
+                      >
+                        {formLanguages.includes(lang.code) ? (
+                          <Check className="h-4 w-4 flex-shrink-0" />
+                        ) : (
+                          <div className="h-4 w-4 flex-shrink-0" />
+                        )}
+                        <span className="truncate">{lang.name}</span>
+                        <span className="text-xs text-muted-foreground truncate">
+                          {lang.nativeName}
+                        </span>
+                      </button>
+                    ),
+                  )}
                 </div>
               </ScrollArea>
             </div>
@@ -569,9 +562,7 @@ const AdminLanguageGroups = () => {
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSave}>
-              {editingGroup ? "Save Changes" : "Create Group"}
-            </Button>
+            <Button onClick={handleSave}>{editingGroup ? "Save Changes" : "Create Group"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

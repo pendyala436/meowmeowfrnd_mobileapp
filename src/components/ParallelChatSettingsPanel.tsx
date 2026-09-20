@@ -16,7 +16,7 @@ interface ParallelChatSettingsPanelProps {
 const ParallelChatSettingsPanel = ({
   currentValue,
   onSave,
-  isLoading
+  isLoading,
 }: ParallelChatSettingsPanelProps) => {
   const { toast } = useToast();
   const [selectedValue, setSelectedValue] = useState(currentValue.toString());
@@ -34,7 +34,7 @@ const ParallelChatSettingsPanel = ({
       toast({
         title: "Error",
         description: "Failed to save settings",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsSaving(false);
@@ -44,7 +44,7 @@ const ParallelChatSettingsPanel = ({
   const options = [
     { value: "1", label: "1 Chat", description: "Focus on one conversation at a time" },
     { value: "2", label: "2 Chats", description: "Moderate multitasking" },
-    { value: "3", label: "3 Chats", description: "Maximum parallel conversations" }
+    { value: "3", label: "3 Chats", description: "Maximum parallel conversations" },
   ];
 
   const hasChanges = selectedValue !== currentValue.toString();
@@ -62,7 +62,7 @@ const ParallelChatSettingsPanel = ({
           <Label className="text-sm text-muted-foreground mb-3 block">
             How many chat windows do you want open at once?
           </Label>
-          
+
           <RadioGroup
             value={selectedValue}
             onValueChange={setSelectedValue}
@@ -83,7 +83,7 @@ const ParallelChatSettingsPanel = ({
                     "hover:border-primary/50 hover:bg-primary/5",
                     selectedValue === option.value
                       ? "border-primary bg-primary/10"
-                      : "border-border"
+                      : "border-border",
                   )}
                 >
                   <div className="flex items-center gap-1 mb-1">
@@ -92,9 +92,7 @@ const ParallelChatSettingsPanel = ({
                         key={i}
                         className={cn(
                           "h-4 w-4",
-                          selectedValue === option.value
-                            ? "text-primary"
-                            : "text-muted-foreground"
+                          selectedValue === option.value ? "text-primary" : "text-muted-foreground",
                         )}
                       />
                     ))}

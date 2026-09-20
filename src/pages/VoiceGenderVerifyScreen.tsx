@@ -210,7 +210,11 @@ const VoiceGenderVerifyScreen = () => {
             </Button>
           )}
 
-          <Button className="w-full" onClick={handleContinue} disabled={!passed || analysing || recording}>
+          <Button
+            className="w-full"
+            onClick={handleContinue}
+            disabled={!passed || analysing || recording}
+          >
             Continue
           </Button>
         </Card>

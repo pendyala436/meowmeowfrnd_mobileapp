@@ -9,9 +9,7 @@ describe("theme chrome color helpers", () => {
   });
 
   it("parses theme tokens", () => {
-    expect(themeTokenToHex("24 88% 46%").toLowerCase()).toBe(
-      hslToHex(24, 88, 46).toLowerCase()
-    );
+    expect(themeTokenToHex("24 88% 46%").toLowerCase()).toBe(hslToHex(24, 88, 46).toLowerCase());
   });
 
   it("returns Rose Ember chrome from theme id (not FRND pink)", () => {

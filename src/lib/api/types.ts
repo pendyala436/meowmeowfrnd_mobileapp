@@ -1,11 +1,11 @@
 /**
  * API Types
- * 
+ *
  * Shared types for the unified async API layer.
  */
 
 // HTTP Methods
-export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
 // Request configuration
 export interface RequestConfig<TData = unknown> {
@@ -19,7 +19,7 @@ export interface RequestConfig<TData = unknown> {
   skipAuth?: boolean;
   cacheKey?: string;
   cacheTTL?: number;
-  priority?: 'high' | 'normal' | 'low';
+  priority?: "high" | "normal" | "low";
   signal?: AbortSignal;
 }
 
@@ -67,14 +67,14 @@ export interface PendingRequest {
   retryCount: number;
   maxRetries: number;
   idempotencyKey?: string;
-  priority: 'high' | 'normal' | 'low';
+  priority: "high" | "normal" | "low";
 }
 
 // Network status
 export interface NetworkStatus {
   isOnline: boolean;
-  connectionType?: 'wifi' | 'cellular' | 'ethernet' | 'unknown';
-  effectiveType?: 'slow-2g' | '2g' | '3g' | '4g';
+  connectionType?: "wifi" | "cellular" | "ethernet" | "unknown";
+  effectiveType?: "slow-2g" | "2g" | "3g" | "4g";
   downlink?: number;
   rtt?: number;
 }
@@ -88,19 +88,19 @@ export interface CacheEntry<T = unknown> {
 }
 
 // Event types for API layer
-export type ApiEventType = 
-  | 'request:start'
-  | 'request:success'
-  | 'request:error'
-  | 'request:retry'
-  | 'network:online'
-  | 'network:offline'
-  | 'queue:add'
-  | 'queue:process'
-  | 'queue:complete'
-  | 'cache:hit'
-  | 'cache:miss'
-  | 'cache:update';
+export type ApiEventType =
+  | "request:start"
+  | "request:success"
+  | "request:error"
+  | "request:retry"
+  | "network:online"
+  | "network:offline"
+  | "queue:add"
+  | "queue:process"
+  | "queue:complete"
+  | "cache:hit"
+  | "cache:miss"
+  | "cache:update";
 
 export interface ApiEvent {
   type: ApiEventType;

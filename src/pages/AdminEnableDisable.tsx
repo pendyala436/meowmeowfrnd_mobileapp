@@ -25,8 +25,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import {
-  ArrowLeft, FileText, Eye, EyeOff, Clock,
-  MessageCircle, Phone, Video, Users, AlertTriangle,
+  ArrowLeft,
+  FileText,
+  Eye,
+  EyeOff,
+  Clock,
+  MessageCircle,
+  Phone,
+  Video,
+  Users,
+  AlertTriangle,
 } from "lucide-react";
 import { useAppSettings } from "@/hooks/useAppSettings";
 import AdminUserAccessPanel from "@/components/AdminUserAccessPanel";
@@ -77,7 +85,8 @@ const TOGGLES: ToggleConfig[] = [
     onToastTitle: "Statements tab enabled",
     offToastTitle: "Statements tab hidden",
     onToastDesc: "All users can now see the Statements tab inside their wallet.",
-    offToastDesc: "Statements tab is now hidden for all users. Wallet balance and recharge remain unaffected.",
+    offToastDesc:
+      "Statements tab is now hidden for all users. Wallet balance and recharge remain unaffected.",
     defaultOn: false,
   },
   {
@@ -229,18 +238,16 @@ const AdminEnableDisable = () => {
     setSavingKey(cfg.key);
     setLocalValues((prev) => ({ ...prev, [cfg.key]: next })); // optimistic
     try {
-      const { error } = await supabase
-        .from("app_settings")
-        .upsert(
-          {
-            setting_key: cfg.key,
-            setting_value: next as unknown as any,
-            setting_type: "json",
-            is_public: true,
-            description: cfg.description,
-          },
-          { onConflict: "setting_key" }
-        );
+      const { error } = await supabase.from("app_settings").upsert(
+        {
+          setting_key: cfg.key,
+          setting_value: next as unknown as any,
+          setting_type: "json",
+          is_public: true,
+          description: cfg.description,
+        },
+        { onConflict: "setting_key" },
+      );
       if (error) throw error;
       toast({
         title: next ? cfg.onToastTitle : cfg.offToastTitle,
@@ -289,11 +296,10 @@ const AdminEnableDisable = () => {
               <div className="flex items-start gap-3">
                 <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                 <div className="text-xs text-amber-900 dark:text-amber-200 leading-relaxed">
-                  <strong>Heavy load control:</strong> Use these toggles when the
-                  system is under high load to stop NEW chats, calls, or group
-                  entries from starting. Users already in an active chat, call, or
-                  group room will continue without interruption — only new entries
-                  are blocked.
+                  <strong>Heavy load control:</strong> Use these toggles when the system is under
+                  high load to stop NEW chats, calls, or group entries from starting. Users already
+                  in an active chat, call, or group room will continue without interruption — only
+                  new entries are blocked.
                   <br />
                   Wallet balance, recharge, and login flows are never affected.
                 </div>
@@ -352,9 +358,9 @@ const AdminEnableDisable = () => {
 
                         {!isStatement && !value && (
                           <div className="mt-3 rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground">
-                            <strong className="text-foreground">Active sessions safe:</strong>{" "}
-                            Users currently using this feature continue without
-                            interruption. Only new {cfg.title.toLowerCase()} are blocked.
+                            <strong className="text-foreground">Active sessions safe:</strong> Users
+                            currently using this feature continue without interruption. Only new{" "}
+                            {cfg.title.toLowerCase()} are blocked.
                           </div>
                         )}
                       </div>

@@ -1,10 +1,10 @@
 import { classifyError, ERROR_MESSAGES, logError } from "@/lib/errors";
 /**
  * ProfileEditDialog Component
- * 
+ *
  * A reusable dialog component for editing user profile information.
  * Protected fields (mobile, email, gender) are displayed but not editable.
- * 
+ *
  * @module components/ProfileEditDialog
  */
 
@@ -30,14 +30,37 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Lock, User, Calendar, MapPin, Briefcase, Book, Heart, Phone, Camera, Languages, Globe, Check, ChevronsUpDown, KeyRound } from "lucide-react";
+import {
+  Loader2,
+  Lock,
+  User,
+  Calendar,
+  MapPin,
+  Briefcase,
+  Book,
+  Heart,
+  Phone,
+  Camera,
+  Languages,
+  Globe,
+  Check,
+  ChevronsUpDown,
+  KeyRound,
+} from "lucide-react";
 import PhoneInputWithCode from "@/components/PhoneInputWithCode";
 import { countries } from "@/data/countries";
 import { statesByCountry, State } from "@/data/states";
 import ProfilePhotosSection from "@/components/ProfilePhotosSection";
 import { languages, type Language } from "@/data/languages";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 // ==================== Type Definitions ====================
@@ -104,30 +127,18 @@ const EDUCATION_LEVELS = [
   "Master's Degree",
   "Doctorate",
   "Professional Degree",
-  "Other"
+  "Other",
 ];
 
 /**
  * Body type options for dropdown
  */
-const BODY_TYPES = [
-  "Slim",
-  "Athletic",
-  "Average",
-  "Curvy",
-  "Plus Size"
-];
+const BODY_TYPES = ["Slim", "Athletic", "Average", "Curvy", "Plus Size"];
 
 /**
  * Marital status options for dropdown
  */
-const MARITAL_STATUSES = [
-  "Single",
-  "Married",
-  "Divorced",
-  "Widowed",
-  "Separated"
-];
+const MARITAL_STATUSES = ["Single", "Married", "Divorced", "Widowed", "Separated"];
 
 /**
  * Religion options for dropdown
@@ -141,7 +152,7 @@ const RELIGIONS = [
   "Jain",
   "Jewish",
   "Other",
-  "Prefer not to say"
+  "Prefer not to say",
 ];
 
 /**
@@ -157,7 +168,14 @@ const DRINKING_HABITS = ["Never", "Socially", "Occasionally", "Regularly"];
 /**
  * Dietary preference options
  */
-const DIETARY_PREFERENCES = ["No Preference", "Vegetarian", "Vegan", "Non-Vegetarian", "Eggetarian", "Pescatarian"];
+const DIETARY_PREFERENCES = [
+  "No Preference",
+  "Vegetarian",
+  "Vegan",
+  "Non-Vegetarian",
+  "Eggetarian",
+  "Pescatarian",
+];
 
 /**
  * Fitness level options
@@ -183,26 +201,62 @@ const PERSONALITY_TYPES = ["Introvert", "Extrovert", "Ambivert"];
  * Zodiac sign options
  */
 const ZODIAC_SIGNS = [
-  "Aries ♈", "Taurus ♉", "Gemini ♊", "Cancer ♋", "Leo ♌", "Virgo ♍",
-  "Libra ♎", "Scorpio ♏", "Sagittarius ♐", "Capricorn ♑", "Aquarius ♒", "Pisces ♓"
+  "Aries ♈",
+  "Taurus ♉",
+  "Gemini ♊",
+  "Cancer ♋",
+  "Leo ♌",
+  "Virgo ♍",
+  "Libra ♎",
+  "Scorpio ♏",
+  "Sagittarius ♐",
+  "Capricorn ♑",
+  "Aquarius ♒",
+  "Pisces ♓",
 ];
 
 /**
  * Interest options
  */
 const INTEREST_OPTIONS = [
-  "Music", "Movies", "Travel", "Reading", "Sports", "Cooking", "Photography",
-  "Art", "Gaming", "Fitness", "Dancing", "Writing", "Technology", "Fashion",
-  "Nature", "Yoga", "Meditation", "Food", "Pets", "Adventure"
+  "Music",
+  "Movies",
+  "Travel",
+  "Reading",
+  "Sports",
+  "Cooking",
+  "Photography",
+  "Art",
+  "Gaming",
+  "Fitness",
+  "Dancing",
+  "Writing",
+  "Technology",
+  "Fashion",
+  "Nature",
+  "Yoga",
+  "Meditation",
+  "Food",
+  "Pets",
+  "Adventure",
 ];
 
 /**
  * Life goal options
  */
 const LIFE_GOAL_OPTIONS = [
-  "Career Growth", "Family", "Travel the World", "Financial Freedom", 
-  "Health & Fitness", "Education", "Start a Business", "Spiritual Growth",
-  "Creative Pursuits", "Community Service", "Finding Love", "Personal Development"
+  "Career Growth",
+  "Family",
+  "Travel the World",
+  "Financial Freedom",
+  "Health & Fitness",
+  "Education",
+  "Start a Business",
+  "Spiritual Growth",
+  "Creative Pursuits",
+  "Community Service",
+  "Finding Love",
+  "Personal Development",
 ];
 
 // ==================== Component ====================
@@ -210,7 +264,7 @@ const LIFE_GOAL_OPTIONS = [
 const ProfileEditDialog = ({ open, onOpenChange, onProfileUpdated }: ProfileEditDialogProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  
+
   // State for profile data
   const [profile, setProfile] = useState<ProfileData>({
     full_name: null,
@@ -239,67 +293,67 @@ const ProfileEditDialog = ({ open, onOpenChange, onProfileUpdated }: ProfileEdit
     personality_type: null,
     zodiac_sign: null,
   });
-  
+
   // Original profile data to track changes
   const [originalProfile, setOriginalProfile] = useState<ProfileData | null>(null);
   const [originalLanguage, setOriginalLanguage] = useState<UserLanguage | null>(null);
-  
+
   // User's selected language for matching
   const [userLanguage, setUserLanguage] = useState<UserLanguage | null>(null);
   const [languageOpen, setLanguageOpen] = useState(false);
   const [languageSearch, setLanguageSearch] = useState("");
-  
+
   // User email from auth (protected field)
   const [userEmail, setUserEmail] = useState<string>("");
-  
+
   // Current user ID
   const [currentUserId, setCurrentUserId] = useState<string>("");
-  
+
   // Has at least one photo
   const [hasPhotos, setHasPhotos] = useState(true);
-  
+
   // Track if photos were changed (photos save automatically, but we track for UI feedback)
   const [photosChanged, setPhotosChanged] = useState(false);
-  
+
   // Loading states
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  
+
   // Available states based on selected country
   const [availableStates, setAvailableStates] = useState<State[]>([]);
-  
+
   // Check if there are any changes - use useMemo for reactivity
   const hasChanges = useMemo(() => {
     if (!originalProfile) return false;
-    
+
     // Check profile fields
-    const profileChanged = Object.keys(profile).some(key => {
+    const profileChanged = Object.keys(profile).some((key) => {
       const k = key as keyof ProfileData;
       const current = profile[k];
       const original = originalProfile[k];
-      
+
       // Handle null/undefined normalization
       const normalizedCurrent = current === undefined ? null : current;
       const normalizedOriginal = original === undefined ? null : original;
-      
+
       // Handle arrays
       if (Array.isArray(normalizedCurrent) && Array.isArray(normalizedOriginal)) {
         return JSON.stringify(normalizedCurrent) !== JSON.stringify(normalizedOriginal);
       }
-      
+
       // Handle null comparisons
       if (normalizedCurrent === null && normalizedOriginal === null) {
         return false;
       }
-      
+
       return normalizedCurrent !== normalizedOriginal;
     });
-    
+
     // Check language change - explicit null checks
-    const currentLangCode = userLanguage?.language_code ?? '';
-    const originalLangCode = originalLanguage?.language_code ?? '';
+    const currentLangCode = userLanguage?.language_code ?? "";
+    const originalLangCode = originalLanguage?.language_code ?? "";
     const languageChanged = currentLangCode !== originalLangCode;
-    
+
     return profileChanged || languageChanged;
   }, [profile, originalProfile, userLanguage, originalLanguage]);
   // ==================== Effects ====================
@@ -318,7 +372,7 @@ const ProfileEditDialog = ({ open, onOpenChange, onProfileUpdated }: ProfileEdit
    */
   useEffect(() => {
     // Find the country code from the country name
-    const countryData = countries.find(c => c.name === profile.country);
+    const countryData = countries.find((c) => c.name === profile.country);
     if (countryData && statesByCountry[countryData.code]) {
       setAvailableStates(statesByCountry[countryData.code]);
     } else {
@@ -335,7 +389,9 @@ const ProfileEditDialog = ({ open, onOpenChange, onProfileUpdated }: ProfileEdit
     setIsLoading(true);
     try {
       // Get authenticated user from session (more reliable than getUser on refresh)
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session?.user) return;
       const user = session.user;
 
@@ -356,18 +412,24 @@ const ProfileEditDialog = ({ open, onOpenChange, onProfileUpdated }: ProfileEdit
       // Each profile type has its own language stored independently
       if (data && data.primary_language) {
         // Use master language list
-        const foundLang = languages.find(l => l.name === data.primary_language);
+        const foundLang = languages.find((l) => l.name === data.primary_language);
         if (foundLang) {
           const langData = {
             language_name: foundLang.name,
-            language_code: foundLang.code
+            language_code: foundLang.code,
           };
           setUserLanguage(langData);
           setOriginalLanguage(langData);
         } else {
           // Language name exists but not in our list - use it anyway
-          setUserLanguage({ language_name: data.primary_language, language_code: data.primary_language });
-          setOriginalLanguage({ language_name: data.primary_language, language_code: data.primary_language });
+          setUserLanguage({
+            language_name: data.primary_language,
+            language_code: data.primary_language,
+          });
+          setOriginalLanguage({
+            language_name: data.primary_language,
+            language_code: data.primary_language,
+          });
         }
       } else {
         setUserLanguage(null);
@@ -427,31 +489,56 @@ const ProfileEditDialog = ({ open, onOpenChange, onProfileUpdated }: ProfileEdit
    */
   const handleSave = async () => {
     // Client-side validation before saving
-    if (profile.full_name && (profile.full_name.trim().length < 2 || profile.full_name.trim().length > 100)) {
-      toast({ title: "Invalid Name", description: "Name must be between 2-100 characters", variant: "destructive" });
+    if (
+      profile.full_name &&
+      (profile.full_name.trim().length < 2 || profile.full_name.trim().length > 100)
+    ) {
+      toast({
+        title: "Invalid Name",
+        description: "Name must be between 2-100 characters",
+        variant: "destructive",
+      });
       return;
     }
     if (profile.bio && profile.bio.trim().length > 500) {
-      toast({ title: "Bio too long", description: "Bio must be less than 500 characters", variant: "destructive" });
+      toast({
+        title: "Bio too long",
+        description: "Bio must be less than 500 characters",
+        variant: "destructive",
+      });
       return;
     }
-    if (profile.height_cm !== null && profile.height_cm !== undefined && (profile.height_cm < 100 || profile.height_cm > 250)) {
-      toast({ title: "Invalid Height", description: "Height must be between 100-250 cm", variant: "destructive" });
+    if (
+      profile.height_cm !== null &&
+      profile.height_cm !== undefined &&
+      (profile.height_cm < 100 || profile.height_cm > 250)
+    ) {
+      toast({
+        title: "Invalid Height",
+        description: "Height must be between 100-250 cm",
+        variant: "destructive",
+      });
       return;
     }
     if (profile.occupation && profile.occupation.trim().length > 50) {
-      toast({ title: "Occupation too long", description: "Occupation must be less than 50 characters", variant: "destructive" });
+      toast({
+        title: "Occupation too long",
+        description: "Occupation must be less than 50 characters",
+        variant: "destructive",
+      });
       return;
     }
 
     setIsSaving(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session?.user) return;
       const user = session.user;
 
       // Sanitize text fields before saving
-      const sanitize = (v: string | null) => v ? v.replace(/<[^>]*>/g, "").trim() : v;
+      const sanitize = (v: string | null) => (v ? v.replace(/<[^>]*>/g, "").trim() : v);
 
       // Note: phone and gender are NOT included as they are protected fields
       const profileData = {
@@ -494,25 +581,27 @@ const ProfileEditDialog = ({ open, onOpenChange, onProfileUpdated }: ProfileEdit
 
       // Also update user_languages table to trigger real-time subscription for dashboard refresh
       if (userLanguage && userLanguage.language_name) {
-        console.log("[ProfileEditDialog] Updating user_languages to:", userLanguage.language_name, userLanguage.language_code);
-        
+        console.log(
+          "[ProfileEditDialog] Updating user_languages to:",
+          userLanguage.language_name,
+          userLanguage.language_code,
+        );
+
         // Delete existing and insert new to ensure proper realtime trigger
-        await supabase
-          .from("user_languages")
-          .delete()
-          .eq("user_id", user.id);
-        
-        const { error: langInsertError } = await supabase
-          .from("user_languages")
-          .insert({
-            user_id: user.id,
-            language_name: userLanguage.language_name,
-            language_code: userLanguage.language_code
-          });
-        
+        await supabase.from("user_languages").delete().eq("user_id", user.id);
+
+        const { error: langInsertError } = await supabase.from("user_languages").insert({
+          user_id: user.id,
+          language_name: userLanguage.language_name,
+          language_code: userLanguage.language_code,
+        });
+
         if (langInsertError) {
           console.error("[ProfileEditDialog] Error updating user_languages:", langInsertError);
-          toast.error("Language preference not saved", { description: "Your other profile changes were saved, but the language preference update failed. Please try saving again." });
+          toast.error("Language preference not saved", {
+            description:
+              "Your other profile changes were saved, but the language preference update failed. Please try saving again.",
+          });
         } else {
           console.log("[ProfileEditDialog] Successfully updated user_languages");
         }
@@ -521,19 +610,25 @@ const ProfileEditDialog = ({ open, onOpenChange, onProfileUpdated }: ProfileEdit
         if (gender === "male") {
           await supabase
             .from("male_profiles")
-            .update({ primary_language: userLanguage.language_name, preferred_language: userLanguage.language_name })
+            .update({
+              primary_language: userLanguage.language_name,
+              preferred_language: userLanguage.language_name,
+            })
             .eq("user_id", user.id);
         } else if (gender === "female") {
           await supabase
             .from("female_profiles")
-            .update({ primary_language: userLanguage.language_name, preferred_language: userLanguage.language_name })
+            .update({
+              primary_language: userLanguage.language_name,
+              preferred_language: userLanguage.language_name,
+            })
             .eq("user_id", user.id);
         }
 
         // Update original language to reflect saved state
         setOriginalLanguage({
           language_name: userLanguage.language_name,
-          language_code: userLanguage.language_code
+          language_code: userLanguage.language_code,
         });
       }
 
@@ -562,7 +657,7 @@ const ProfileEditDialog = ({ open, onOpenChange, onProfileUpdated }: ProfileEdit
    * Update a specific field in the profile state
    */
   const updateField = <K extends keyof ProfileData>(field: K, value: ProfileData[K]) => {
-    setProfile(prev => ({ ...prev, [field]: value }));
+    setProfile((prev) => ({ ...prev, [field]: value }));
   };
 
   // ==================== Render ====================
@@ -597,11 +692,7 @@ const ProfileEditDialog = ({ open, onOpenChange, onProfileUpdated }: ProfileEdit
               {/* Email - Protected */}
               <div className="space-y-2">
                 <Label className="text-muted-foreground">Email</Label>
-                <Input
-                  value={userEmail}
-                  disabled
-                  className="bg-muted cursor-not-allowed"
-                />
+                <Input value={userEmail} disabled className="bg-muted cursor-not-allowed" />
               </div>
 
               {/* Mobile Number - Protected */}
@@ -624,7 +715,13 @@ const ProfileEditDialog = ({ open, onOpenChange, onProfileUpdated }: ProfileEdit
                   Gender
                 </Label>
                 <Input
-                  value={profile.gender === 'male' ? 'Male' : profile.gender === 'female' ? 'Female' : profile.gender || ''}
+                  value={
+                    profile.gender === "male"
+                      ? "Male"
+                      : profile.gender === "female"
+                        ? "Female"
+                        : profile.gender || ""
+                  }
                   disabled
                   className="bg-muted cursor-not-allowed capitalize"
                 />
@@ -638,9 +735,13 @@ const ProfileEditDialog = ({ open, onOpenChange, onProfileUpdated }: ProfileEdit
                   <Camera className="w-4 h-4" />
                   Profile Photos & Selfie Verification
                 </div>
-                <ProfilePhotosSection 
+                <ProfilePhotosSection
                   userId={currentUserId}
-                  expectedGender={(profile.gender === 'male' || profile.gender === 'female') ? profile.gender : undefined}
+                  expectedGender={
+                    profile.gender === "male" || profile.gender === "female"
+                      ? profile.gender
+                      : undefined
+                  }
                   onPhotosChange={(hasAnyPhotos) => {
                     setHasPhotos(hasAnyPhotos);
                     setPhotosChanged(true);
@@ -652,7 +753,7 @@ const ProfileEditDialog = ({ open, onOpenChange, onProfileUpdated }: ProfileEdit
             {/* ==================== Editable Fields Section ==================== */}
 
             {/* ==================== Editable Fields Section ==================== */}
-            
+
             {/* Full Name */}
             <div className="space-y-2">
               <Label htmlFor="full_name" className="flex items-center gap-2">
@@ -699,7 +800,7 @@ const ProfileEditDialog = ({ open, onOpenChange, onProfileUpdated }: ProfileEdit
                   <SelectTrigger>
                     <SelectValue placeholder="Select country" />
                   </SelectTrigger>
-                <SelectContent>
+                  <SelectContent>
                     {countries.map((country) => (
                       <SelectItem key={country.code} value={country.name}>
                         {country.flag} {country.name}
@@ -720,7 +821,7 @@ const ProfileEditDialog = ({ open, onOpenChange, onProfileUpdated }: ProfileEdit
                   <SelectTrigger>
                     <SelectValue placeholder="Select state" />
                   </SelectTrigger>
-                <SelectContent>
+                  <SelectContent>
                     {availableStates.map((state) => (
                       <SelectItem key={state.code} value={state.name}>
                         {state.name}
@@ -738,9 +839,10 @@ const ProfileEditDialog = ({ open, onOpenChange, onProfileUpdated }: ProfileEdit
                 My Language (for Chat Matching)
               </Label>
               <p className="text-xs text-muted-foreground">
-                Select your primary language from {languages.length}+ languages. Auto-translation is available.
+                Select your primary language from {languages.length}+ languages. Auto-translation is
+                available.
               </p>
-              
+
               <Popover open={languageOpen} onOpenChange={setLanguageOpen}>
                 <PopoverTrigger asChild>
                   <Button
@@ -762,25 +864,31 @@ const ProfileEditDialog = ({ open, onOpenChange, onProfileUpdated }: ProfileEdit
                 </PopoverTrigger>
                 <PopoverContent className="w-[400px] p-0 bg-popover z-50" align="start">
                   <Command className="bg-popover">
-                    <CommandInput 
-                      placeholder="Search from 842 languages..." 
+                    <CommandInput
+                      placeholder="Search from 842 languages..."
                       value={languageSearch}
                       onValueChange={setLanguageSearch}
                     />
                     <CommandList className="max-h-80">
                       <CommandEmpty>No language found. Try searching by name.</CommandEmpty>
-                      
+
                       {/* Show filtered results - increased limit */}
-                      <CommandGroup heading={`🌐 Languages (${languages.filter(l => 
-                        !languageSearch || 
-                        l.name.toLowerCase().includes(languageSearch.toLowerCase()) || 
-                        l.nativeName.toLowerCase().includes(languageSearch.toLowerCase())
-                      ).length} available)`}>
+                      <CommandGroup
+                        heading={`🌐 Languages (${
+                          languages.filter(
+                            (l) =>
+                              !languageSearch ||
+                              l.name.toLowerCase().includes(languageSearch.toLowerCase()) ||
+                              l.nativeName.toLowerCase().includes(languageSearch.toLowerCase()),
+                          ).length
+                        } available)`}
+                      >
                         {languages
-                          .filter(l => 
-                            !languageSearch || 
-                            l.name.toLowerCase().includes(languageSearch.toLowerCase()) || 
-                            l.nativeName.toLowerCase().includes(languageSearch.toLowerCase())
+                          .filter(
+                            (l) =>
+                              !languageSearch ||
+                              l.name.toLowerCase().includes(languageSearch.toLowerCase()) ||
+                              l.nativeName.toLowerCase().includes(languageSearch.toLowerCase()),
                           )
                           .slice(0, 100)
                           .map((lang) => (
@@ -790,20 +898,29 @@ const ProfileEditDialog = ({ open, onOpenChange, onProfileUpdated }: ProfileEdit
                               onSelect={() => {
                                 setUserLanguage({
                                   language_name: lang.name,
-                                  language_code: lang.code
+                                  language_code: lang.code,
                                 });
                                 setLanguageOpen(false);
                                 setLanguageSearch("");
                               }}
                               className="cursor-pointer"
                             >
-                              <Check className={cn("mr-2 h-4 w-4 shrink-0", userLanguage?.language_code === lang.code ? "opacity-100" : "opacity-0")} />
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4 shrink-0",
+                                  userLanguage?.language_code === lang.code
+                                    ? "opacity-100"
+                                    : "opacity-0",
+                                )}
+                              />
                               <span className="flex-1 truncate">{lang.name}</span>
-                              <span className="text-xs text-muted-foreground ml-2 truncate">{lang.nativeName}</span>
+                              <span className="text-xs text-muted-foreground ml-2 truncate">
+                                {lang.nativeName}
+                              </span>
                             </CommandItem>
                           ))}
                       </CommandGroup>
-                      
+
                       {!languageSearch && (
                         <div className="p-2 text-xs text-center text-muted-foreground border-t">
                           Type to search all 842 languages
@@ -873,7 +990,9 @@ const ProfileEditDialog = ({ open, onOpenChange, onProfileUpdated }: ProfileEdit
                   id="height"
                   type="number"
                   value={profile.height_cm || ""}
-                  onChange={(e) => updateField("height_cm", e.target.value ? parseInt(e.target.value) : null)}
+                  onChange={(e) =>
+                    updateField("height_cm", e.target.value ? parseInt(e.target.value) : null)
+                  }
                   placeholder="e.g., 170"
                   min={100}
                   max={250}
@@ -959,14 +1078,14 @@ const ProfileEditDialog = ({ open, onOpenChange, onProfileUpdated }: ProfileEdit
                 maxLength={500}
               />
               <p className="text-xs text-muted-foreground text-right">
-                {(profile.bio?.length || 0)}/500 characters
+                {profile.bio?.length || 0}/500 characters
               </p>
             </div>
 
             {/* ==================== Lifestyle Section ==================== */}
             <div className="space-y-4 p-4 bg-muted/30 rounded-lg border border-border">
               <h3 className="text-sm font-semibold text-foreground">Lifestyle</h3>
-              
+
               {/* Smoking & Drinking */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -1020,7 +1139,7 @@ const ProfileEditDialog = ({ open, onOpenChange, onProfileUpdated }: ProfileEdit
                     </SelectTrigger>
                     <SelectContent>
                       {DIETARY_PREFERENCES.map((diet) => (
-                        <SelectItem key={diet} value={diet.toLowerCase().replace(/ /g, '_')}>
+                        <SelectItem key={diet} value={diet.toLowerCase().replace(/ /g, "_")}>
                           {diet}
                         </SelectItem>
                       ))}
@@ -1038,7 +1157,7 @@ const ProfileEditDialog = ({ open, onOpenChange, onProfileUpdated }: ProfileEdit
                     </SelectTrigger>
                     <SelectContent>
                       {FITNESS_LEVELS.map((level) => (
-                        <SelectItem key={level} value={level.toLowerCase().replace(/ /g, '_')}>
+                        <SelectItem key={level} value={level.toLowerCase().replace(/ /g, "_")}>
                           {level}
                         </SelectItem>
                       ))}
@@ -1060,7 +1179,7 @@ const ProfileEditDialog = ({ open, onOpenChange, onProfileUpdated }: ProfileEdit
                     </SelectTrigger>
                     <SelectContent>
                       {PET_PREFERENCES.map((pref) => (
-                        <SelectItem key={pref} value={pref.toLowerCase().replace(/ /g, '_')}>
+                        <SelectItem key={pref} value={pref.toLowerCase().replace(/ /g, "_")}>
                           {pref}
                         </SelectItem>
                       ))}
@@ -1078,7 +1197,7 @@ const ProfileEditDialog = ({ open, onOpenChange, onProfileUpdated }: ProfileEdit
                     </SelectTrigger>
                     <SelectContent>
                       {TRAVEL_FREQUENCIES.map((freq) => (
-                        <SelectItem key={freq} value={freq.toLowerCase().replace(/ /g, '_')}>
+                        <SelectItem key={freq} value={freq.toLowerCase().replace(/ /g, "_")}>
                           {freq}
                         </SelectItem>
                       ))}
@@ -1096,7 +1215,9 @@ const ProfileEditDialog = ({ open, onOpenChange, onProfileUpdated }: ProfileEdit
                     variant={profile.has_children === true ? "default" : "outline"}
                     size="sm"
                     className="flex-1"
-                    onClick={() => updateField("has_children", profile.has_children === true ? null : true)}
+                    onClick={() =>
+                      updateField("has_children", profile.has_children === true ? null : true)
+                    }
                   >
                     Yes
                   </Button>
@@ -1105,7 +1226,9 @@ const ProfileEditDialog = ({ open, onOpenChange, onProfileUpdated }: ProfileEdit
                     variant={profile.has_children === false ? "default" : "outline"}
                     size="sm"
                     className="flex-1"
-                    onClick={() => updateField("has_children", profile.has_children === false ? null : false)}
+                    onClick={() =>
+                      updateField("has_children", profile.has_children === false ? null : false)
+                    }
                   >
                     No
                   </Button>
@@ -1143,7 +1266,7 @@ const ProfileEditDialog = ({ open, onOpenChange, onProfileUpdated }: ProfileEdit
                     </SelectTrigger>
                     <SelectContent>
                       {ZODIAC_SIGNS.map((sign) => (
-                        <SelectItem key={sign} value={sign.split(' ')[0].toLowerCase()}>
+                        <SelectItem key={sign} value={sign.split(" ")[0].toLowerCase()}>
                           {sign}
                         </SelectItem>
                       ))}
@@ -1169,7 +1292,10 @@ const ProfileEditDialog = ({ open, onOpenChange, onProfileUpdated }: ProfileEdit
                       onClick={() => {
                         const current = profile.interests || [];
                         if (isSelected) {
-                          updateField("interests", current.filter(i => i !== interest));
+                          updateField(
+                            "interests",
+                            current.filter((i) => i !== interest),
+                          );
                         } else if (current.length < 10) {
                           updateField("interests", [...current, interest]);
                         }
@@ -1181,7 +1307,7 @@ const ProfileEditDialog = ({ open, onOpenChange, onProfileUpdated }: ProfileEdit
                 })}
               </div>
               <p className="text-xs text-muted-foreground">
-                {(profile.interests?.length || 0)}/10 selected
+                {profile.interests?.length || 0}/10 selected
               </p>
             </div>
 
@@ -1201,7 +1327,10 @@ const ProfileEditDialog = ({ open, onOpenChange, onProfileUpdated }: ProfileEdit
                       onClick={() => {
                         const current = profile.life_goals || [];
                         if (isSelected) {
-                          updateField("life_goals", current.filter(g => g !== goal));
+                          updateField(
+                            "life_goals",
+                            current.filter((g) => g !== goal),
+                          );
                         } else if (current.length < 5) {
                           updateField("life_goals", [...current, goal]);
                         }
@@ -1213,7 +1342,7 @@ const ProfileEditDialog = ({ open, onOpenChange, onProfileUpdated }: ProfileEdit
                 })}
               </div>
               <p className="text-xs text-muted-foreground">
-                {(profile.life_goals?.length || 0)}/5 selected
+                {profile.life_goals?.length || 0}/5 selected
               </p>
             </div>
 
@@ -1233,7 +1362,7 @@ const ProfileEditDialog = ({ open, onOpenChange, onProfileUpdated }: ProfileEdit
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    navigate('/forgot-password');
+                    navigate("/forgot-password");
                   }}
                 >
                   <KeyRound className="w-4 h-4 mr-2" />
@@ -1244,11 +1373,7 @@ const ProfileEditDialog = ({ open, onOpenChange, onProfileUpdated }: ProfileEdit
 
             {/* ==================== Action Buttons ==================== */}
             <div className="flex justify-end gap-3 pt-4 border-t">
-              <Button
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                disabled={isSaving}
-              >
+              <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>
                 Cancel
               </Button>
               <Button

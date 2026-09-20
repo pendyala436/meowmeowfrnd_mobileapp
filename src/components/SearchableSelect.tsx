@@ -36,7 +36,7 @@ const SearchableSelect = ({
   const filteredOptions = options.filter(
     (opt) =>
       opt.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      opt.sublabel?.toLowerCase().includes(searchQuery.toLowerCase())
+      opt.sublabel?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   useEffect(() => {
@@ -69,24 +69,24 @@ const SearchableSelect = ({
           "transition-all duration-300",
           "hover:border-primary/30 hover:shadow-soft",
           isOpen && "border-primary shadow-soft",
-          "focus:outline-none focus:border-primary focus:shadow-soft"
+          "focus:outline-none focus:border-primary focus:shadow-soft",
         )}
       >
         <div className="flex items-center gap-3">
-          {selectedOption?.icon && (
-            <span className="text-2xl">{selectedOption.icon}</span>
-          )}
-          <span className={cn(
-            "font-medium",
-            selectedOption ? "text-foreground" : "text-muted-foreground"
-          )}>
+          {selectedOption?.icon && <span className="text-2xl">{selectedOption.icon}</span>}
+          <span
+            className={cn(
+              "font-medium",
+              selectedOption ? "text-foreground" : "text-muted-foreground",
+            )}
+          >
             {selectedOption ? selectedOption.label : placeholder}
           </span>
         </div>
         <ChevronDown
           className={cn(
             "w-5 h-5 text-muted-foreground transition-transform duration-300",
-            isOpen && "rotate-180"
+            isOpen && "rotate-180",
           )}
         />
       </button>
@@ -130,14 +130,12 @@ const SearchableSelect = ({
                     "transition-colors duration-200",
                     "hover:bg-accent",
                     value === option.value && "bg-primary/5",
-                    index === 0 && "animate-slide-in-right"
+                    index === 0 && "animate-slide-in-right",
                   )}
                   style={{ animationDelay: `${index * 20}ms` }}
                 >
                   <div className="flex items-center gap-3">
-                    {option.icon && (
-                      <span className="text-xl">{option.icon}</span>
-                    )}
+                    {option.icon && <span className="text-xl">{option.icon}</span>}
                     <div className="text-left">
                       <div className="font-medium text-foreground">{option.label}</div>
                       {option.sublabel && (
@@ -145,9 +143,7 @@ const SearchableSelect = ({
                       )}
                     </div>
                   </div>
-                  {value === option.value && (
-                    <Check className="w-5 h-5 text-primary" />
-                  )}
+                  {value === option.value && <Check className="w-5 h-5 text-primary" />}
                 </button>
               ))
             )}

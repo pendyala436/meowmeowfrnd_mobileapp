@@ -7,11 +7,24 @@ const ADMIN_CHECK_TIMEOUT = 15000; // 15 seconds — generous for slow DBs
 
 // Module-level cache so multiple components share one check per session
 const CACHE_TTL = 300_000; // 5 minutes
-let cachedResult: { isAdmin: boolean; email: string; userId: string; timestamp: number } | null = null;
-let pendingPromise: Promise<{ isAdmin: boolean; email: string; userId: string; timestamp: number } | null> | null = null;
+let cachedResult: { isAdmin: boolean; email: string; userId: string; timestamp: number } | null =
+  null;
+let pendingPromise: Promise<{
+  isAdmin: boolean;
+  email: string;
+  userId: string;
+  timestamp: number;
+} | null> | null = null;
 
-const performAdminCheck = async (): Promise<{ isAdmin: boolean; email: string; userId: string; timestamp: number } | null> => {
-  const { data: { session } } = await supabase.auth.getSession();
+const performAdminCheck = async (): Promise<{
+  isAdmin: boolean;
+  email: string;
+  userId: string;
+  timestamp: number;
+} | null> => {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
   if (!session?.user) return null;
 
   const user = session.user;
@@ -33,7 +46,7 @@ const performAdminCheck = async (): Promise<{ isAdmin: boolean; email: string; u
 
     if (!roleError || attempt === 3) break;
     console.warn(`[useAdminAccess] Role check attempt ${attempt} failed, retrying...`);
-    await new Promise(r => setTimeout(r, 1000 * attempt));
+    await new Promise((r) => setTimeout(r, 1000 * attempt));
   }
 
   if (roleError) {
@@ -65,7 +78,7 @@ export const useAdminAccess = () => {
 
     const check = async () => {
       // Fast path: use cached result from another component's check
-      if (cachedResult && (Date.now() - cachedResult.timestamp) < CACHE_TTL) {
+      if (cachedResult && Date.now() - cachedResult.timestamp < CACHE_TTL) {
         if (!mounted) return;
         if (!cachedResult.isAdmin) {
           toast.error("Access Denied", { description: "You don't have admin privileges" });
@@ -90,7 +103,7 @@ export const useAdminAccess = () => {
         const result = await Promise.race([
           pendingPromise,
           new Promise<"timeout">((resolve) =>
-            setTimeout(() => resolve("timeout"), ADMIN_CHECK_TIMEOUT)
+            setTimeout(() => resolve("timeout"), ADMIN_CHECK_TIMEOUT),
           ),
         ]);
 
@@ -137,7 +150,9 @@ export const useAdminAccess = () => {
     };
 
     check();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [navigate]);
 
   return { isLoading, isAdmin, adminEmail, userId };

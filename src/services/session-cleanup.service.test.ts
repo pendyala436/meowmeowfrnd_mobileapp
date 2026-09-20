@@ -2,7 +2,10 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const chain = (awaitResult: { error: unknown } | "reject" = { error: null }) => {
   const q: Record<string, ReturnType<typeof vi.fn>> & {
-    then?: (onFulfilled: (v: unknown) => unknown, onRejected?: (e: unknown) => unknown) => Promise<unknown>;
+    then?: (
+      onFulfilled: (v: unknown) => unknown,
+      onRejected?: (e: unknown) => unknown,
+    ) => Promise<unknown>;
   } = {};
   q.update = vi.fn().mockReturnValue(q);
   q.delete = vi.fn().mockReturnValue(q);

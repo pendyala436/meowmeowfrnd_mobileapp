@@ -19,7 +19,12 @@ interface ScoreRow {
 }
 
 const formatINR = (amount: number) =>
-  new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount);
+  new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
 
 export function ScoreTab({ currentUserId }: { currentUserId: string }) {
   const [rows, setRows] = useState<ScoreRow[]>([]);
@@ -36,16 +41,22 @@ export function ScoreTab({ currentUserId }: { currentUserId: string }) {
       setRows([]);
     } else {
       const list = (Array.isArray(data) ? data : []) as ScoreRow[];
-      setRows(list.map((r) => ({
-        ...r,
-        total: Number(r.total) || 0,
-        days: Array.isArray(r.days) ? r.days.map((d) => ({ date: d.date, amount: Number(d.amount) || 0 })) : [],
-      })));
+      setRows(
+        list.map((r) => ({
+          ...r,
+          total: Number(r.total) || 0,
+          days: Array.isArray(r.days)
+            ? r.days.map((d) => ({ date: d.date, amount: Number(d.amount) || 0 }))
+            : [],
+        })),
+      );
     }
     setLoading(false);
   };
 
-  useEffect(() => { void load(); }, []);
+  useEffect(() => {
+    void load();
+  }, []);
 
   return (
     <div className="min-h-0 h-full overflow-y-auto overscroll-contain">
@@ -60,7 +71,14 @@ export function ScoreTab({ currentUserId }: { currentUserId: string }) {
               Earnings since the last payout statement. Resets to ₹0 when admin generates payout.
             </p>
           </div>
-          <Button variant="ghost" size="sm" onClick={() => void load()} disabled={loading} className="h-7 w-7 p-0" aria-label="Refresh scores">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => void load()}
+            disabled={loading}
+            className="h-7 w-7 p-0"
+            aria-label="Refresh scores"
+          >
             <RefreshCw className={cn("w-3.5 h-3.5", loading && "animate-spin")} />
           </Button>
         </div>
@@ -73,23 +91,36 @@ export function ScoreTab({ currentUserId }: { currentUserId: string }) {
       ) : error ? (
         <p className="text-center text-sm text-destructive py-12">{error}</p>
       ) : rows.length === 0 ? (
-        <p className="text-center text-sm text-muted-foreground py-12">No scores yet this period.</p>
+        <p className="text-center text-sm text-muted-foreground py-12">
+          No scores yet this period.
+        </p>
       ) : (
         <div>
           {rows.map((row, idx) => {
             const isMe = row.user_id === currentUserId;
             const open = openId === row.user_id;
             return (
-              <div key={row.user_id} className={cn("border-b border-border/30", isMe && "bg-primary/5")}>
+              <div
+                key={row.user_id}
+                className={cn("border-b border-border/30", isMe && "bg-primary/5")}
+              >
                 <button
                   type="button"
                   className="w-full flex items-center gap-3 px-4 py-3 text-left"
                   onClick={() => setOpenId(open ? null : row.user_id)}
                 >
-                  <span className={cn(
-                    "w-6 text-center text-xs font-bold",
-                    idx === 0 ? "text-amber-500" : idx === 1 ? "text-slate-400" : idx === 2 ? "text-orange-700" : "text-muted-foreground"
-                  )}>
+                  <span
+                    className={cn(
+                      "w-6 text-center text-xs font-bold",
+                      idx === 0
+                        ? "text-amber-500"
+                        : idx === 1
+                          ? "text-slate-400"
+                          : idx === 2
+                            ? "text-orange-700"
+                            : "text-muted-foreground",
+                    )}
+                  >
                     {idx + 1}
                   </span>
                   <Avatar className="h-10 w-10">
@@ -98,23 +129,34 @@ export function ScoreTab({ currentUserId }: { currentUserId: string }) {
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold truncate">
-                      {row.full_name}{isMe ? " (You)" : ""}
+                      {row.full_name}
+                      {isMe ? " (You)" : ""}
                     </p>
-                    <p className="text-[11px] text-muted-foreground">{row.days.length} day{row.days.length === 1 ? "" : "s"} with earnings</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {row.days.length} day{row.days.length === 1 ? "" : "s"} with earnings
+                    </p>
                   </div>
                   <p className="text-sm font-bold text-primary">{formatINR(row.total)}</p>
-                  {open ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                  {open ? (
+                    <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                  )}
                 </button>
                 {open && (
                   <div className="px-4 pb-3 pl-16 space-y-1">
                     {row.days.length === 0 ? (
-                      <p className="text-xs text-muted-foreground">No daily earnings yet — score is ₹0 until the next paid session.</p>
-                    ) : row.days.map((d) => (
-                      <div key={d.date} className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">{d.date}</span>
-                        <span className="font-medium">{formatINR(d.amount)}</span>
-                      </div>
-                    ))}
+                      <p className="text-xs text-muted-foreground">
+                        No daily earnings yet — score is ₹0 until the next paid session.
+                      </p>
+                    ) : (
+                      row.days.map((d) => (
+                        <div key={d.date} className="flex justify-between text-xs">
+                          <span className="text-muted-foreground">{d.date}</span>
+                          <span className="font-medium">{formatINR(d.amount)}</span>
+                        </div>
+                      ))
+                    )}
                   </div>
                 )}
               </div>
