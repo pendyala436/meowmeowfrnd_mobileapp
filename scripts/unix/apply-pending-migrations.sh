@@ -125,16 +125,35 @@ pending_count="${#pending_files[@]}"
 
 if [ "$profiles_exists" = "1" ] && [ "$pending_count" -gt 10 ]; then
   echo "==> Schema already present but ${pending_count} versions missing from history."
-  echo "    Baselining those versions WITHOUT re-running SQL (catch-up)."
+  echo "    Baselining backlog WITHOUT re-running SQL (catch-up)."
+
   version_list=""
+  must_run_files=()
+  baseline_count=0
   for f in "${pending_files[@]}"; do
     base="$(basename "$f")"
     version="${base%%_*}"
+    # Never baseline CI smoke probes — those must execute real SQL.
+    if [[ "$base" == *_ci_smoke_* ]]; then
+      must_run_files+=("$f")
+      continue
+    fi
     version_list+="${version}"$'\n'
+    baseline_count=$((baseline_count + 1))
   done
-  record_versions_batch "$version_list"
-  echo "==> Baselined ${pending_count} migration(s). Future new files will apply normally."
-  exit 0
+
+  if [ "$baseline_count" -gt 0 ]; then
+    record_versions_batch "$version_list"
+    echo "==> Baselined ${baseline_count} migration(s)."
+  fi
+
+  pending_files=("${must_run_files[@]}")
+  if [ "${#pending_files[@]}" -eq 0 ]; then
+    echo "==> No forced/smoke migrations left to run."
+    exit 0
+  fi
+
+  echo "==> Applying ${#pending_files[@]} smoke/forced migration(s) for real."
 fi
 
 applied=0
@@ -170,3 +189,9 @@ for f in "${pending_files[@]}"; do
 done
 
 echo "==> Migrations done: ${applied} applied, ${baselined} baselined (already on DB), ${skipped} already recorded"
+
+# Prove smoke probe landed when that migration was in this run.
+if psql_q -tAc "SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='_ci_migration_smoke'" | grep -q 1; then
+  note="$(psql_q -tAc "SELECT note FROM public._ci_migration_smoke WHERE id = 1;" | tr -d '[:space:]')"
+  echo "==> Smoke probe OK: public._ci_migration_smoke.note=${note}"
+fi
