@@ -29,7 +29,43 @@ psql_q() {
 
 record_version() {
   local version="$1"
-  psql_q -c "INSERT INTO supabase_migrations.schema_migrations (version) VALUES ('${version}') ON CONFLICT (version) DO NOTHING;" >/dev/null
+  # Existing self-hosted tables often lack a UNIQUE/PK on version, so ON CONFLICT cannot be used.
+  psql_q -c "
+    INSERT INTO supabase_migrations.schema_migrations (version)
+    SELECT '${version}'
+    WHERE NOT EXISTS (
+      SELECT 1 FROM supabase_migrations.schema_migrations WHERE version = '${version}'
+    );
+  " >/dev/null
+}
+
+record_versions_batch() {
+  # $1 = newline-separated version list
+  local versions_sql=""
+  local v
+  local first=1
+  while IFS= read -r v; do
+    [ -z "$v" ] && continue
+    if [ "$first" -eq 1 ]; then
+      versions_sql="('${v}')"
+      first=0
+    else
+      versions_sql="${versions_sql},('${v}')"
+    fi
+  done <<<"$1"
+
+  if [ -z "$versions_sql" ]; then
+    return 0
+  fi
+
+  psql_q -c "
+    INSERT INTO supabase_migrations.schema_migrations (version)
+    SELECT v.version
+    FROM (VALUES ${versions_sql}) AS v(version)
+    WHERE NOT EXISTS (
+      SELECT 1 FROM supabase_migrations.schema_migrations m WHERE m.version = v.version
+    );
+  " >/dev/null
 }
 
 is_recorded() {
@@ -90,11 +126,13 @@ pending_count="${#pending_files[@]}"
 if [ "$profiles_exists" = "1" ] && [ "$pending_count" -gt 10 ]; then
   echo "==> Schema already present but ${pending_count} versions missing from history."
   echo "    Baselining those versions WITHOUT re-running SQL (catch-up)."
+  version_list=""
   for f in "${pending_files[@]}"; do
     base="$(basename "$f")"
     version="${base%%_*}"
-    record_version "$version"
+    version_list+="${version}"$'\n'
   done
+  record_versions_batch "$version_list"
   echo "==> Baselined ${pending_count} migration(s). Future new files will apply normally."
   exit 0
 fi
