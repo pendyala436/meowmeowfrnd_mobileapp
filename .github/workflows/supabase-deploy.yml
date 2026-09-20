@@ -22,22 +22,24 @@ jobs:
         with:
           version: latest
 
+      # Self-hosted Postgres — NOT db.xxx.supabase.co / db.meow-meow.co.in.
+      # Secret must be the full URL GitHub can reach, e.g.
+      #   postgresql://postgres:PASSWORD@HOST:5432/postgres
+      # URL-encode special chars in the password (@ : / # %).
+      # If port 5432 is only on the VPS localhost, GitHub-hosted runners
+      # cannot connect — use a self-hosted runner on the server instead.
       - name: Apply migrations via Supabase CLI
         run: |
           supabase db push \
-            --db-url "postgresql://postgres:${{ secrets.SUPABASE_DB_PASSWORD }}@db.meow-meow.co.in:5432/postgres" \
+            --db-url "${{ secrets.SUPABASE_DB_URL }}" \
             --include-all
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
 
       - name: Verify applied migrations
         run: |
           echo "Migrations applied successfully"
           supabase db diff \
-            --db-url "postgresql://postgres:${{ secrets.SUPABASE_DB_PASSWORD }}@www.meow-meow.co.in:5432/postgres" \
+            --db-url "${{ secrets.SUPABASE_DB_URL }}" \
             2>/dev/null || echo "Diff complete"
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         continue-on-error: true
 
       # ---------------------------------------------------------------
