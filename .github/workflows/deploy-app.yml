@@ -10,6 +10,9 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    env:
+      # Forwarded to the remote shell for `sudo -S` (same as interactive sudo -i).
+      SUDO_PASSWORD: ${{ secrets.SSH_PASSWORD }}
     steps:
       - name: Deploy meow-app via SSH
         uses: appleboy/ssh-action@v1.2.2
@@ -18,8 +21,8 @@ jobs:
           username: ${{ vars.SSH_USER || secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
           port: ${{ vars.SSH_PORT || 22 }}
+          envs: SUDO_PASSWORD
           script_stop: true
-          # Image build can take a while; keep the SSH session alive.
           command_timeout: 40m
           script: |
             set -euo pipefail
@@ -27,19 +30,27 @@ jobs:
             APP_DIR="${{ vars.APP_DIR || '/meowmeow/app/new_project' }}"
             COMPOSE_DIR="${{ vars.COMPOSE_DIR || '/meowmeow/app' }}"
 
-            echo "==> Updating source in $APP_DIR"
-            cd "$APP_DIR"
-            git fetch origin main
-            git checkout main
-            git pull --ff-only origin main
+            # Non-interactive equivalent of: sudo -i (password from SSH_PASSWORD)
+            echo "$SUDO_PASSWORD" | sudo -S -v
+            sudo -n bash -c "
+              set -euo pipefail
+              APP_DIR='$APP_DIR'
+              COMPOSE_DIR='$COMPOSE_DIR'
 
-            echo "==> Building meow-app:latest"
-            docker build --no-cache -t meow-app:latest .
+              echo \"==> Updating source in \$APP_DIR\"
+              cd \"\$APP_DIR\"
+              git fetch origin main
+              git checkout main
+              git pull --ff-only origin main
 
-            echo "==> Recreating bun-app from $COMPOSE_DIR"
-            cd "$COMPOSE_DIR"
-            docker compose up -d --no-deps --force-recreate bun-app
+              echo '==> Building meow-app:latest'
+              docker build --no-cache -t meow-app:latest .
 
-            echo "==> Deploy finished"
-            docker image inspect meow-app:latest --format 'image={{.Id}} created={{.Created}}'
-            docker compose ps bun-app
+              echo \"==> Recreating bun-app from \$COMPOSE_DIR\"
+              cd \"\$COMPOSE_DIR\"
+              docker compose up -d --no-deps --force-recreate bun-app
+
+              echo '==> Deploy finished'
+              docker image inspect meow-app:latest --format 'image={{.Id}} created={{.Created}}'
+              docker compose ps bun-app
+            "
