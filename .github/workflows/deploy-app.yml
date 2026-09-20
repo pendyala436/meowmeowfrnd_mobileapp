@@ -78,15 +78,37 @@ jobs:
           echo "$RESPONSE" | python3 -m json.tool
           echo "::endgroup::"
 
-          OK=$(echo "$RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin).get('ok'))")
-          if [ "$OK" != "True" ]; then
-            echo "::error::Financial SoT validation FAILED. See output above."
-            echo "$RESPONSE" | python3 -c "
-          import sys, json
+          # RPC returns TABLE rows: [{check_name, status, details}, ...]
+          echo "$RESPONSE" | python3 -c '
+          import json, sys
           data = json.load(sys.stdin)
-          for c in data.get('checks', []):
-              status = 'PASS' if c.get('pass') else 'FAIL'
-              print(f\"  {status} {c['name']}: {json.dumps(c.get('detail', {}))}\")"
-            exit 1
-          fi
-          echo "All SoT checks passed."
+
+          if isinstance(data, dict) and data.get("message"):
+              print("RPC error:", data.get("message"), file=sys.stderr)
+              sys.exit(1)
+
+          if isinstance(data, dict) and "ok" in data:
+              checks = data.get("checks") or []
+              ok = bool(data.get("ok"))
+          elif isinstance(data, list):
+              checks = data
+              ok = all(str(c.get("status", "")).upper() != "FAIL" for c in checks)
+          else:
+              print("Unexpected SoT response type:", type(data).__name__, file=sys.stderr)
+              sys.exit(1)
+
+          for c in checks:
+              name = c.get("check_name") or c.get("name") or "?"
+              status = str(c.get("status") or ("PASS" if c.get("pass") else "FAIL")).upper()
+              detail = c.get("details") if "details" in c else c.get("detail", {})
+              print(f"  {status} {name}: {detail}")
+
+          if not checks:
+              print("SoT returned no checks", file=sys.stderr)
+              sys.exit(1)
+
+          if not ok:
+              print("Financial SoT validation FAILED.", file=sys.stderr)
+              sys.exit(1)
+          print("All SoT checks passed.")
+          '
