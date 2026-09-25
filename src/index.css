@@ -4001,3 +4001,27 @@ html {
     color: hsl(0 0% 100%) !important;
   }
 }
+
+/* Sonner toasts: keep dark/colored surfaces so forced white text stays readable */
+[data-sonner-toaster] [data-sonner-toast] {
+  background: hsl(335 70% 28%) !important;
+  color: #fff !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+}
+[data-sonner-toaster] [data-sonner-toast][data-type="error"] {
+  background: hsl(0 72% 38%) !important;
+}
+[data-sonner-toaster] [data-sonner-toast][data-type="success"] {
+  background: hsl(88 40% 28%) !important;
+}
+[data-sonner-toaster] [data-sonner-toast][data-type="warning"] {
+  background: hsl(43 80% 32%) !important;
+}
+[data-sonner-toaster] [data-sonner-toast][data-type="info"] {
+  background: hsl(218 55% 32%) !important;
+}
+[data-sonner-toaster] [data-sonner-toast] [data-title],
+[data-sonner-toaster] [data-sonner-toast] [data-description],
+[data-sonner-toaster] [data-sonner-toast] [data-content] {
+  color: #fff !important;
+}

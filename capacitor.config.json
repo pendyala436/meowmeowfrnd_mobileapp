@@ -1,0 +1,43 @@
+{
+  "appId": "in.co.meowmeow",
+  "appName": "Meow Meow Frnd App",
+  "webDir": "dist",
+  "server": {
+    "allowNavigation": [
+      "razorpay.com",
+      "*.razorpay.com",
+      "razorpay.in",
+      "*.razorpay.in"
+    ]
+  },
+  "ios": {
+    "contentInset": "automatic",
+    "backgroundColor": "#FF2B85",
+    "preferredContentMode": "mobile",
+    "handleApplicationNotifications": true
+  },
+  "android": {
+    "backgroundColor": "#FF2B85",
+    "allowMixedContent": true,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false
+  },
+  "plugins": {
+    "Keyboard": {
+      "resize": "body",
+      "style": "dark",
+      "resizeOnFullScreen": true
+    },
+    "StatusBar": {
+      "style": "dark",
+      "backgroundColor": "#FF2B85"
+    },
+    "SplashScreen": {
+      "launchShowDuration": 800,
+      "backgroundColor": "#FF2B85",
+      "showSpinner": false,
+      "splashFullScreen": true,
+      "splashImmersive": true
+    }
+  }
+}

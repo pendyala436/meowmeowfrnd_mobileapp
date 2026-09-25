@@ -19,11 +19,18 @@ const Toaster = ({ ...props }: ToasterProps) => {
       toastOptions={{
         duration: 5000,
         classNames: {
+          // App forces white text globally — toast surfaces must stay dark/colored.
           toast:
-            "group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg",
-          description: "group-[.toast]:text-muted-foreground",
-          actionButton: "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
-          cancelButton: "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
+            "group toast !bg-[hsl(335_70%_28%)] !text-white border border-white/25 shadow-lg",
+          title: "!text-white !font-semibold",
+          description: "!text-white/90",
+          success: "!bg-[hsl(88_40%_28%)] !text-white !border-white/20",
+          error: "!bg-[hsl(0_72%_38%)] !text-white !border-white/25",
+          warning: "!bg-[hsl(43_80%_32%)] !text-white !border-white/20",
+          info: "!bg-[hsl(218_55%_32%)] !text-white !border-white/20",
+          actionButton: "!bg-white !text-[hsl(335_70%_28%)]",
+          cancelButton: "!bg-white/15 !text-white",
+          closeButton: "!bg-white/15 !text-white !border-white/20",
         },
       }}
       {...props}

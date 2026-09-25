@@ -6,12 +6,14 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, Send, Paperclip, Image, FileText, File, X, Download, Shield } from "lucide-react";
+import { Users, Send, Paperclip, Image, FileText, File, X, Download, Shield, Phone, Video } from "lucide-react";
 import { classifyError, ERROR_MESSAGES } from "@/lib/errors";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
+import { useAppCall } from "@/hooks/useAppCall";
+import { CallScreen } from "@/components/CallScreen";
 
 interface TLMessage {
   id: string;
@@ -57,16 +59,40 @@ export function TLCommunicationTab({
   const [isSending, setIsSending] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showMembers, setShowMembers] = useState(false);
+  const [isAdminViewer, setIsAdminViewer] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const profileCacheRef = useRef<
     Map<string, { name: string; photo: string | null; isAdmin: boolean }>
   >(new Map());
 
+  const {
+    status: callStatus,
+    activeCall,
+    isMuted,
+    isCameraOff,
+    initiateCall,
+    endCall,
+    toggleMute,
+    toggleCamera,
+  } = useAppCall(currentUserId, "male", 0, { isAdmin: isAdminViewer });
+  const inCall = isAdminViewer && callStatus !== "idle" && callStatus !== "ended" && !!activeCall;
+
   useEffect(() => {
     if (!currentUserId) return;
     void loadAll();
     const cleanup = subscribe();
+    void supabase
+      .from("user_roles")
+      .select("user_id")
+      .eq("user_id", currentUserId)
+      .eq("role", "admin")
+      .maybeSingle()
+      .then(({ data }) => {
+        const admin = !!data;
+        setIsAdminViewer(admin);
+        if (admin) setShowMembers(true);
+      });
     return cleanup;
     // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
   }, [currentUserId]);
@@ -491,6 +517,34 @@ export function TLCommunicationTab({
                     </div>
                     <span className="text-xs truncate flex-1">{m.fullName}</span>
                     {m.isAdmin && <span className="text-[9px] text-primary">Admin</span>}
+                    {isAdminViewer && !m.isAdmin && m.userId !== currentUserId && (
+                      <div className="flex items-center gap-0.5 shrink-0">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7 text-white hover:bg-white/15"
+                          title={`Audio call ${m.fullName} (free)`}
+                          disabled={inCall}
+                          onClick={() =>
+                            void initiateCall(m.userId, m.fullName, m.photoUrl, "audio")
+                          }
+                        >
+                          <Phone className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7 text-white hover:bg-white/15"
+                          title={`Video call ${m.fullName} (free)`}
+                          disabled={inCall}
+                          onClick={() =>
+                            void initiateCall(m.userId, m.fullName, m.photoUrl, "video")
+                          }
+                        >
+                          <Video className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -498,6 +552,22 @@ export function TLCommunicationTab({
           </div>
         )}
       </div>
+
+      {isAdminViewer && inCall && (
+        <CallScreen
+          status={callStatus}
+          activeCall={activeCall}
+          isMuted={isMuted}
+          isCameraOff={isCameraOff}
+          onEnd={endCall}
+          onToggleMute={toggleMute}
+          onToggleCamera={toggleCamera}
+          userGender="male"
+          partnerUserId={activeCall?.remoteUserId}
+          senderName="Admin"
+          currentUserId={currentUserId}
+        />
+      )}
     </Card>
   );
 }

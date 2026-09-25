@@ -31,14 +31,18 @@ export const useAppCall = (
   currentUserId: string | null,
   currentUserGender: "male" | "female",
   walletBalance: number,
+  options?: { isAdmin?: boolean },
 ) => {
   const { toast } = useToast();
   const { settings } = useAppSettings();
+  const isAdminCaller = !!options?.isAdmin;
   const pricing = { audioRatePerMinute: 6, videoRatePerMinute: 8 };
   const [status, setStatus] = useState<CallStatus>("idle");
   const [activeCall, setActiveCall] = useState<ActiveCall | null>(null);
   const [isMuted, setIsMuted] = useState(false);
   const [isCameraOff, setIsCameraOff] = useState(false);
+  const isAdminCallerRef = useRef(isAdminCaller);
+  isAdminCallerRef.current = isAdminCaller;
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
@@ -341,7 +345,8 @@ export const useAppCall = (
       targetPhoto: string | null,
       callType: CallType,
     ) => {
-      if (!currentUserId || currentUserGender !== "male") return;
+      if (!currentUserId) return;
+      if (!isAdminCallerRef.current && currentUserGender !== "male") return;
       if (callType === "audio" && settings.audioCallEnabled === false) {
         toast({
           title: "Audio calls temporarily unavailable",
@@ -363,68 +368,70 @@ export const useAppCall = (
         return;
       }
 
-      // Blocked users cannot call each other
-      try {
-        const { data: blockHit } = await supabase
-          .from("user_blocks")
-          .select("id")
-          .or(
-            `and(blocked_by.eq.${currentUserId},blocked_user_id.eq.${targetUserId}),and(blocked_by.eq.${targetUserId},blocked_user_id.eq.${currentUserId})`,
-          )
-          .limit(1)
-          .maybeSingle();
-        if (blockHit) {
+      // Blocked users cannot call each other (admins may still reach support)
+      if (!isAdminCallerRef.current) {
+        try {
+          const { data: blockHit } = await supabase
+            .from("user_blocks")
+            .select("id")
+            .or(
+              `and(blocked_by.eq.${currentUserId},blocked_user_id.eq.${targetUserId}),and(blocked_by.eq.${targetUserId},blocked_user_id.eq.${currentUserId})`,
+            )
+            .limit(1)
+            .maybeSingle();
+          if (blockHit) {
+            toast({
+              title: "Calls unavailable",
+              description: "You cannot call a blocked user.",
+              variant: "destructive",
+            });
+            return;
+          }
+        } catch {
+          /* non-fatal */
+        }
+
+        const [selfLang, targetLang] = await Promise.all([
+          fetchCallLanguage(currentUserId),
+          fetchCallLanguage(targetUserId),
+        ]);
+        if (!canCallEachOther(selfLang, targetLang)) {
           toast({
-            title: "Calls unavailable",
-            description: "You cannot call a blocked user.",
+            title: "Calls not available",
+            description: CALL_LANGUAGE_UNAVAILABLE,
             variant: "destructive",
           });
           return;
         }
-      } catch {
-        /* non-fatal */
-      }
-
-      const [selfLang, targetLang] = await Promise.all([
-        fetchCallLanguage(currentUserId),
-        fetchCallLanguage(targetUserId),
-      ]);
-      if (!canCallEachOther(selfLang, targetLang)) {
-        toast({
-          title: "Calls not available",
-          description: CALL_LANGUAGE_UNAVAILABLE,
-          variant: "destructive",
-        });
-        return;
-      }
-      const cap = await assertLanguageCallCapacity(selfLang, 2);
-      if (!cap.allowed) {
-        toast({
-          title: "Calls full",
-          description: cap.error || CALL_LANGUAGE_UNAVAILABLE,
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Check super user
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      const userEmail = session?.user?.email || "";
-      const isSuperUser = /^(female|male|admin)([1-9]|1[0-5])@meow-meow\.com$/i.test(userEmail);
-
-      if (!isSuperUser) {
-        const rate =
-          callType === "audio" ? pricing.audioRatePerMinute || 6 : pricing.videoRatePerMinute || 8;
-        const minBal = rate * 2;
-        if (walletBalance < minBal) {
+        const cap = await assertLanguageCallCapacity(selfLang, 2);
+        if (!cap.allowed) {
           toast({
-            title: "Insufficient balance",
-            description: `Need ₹${minBal} minimum for ${callType} call. Please recharge.`,
+            title: "Calls full",
+            description: cap.error || CALL_LANGUAGE_UNAVAILABLE,
             variant: "destructive",
           });
           return;
+        }
+
+        // Check super user
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        const userEmail = session?.user?.email || "";
+        const isSuperUser = /^(female|male|admin)([1-9]|1[0-5])@meow-meow\.com$/i.test(userEmail);
+
+        if (!isSuperUser) {
+          const rate =
+            callType === "audio" ? pricing.audioRatePerMinute || 6 : pricing.videoRatePerMinute || 8;
+          const minBal = rate * 2;
+          if (walletBalance < minBal) {
+            toast({
+              title: "Insufficient balance",
+              description: `Need ₹${minBal} minimum for ${callType} call. Please recharge.`,
+              variant: "destructive",
+            });
+            return;
+          }
         }
       }
 

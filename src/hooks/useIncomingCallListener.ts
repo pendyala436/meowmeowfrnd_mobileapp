@@ -68,12 +68,24 @@ export const useIncomingCallListener = (
         .eq("user_id", row.man_user_id ?? "")
         .maybeSingle();
 
+      let callerName = profile?.full_name || "";
+      let callerPhoto = profile?.photo_url || null;
+      if (!callerName) {
+        const { data: fallback } = await supabase
+          .from("profiles")
+          .select("full_name, photo_url")
+          .eq("user_id", row.man_user_id ?? "")
+          .maybeSingle();
+        callerName = fallback?.full_name || "Admin";
+        callerPhoto = fallback?.photo_url || null;
+      }
+
       setIncomingCall({
         callId: row.call_id ?? row.id,
         callType: (row.call_type as "audio" | "video") || "video",
         callerUserId: row.man_user_id ?? "",
-        callerName: profile?.full_name || "Unknown",
-        callerPhoto: profile?.photo_url || null,
+        callerName,
+        callerPhoto,
       });
     };
 

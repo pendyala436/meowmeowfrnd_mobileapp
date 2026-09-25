@@ -1,6 +1,7 @@
 /**
  * AdminSideChat — admin-facing 1-to-1 chat panel for /admin/messenger.
  * Mirrors UserAdminChat but inserts messages with sender_role='admin'.
+ * Audio/video call buttons place a free admin→woman call (billing bypass).
  */
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +13,8 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/errors";
+import { useAppCall } from "@/hooks/useAppCall";
+import { CallScreen } from "@/components/CallScreen";
 
 interface Msg {
   id: string;
@@ -31,7 +34,20 @@ export function AdminSideChat({ adminId, targetUserId, targetUserName }: Props) 
   const [messages, setMessages] = useState<Msg[]>([]);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
+  const [targetGender, setTargetGender] = useState<string | null>(null);
+  const [targetPhoto, setTargetPhoto] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
+
+  const {
+    status: callStatus,
+    activeCall,
+    isMuted,
+    isCameraOff,
+    initiateCall,
+    endCall,
+    toggleMute,
+    toggleCamera,
+  } = useAppCall(adminId, "male", 0, { isAdmin: true });
 
   const fetchMessages = async () => {
     const { data } = await supabase
@@ -42,6 +58,23 @@ export function AdminSideChat({ adminId, targetUserId, targetUserName }: Props) 
       .limit(200);
     if (data) setMessages(data as Msg[]);
   };
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("gender, photo_url")
+        .eq("user_id", targetUserId)
+        .maybeSingle();
+      if (cancelled) return;
+      setTargetGender((data?.gender || "").toLowerCase() || null);
+      setTargetPhoto(data?.photo_url || null);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [targetUserId]);
 
   useEffect(() => {
     fetchMessages();
@@ -98,6 +131,17 @@ export function AdminSideChat({ adminId, targetUserId, targetUserName }: Props) 
     }
   };
 
+  const canCallWoman = targetGender === "female";
+  const startCall = (type: "audio" | "video") => {
+    if (!canCallWoman) {
+      toast.info("Admin audio/video calls are available to women (including TL).");
+      return;
+    }
+    void initiateCall(targetUserId, targetUserName, targetPhoto, type);
+  };
+
+  const inCall = callStatus !== "idle" && callStatus !== "ended" && !!activeCall;
+
   return (
     <div className="flex flex-col h-[65vh]">
       <div className="px-3 py-2 border-b border-border flex items-center justify-between">
@@ -114,26 +158,20 @@ export function AdminSideChat({ adminId, targetUserId, targetUserName }: Props) 
           <Button
             size="icon"
             variant="ghost"
-            className="h-8 w-8"
-            title="Audio call (free)"
-            onClick={() =>
-              toast.info(
-                "Free audio call — use existing call flow from user side; admin billing bypass is active.",
-              )
-            }
+            className="h-8 w-8 text-white hover:bg-white/15"
+            title={canCallWoman ? "Audio call (free)" : "Audio calls available for women / TL"}
+            disabled={!canCallWoman || inCall}
+            onClick={() => startCall("audio")}
           >
             <Phone className="w-4 h-4" />
           </Button>
           <Button
             size="icon"
             variant="ghost"
-            className="h-8 w-8"
-            title="Video call (free)"
-            onClick={() =>
-              toast.info(
-                "Free video call — use existing call flow from user side; admin billing bypass is active.",
-              )
-            }
+            className="h-8 w-8 text-white hover:bg-white/15"
+            title={canCallWoman ? "Video call (free)" : "Video calls available for women / TL"}
+            disabled={!canCallWoman || inCall}
+            onClick={() => startCall("video")}
           >
             <Video className="w-4 h-4" />
           </Button>
@@ -186,6 +224,24 @@ export function AdminSideChat({ adminId, targetUserId, targetUserName }: Props) 
           {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
         </Button>
       </div>
+
+      {inCall && (
+        <CallScreen
+          status={callStatus}
+          activeCall={activeCall}
+          isMuted={isMuted}
+          isCameraOff={isCameraOff}
+          onEnd={() => {
+            endCall();
+          }}
+          onToggleMute={toggleMute}
+          onToggleCamera={toggleCamera}
+          userGender="male"
+          partnerUserId={targetUserId}
+          senderName="Admin"
+          currentUserId={adminId}
+        />
+      )}
     </div>
   );
 }
