@@ -6,7 +6,19 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, Send, Paperclip, Image, FileText, File, X, Download, Shield, Phone, Video } from "lucide-react";
+import {
+  Users,
+  Send,
+  Paperclip,
+  Image,
+  FileText,
+  File,
+  X,
+  Download,
+  Shield,
+  Phone,
+  Video,
+} from "lucide-react";
 import { classifyError, ERROR_MESSAGES } from "@/lib/errors";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";

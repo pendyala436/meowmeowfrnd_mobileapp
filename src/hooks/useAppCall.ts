@@ -422,7 +422,9 @@ export const useAppCall = (
 
         if (!isSuperUser) {
           const rate =
-            callType === "audio" ? pricing.audioRatePerMinute || 6 : pricing.videoRatePerMinute || 8;
+            callType === "audio"
+              ? pricing.audioRatePerMinute || 6
+              : pricing.videoRatePerMinute || 8;
           const minBal = rate * 2;
           if (walletBalance < minBal) {
             toast({

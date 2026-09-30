@@ -20,8 +20,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
         duration: 5000,
         classNames: {
           // App forces white text globally — toast surfaces must stay dark/colored.
-          toast:
-            "group toast !bg-[hsl(335_70%_28%)] !text-white border border-white/25 shadow-lg",
+          toast: "group toast !bg-[hsl(335_70%_28%)] !text-white border border-white/25 shadow-lg",
           title: "!text-white !font-semibold",
           description: "!text-white/90",
           success: "!bg-[hsl(88_40%_28%)] !text-white !border-white/20",

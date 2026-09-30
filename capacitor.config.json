@@ -3,12 +3,7 @@
   "appName": "Meow Meow Frnd App",
   "webDir": "dist",
   "server": {
-    "allowNavigation": [
-      "razorpay.com",
-      "*.razorpay.com",
-      "razorpay.in",
-      "*.razorpay.in"
-    ]
+    "allowNavigation": ["razorpay.com", "*.razorpay.com", "razorpay.in", "*.razorpay.in"]
   },
   "ios": {
     "contentInset": "automatic",
