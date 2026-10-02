@@ -20,8 +20,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
           toast: "group toast border shadow-lg",
           title: "!text-white !font-semibold",
           description: "!text-white/90",
-          actionButton:
-            "!bg-[hsl(var(--primary-foreground))] !text-[hsl(var(--primary))]",
+          actionButton: "!bg-[hsl(var(--primary-foreground))] !text-[hsl(var(--primary))]",
           cancelButton: "!bg-white/15 !text-white",
           closeButton: "!bg-white/15 !text-white !border-white/20",
         },
