@@ -1,16 +1,15 @@
 /**
  * Route-aware SEO head updates for the SPA.
- * - Public routes: index,follow + canonical
- * - Private/app routes: noindex,nofollow (dashboards, chat, admin, registration)
+ * - Public routes: index,follow + canonical + unique title/description
+ * - Private/app routes: noindex,nofollow
  */
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import {
-  SITE_DEFAULT_DESCRIPTION,
-  SITE_DEFAULT_TITLE,
   SITE_NAME,
   SITE_OG_IMAGE,
   absoluteUrl,
+  getPageSeo,
   isPublicIndexablePath,
 } from "@/lib/site";
 
@@ -34,19 +33,6 @@ function upsertLink(rel: string, href: string): void {
   el.setAttribute("href", href);
 }
 
-const ROUTE_TITLES: Record<string, string> = {
-  "/": SITE_DEFAULT_TITLE,
-  "/auth": `Sign In | ${SITE_NAME}`,
-  "/install": `Install App | ${SITE_NAME}`,
-  "/forgot-password": `Forgot Password | ${SITE_NAME}`,
-  "/register": `Register | ${SITE_NAME}`,
-  "/dashboard": `Dashboard | ${SITE_NAME}`,
-  "/women-dashboard": `Dashboard | ${SITE_NAME}`,
-  "/admin": `Admin | ${SITE_NAME}`,
-  "/settings": `Settings | ${SITE_NAME}`,
-  "/wallet": `Wallet | ${SITE_NAME}`,
-};
-
 export function SeoManager() {
   const { pathname } = useLocation();
 
@@ -54,17 +40,11 @@ export function SeoManager() {
     const normalized = pathname.replace(/\/+$/, "") || "/";
     const indexable = isPublicIndexablePath(normalized);
     const canonical = absoluteUrl(normalized === "/" ? "/" : normalized);
-    const title =
-      ROUTE_TITLES[normalized] ||
-      (normalized.startsWith("/admin")
-        ? `Admin | ${SITE_NAME}`
-        : normalized.startsWith("/chat")
-          ? `Chat | ${SITE_NAME}`
-          : `${SITE_NAME}`);
+    const { title, description } = getPageSeo(normalized);
 
     document.title = title;
 
-    upsertMeta("name", "description", SITE_DEFAULT_DESCRIPTION);
+    upsertMeta("name", "description", description);
     upsertMeta(
       "name",
       "robots",
@@ -75,7 +55,7 @@ export function SeoManager() {
     upsertLink("canonical", canonical);
 
     upsertMeta("property", "og:title", title);
-    upsertMeta("property", "og:description", SITE_DEFAULT_DESCRIPTION);
+    upsertMeta("property", "og:description", description);
     upsertMeta("property", "og:url", canonical);
     upsertMeta("property", "og:image", SITE_OG_IMAGE);
     upsertMeta("property", "og:type", "website");
@@ -83,7 +63,7 @@ export function SeoManager() {
     upsertMeta("property", "og:locale", "en_IN");
 
     upsertMeta("name", "twitter:title", title);
-    upsertMeta("name", "twitter:description", SITE_DEFAULT_DESCRIPTION);
+    upsertMeta("name", "twitter:description", description);
     upsertMeta("name", "twitter:image", SITE_OG_IMAGE);
     upsertMeta("name", "twitter:card", "summary_large_image");
   }, [pathname]);

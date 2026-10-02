@@ -8,8 +8,10 @@ import {
   SITE_OG_IMAGE,
   SITE_LOGO,
   PUBLIC_INDEXABLE_PATHS,
+  PAGE_SEO,
   absoluteUrl,
   isPublicIndexablePath,
+  getPageSeo,
 } from "./site";
 
 describe("site SEO helpers", () => {
@@ -47,15 +49,18 @@ describe("site SEO helpers", () => {
 
   describe("isPublicIndexablePath", () => {
     it("allows the public indexable set", () => {
-      expect(PUBLIC_INDEXABLE_PATHS.has("/")).toBe(true);
+      expect(PUBLIC_INDEXABLE_PATHS.has("/about")).toBe(true);
       expect(isPublicIndexablePath("/")).toBe(true);
       expect(isPublicIndexablePath("/auth")).toBe(true);
       expect(isPublicIndexablePath("/install")).toBe(true);
+      expect(isPublicIndexablePath("/about")).toBe(true);
+      expect(isPublicIndexablePath("/how-it-works")).toBe(true);
+      expect(isPublicIndexablePath("/faq")).toBe(true);
     });
 
     it("normalizes trailing slashes", () => {
       expect(isPublicIndexablePath("/auth/")).toBe(true);
-      expect(isPublicIndexablePath("/install///")).toBe(true);
+      expect(isPublicIndexablePath("/faq///")).toBe(true);
       expect(isPublicIndexablePath("")).toBe(true);
     });
 
@@ -64,6 +69,29 @@ describe("site SEO helpers", () => {
       expect(isPublicIndexablePath("/admin")).toBe(false);
       expect(isPublicIndexablePath("/chat/abc")).toBe(false);
       expect(isPublicIndexablePath("/wallet")).toBe(false);
+    });
+  });
+
+  describe("getPageSeo", () => {
+    it("returns unique public page meta", () => {
+      expect(getPageSeo("/about").title).toContain("About");
+      expect(getPageSeo("/faq").description.toLowerCase()).toContain("frequently asked");
+      expect(getPageSeo("/how-it-works").title).not.toBe(getPageSeo("/about").title);
+      expect(PAGE_SEO["/install"].description.length).toBeGreaterThan(40);
+    });
+
+    it("falls back for admin and chat prefixes", () => {
+      expect(getPageSeo("/admin/users").title).toContain("Admin");
+      expect(getPageSeo("/chat/xyz").title).toContain("Chat");
+    });
+
+    it("falls back to site name for unknown paths", () => {
+      expect(getPageSeo("/totally-unknown").title).toBe(SITE_NAME);
+    });
+
+    it("normalizes empty path to home seo", () => {
+      expect(getPageSeo("")).toEqual(PAGE_SEO["/"]);
+      expect(getPageSeo("///").title).toBe(PAGE_SEO["/"].title);
     });
   });
 });

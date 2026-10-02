@@ -50,6 +50,9 @@ export const ROUTES = {
   SETTINGS: "/settings",
   PRIVATE_GROUPS: "/private-groups",
   INSTALL: "/install",
+  ABOUT: "/about",
+  HOW_IT_WORKS: "/how-it-works",
+  FAQ: "/faq",
 
   // Admin
   ADMIN: "/admin",
