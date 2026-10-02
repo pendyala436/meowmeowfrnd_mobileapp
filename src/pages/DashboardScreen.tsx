@@ -1313,6 +1313,11 @@ const DashboardScreen = () => {
     opts?: { fromMatch?: boolean },
   ) {
     if (isConnecting) return;
+    // Online / cold start: same recharge gate as Chats & Group Call tabs
+    if (!opts?.fromMatch && menNeedsRecharge(walletBalance, pricing.ratePerMinute)) {
+      setRechargeDialogOpen(true);
+      return;
+    }
     if (settings.chatEnabled === false) {
       toast({
         title: "Chat temporarily unavailable",
