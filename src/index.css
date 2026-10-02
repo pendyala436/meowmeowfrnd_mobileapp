@@ -4002,23 +4002,23 @@ html {
   }
 }
 
-/* Sonner toasts: keep dark/colored surfaces so forced white text stays readable */
+/* Sonner toasts: theme-tinted dark surfaces so forced white text stays readable */
 [data-sonner-toaster] [data-sonner-toast] {
-  background: hsl(335 70% 28%) !important;
+  background: color-mix(in srgb, hsl(var(--primary)) 62%, #000) !important;
   color: #fff !important;
-  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  border: 1px solid color-mix(in srgb, hsl(var(--primary-foreground)) 28%, transparent) !important;
 }
 [data-sonner-toaster] [data-sonner-toast][data-type="error"] {
-  background: hsl(0 72% 38%) !important;
+  background: color-mix(in srgb, hsl(var(--destructive)) 72%, #000) !important;
 }
 [data-sonner-toaster] [data-sonner-toast][data-type="success"] {
-  background: hsl(88 40% 28%) !important;
+  background: color-mix(in srgb, hsl(var(--success)) 65%, #000) !important;
 }
 [data-sonner-toaster] [data-sonner-toast][data-type="warning"] {
-  background: hsl(43 80% 32%) !important;
+  background: color-mix(in srgb, hsl(var(--warning)) 55%, #000) !important;
 }
 [data-sonner-toaster] [data-sonner-toast][data-type="info"] {
-  background: hsl(218 55% 32%) !important;
+  background: color-mix(in srgb, hsl(var(--info)) 65%, #000) !important;
 }
 [data-sonner-toaster] [data-sonner-toast] [data-title],
 [data-sonner-toaster] [data-sonner-toast] [data-description],

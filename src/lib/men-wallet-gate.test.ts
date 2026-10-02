@@ -21,10 +21,10 @@ describe("men-wallet-gate", () => {
   });
 
   it("identifies paid engagement tabs", () => {
-    expect(MEN_PAID_TABS).toEqual(["chats", "groups", "matches"]);
+    expect(MEN_PAID_TABS).toEqual(["chats", "groups"]);
     expect(isMenPaidTab("chats")).toBe(true);
     expect(isMenPaidTab("groups")).toBe(true);
-    expect(isMenPaidTab("matches")).toBe(true);
+    expect(isMenPaidTab("matches")).toBe(false);
     expect(isMenPaidTab("online")).toBe(false);
     expect(isMenPaidTab("wallet")).toBe(false);
   });
