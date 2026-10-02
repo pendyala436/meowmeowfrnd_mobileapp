@@ -1,14 +1,47 @@
+User-agent: *
+Allow: /
+Allow: /auth
+Allow: /install
+Disallow: /dashboard
+Disallow: /women-dashboard
+Disallow: /chat
+Disallow: /matching
+Disallow: /match-discovery
+Disallow: /online-users
+Disallow: /profile
+Disallow: /settings
+Disallow: /private-groups
+Disallow: /wallet
+Disallow: /women-wallet
+Disallow: /admin
+Disallow: /captcha
+Disallow: /gender-verify
+Disallow: /register
+Disallow: /basic-info
+Disallow: /personal-details
+Disallow: /voice-gender-verify
+Disallow: /photo-upload
+Disallow: /additional-photos
+Disallow: /location-setup
+Disallow: /language-preferences
+Disallow: /password-setup
+Disallow: /terms-agreement
+Disallow: /ai-processing
+Disallow: /registration-complete
+Disallow: /approval-pending
+Disallow: /welcome
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /password-reset-success
+
 User-agent: Googlebot
 Allow: /
+Allow: /auth
+Allow: /install
 
 User-agent: Bingbot
 Allow: /
+Allow: /auth
+Allow: /install
 
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
-User-agent: *
-Allow: /
+Sitemap: https://www.meow-meow.co.in/sitemap.xml

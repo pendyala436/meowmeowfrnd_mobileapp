@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { QueryClient, QueryClientProvider, QueryCache } from "@tanstack/react-query";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { SeoManager } from "@/components/SeoManager";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import SecurityProvider from "@/components/SecurityProvider";
 import ScreenCaptureGuard from "@/components/ScreenCaptureGuard";
@@ -163,6 +164,7 @@ const AppShell = () => {
       <ScreenCaptureGuard>
         <UserActivityProvider>
           <AutoLogoutWrapper>
+            <SeoManager />
             <Routes>
               {/* Auth */}
               <Route
