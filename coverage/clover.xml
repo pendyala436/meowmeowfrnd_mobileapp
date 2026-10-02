@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1790734262149" clover="3.2.0">
-  <project timestamp="1790734262149" name="All files">
-    <metrics statements="2692" coveredstatements="2692" conditionals="707" coveredconditionals="707" methods="104" coveredmethods="104" elements="3503" coveredelements="3503" complexity="0" loc="2692" ncloc="2692" packages="6" files="24" classes="24"/>
+<coverage generated="1790943308448" clover="3.2.0">
+  <project timestamp="1790943308448" name="All files">
+    <metrics statements="2716" coveredstatements="2716" conditionals="715" coveredconditionals="715" methods="106" coveredmethods="106" elements="3537" coveredelements="3537" complexity="0" loc="2716" ncloc="2716" packages="6" files="25" classes="25"/>
     <package name="components">
       <metrics statements="101" coveredstatements="101" conditionals="14" coveredconditionals="14" methods="4" coveredmethods="4"/>
       <file name="AppBottomTabs.tsx" path="/Users/jahbyte/Desktop/new_project/src/components/AppBottomTabs.tsx">
@@ -401,7 +401,7 @@
       </file>
     </package>
     <package name="lib">
-      <metrics statements="1621" coveredstatements="1621" conditionals="439" coveredconditionals="439" methods="55" coveredmethods="55"/>
+      <metrics statements="1645" coveredstatements="1645" conditionals="447" coveredconditionals="447" methods="57" coveredmethods="57"/>
       <file name="call-languages.ts" path="/Users/jahbyte/Desktop/new_project/src/lib/call-languages.ts">
         <metrics statements="186" coveredstatements="186" conditionals="62" coveredconditionals="62" methods="12" coveredmethods="12"/>
         <line num="1" count="1" type="stmt"/>
@@ -1795,6 +1795,33 @@
         <line num="37" count="1" type="stmt"/>
         <line num="38" count="1" type="stmt"/>
         <line num="39" count="1" type="stmt"/>
+      </file>
+      <file name="site.ts" path="/Users/jahbyte/Desktop/new_project/src/lib/site.ts">
+        <metrics statements="24" coveredstatements="24" conditionals="8" coveredconditionals="8" methods="2" coveredmethods="2"/>
+        <line num="1" count="1" type="stmt"/>
+        <line num="4" count="1" type="stmt"/>
+        <line num="5" count="1" type="stmt"/>
+        <line num="6" count="1" type="stmt"/>
+        <line num="7" count="1" type="stmt"/>
+        <line num="10" count="1" type="stmt"/>
+        <line num="11" count="1" type="stmt"/>
+        <line num="12" count="1" type="stmt"/>
+        <line num="13" count="1" type="stmt"/>
+        <line num="14" count="1" type="stmt"/>
+        <line num="16" count="1" type="stmt"/>
+        <line num="17" count="1" type="cond" truecount="1" falsecount="0"/>
+        <line num="18" count="8" type="cond" truecount="3" falsecount="0"/>
+        <line num="19" count="8" type="cond" truecount="2" falsecount="0"/>
+        <line num="20" count="8" type="stmt"/>
+        <line num="22" count="1" type="stmt"/>
+        <line num="23" count="1" type="stmt"/>
+        <line num="25" count="1" type="stmt"/>
+        <line num="28" count="1" type="stmt"/>
+        <line num="29" count="1" type="stmt"/>
+        <line num="31" count="1" type="cond" truecount="1" falsecount="0"/>
+        <line num="32" count="10" type="cond" truecount="1" falsecount="0"/>
+        <line num="33" count="10" type="stmt"/>
+        <line num="34" count="10" type="stmt"/>
       </file>
       <file name="utils.ts" path="/Users/jahbyte/Desktop/new_project/src/lib/utils.ts">
         <metrics statements="18" coveredstatements="18" conditionals="9" coveredconditionals="9" methods="2" coveredmethods="2"/>
