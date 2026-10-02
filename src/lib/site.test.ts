@@ -21,7 +21,8 @@ describe("site SEO helpers", () => {
     expect(SITE_NAME).toBe("Meow Meow Frnd App");
     expect(SITE_TAGLINE).toBe("Find Your Purrfect Match");
     expect(SITE_DEFAULT_TITLE).toContain(SITE_NAME);
-    expect(SITE_DEFAULT_TITLE).toContain(SITE_TAGLINE);
+    expect(SITE_DEFAULT_TITLE.toLowerCase()).toContain("friends");
+    expect(SITE_DEFAULT_DESCRIPTION.toLowerCase()).toContain("make friends online");
     expect(SITE_DEFAULT_DESCRIPTION.length).toBeGreaterThan(40);
   });
 
@@ -75,7 +76,7 @@ describe("site SEO helpers", () => {
   describe("getPageSeo", () => {
     it("returns unique public page meta", () => {
       expect(getPageSeo("/about").title).toContain("About");
-      expect(getPageSeo("/faq").description.toLowerCase()).toContain("frequently asked");
+      expect(getPageSeo("/faq").description.toLowerCase()).toContain("meet new people");
       expect(getPageSeo("/how-it-works").title).not.toBe(getPageSeo("/about").title);
       expect(PAGE_SEO["/install"].description.length).toBeGreaterThan(40);
     });

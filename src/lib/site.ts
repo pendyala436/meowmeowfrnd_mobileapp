@@ -2,6 +2,8 @@
  * Canonical public site origin for SEO / OG / sitemap.
  * Override with VITE_SITE_URL at build time if the primary domain changes.
  */
+import { HOME_DESCRIPTION, HOME_TITLE } from "@/lib/seo-keywords";
+
 export const SITE_ORIGIN = (import.meta.env.VITE_SITE_URL || "https://www.meow-meow.co.in").replace(
   /\/$/,
   "",
@@ -9,9 +11,8 @@ export const SITE_ORIGIN = (import.meta.env.VITE_SITE_URL || "https://www.meow-m
 
 export const SITE_NAME = "Meow Meow Frnd App";
 export const SITE_TAGLINE = "Find Your Purrfect Match";
-export const SITE_DEFAULT_TITLE = `${SITE_NAME} - ${SITE_TAGLINE}`;
-export const SITE_DEFAULT_DESCRIPTION =
-  "Meow Meow Frnd App is a global friend-making app connecting people through meaningful chat, audio, and video conversations. Find your perfect friend worldwide.";
+export const SITE_DEFAULT_TITLE = HOME_TITLE;
+export const SITE_DEFAULT_DESCRIPTION = HOME_DESCRIPTION;
 
 /** Absolute URL helper */
 export function absoluteUrl(path = "/"): string {
@@ -36,27 +37,27 @@ export const PAGE_SEO: Record<string, PageSeo> = {
   "/auth": {
     title: `Sign In | ${SITE_NAME}`,
     description:
-      "Sign in to Meow Meow Frnd App to chat, call, and connect with verified friends across India and beyond.",
+      "Sign in to Meow Meow Frnd to make friends online, chat with new people, and start safe voice or video conversations.",
   },
   "/install": {
     title: `Install App | ${SITE_NAME}`,
     description:
-      "Install Meow Meow Frnd as a PWA on Android, iPhone, or desktop for faster access, notifications, and an app-like experience.",
+      "Install the Meow Meow Frnd friendship app as a PWA — meet people, chat, and call from your home screen on Android, iPhone, or desktop.",
   },
   "/about": {
     title: `About Us | ${SITE_NAME}`,
     description:
-      "Learn about Meow Meow Frnd App — a friend-making platform focused on safe chat, audio and video calls, and meaningful connections.",
+      "About Meow Meow Frnd — a social friendship app to meet like-minded people, make genuine connections, and chat safely with voice and video.",
   },
   "/how-it-works": {
     title: `How It Works | ${SITE_NAME}`,
     description:
-      "See how Meow Meow Frnd works: register, verify, match by language, chat and call safely, and manage your wallet on web or mobile.",
+      "How to make friends online with Meow Meow Frnd: register, verify, match by language, chat privately, and connect with voice or video calls.",
   },
   "/faq": {
     title: `FAQ | ${SITE_NAME}`,
     description:
-      "Frequently asked questions about Meow Meow Frnd App — accounts, safety, chat, calls, payments, languages, and installing the PWA.",
+      "FAQ: how to meet new people online, make friends safely, use chat and video calls, languages, wallet, and installing Meow Meow Frnd.",
   },
   "/forgot-password": {
     title: `Forgot Password | ${SITE_NAME}`,

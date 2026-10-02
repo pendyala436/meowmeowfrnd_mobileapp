@@ -432,7 +432,7 @@ const AuthScreen = () => {
               <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-2 sm:mb-4 bg-primary/20 rounded-full animate-pulse" />
             }
           >
-            <MeowLogo size="lg" className="mx-auto mb-2 sm:mb-4" />
+            <MeowLogo size="lg" priority className="mx-auto mb-2 sm:mb-4" />
           </Suspense>
           <h1 className="font-logo text-2xl sm:text-4xl text-white mb-1 sm:mb-2 drop-shadow-sm">
             {t("app.name", "MEOW MEOW FRND APP")}
@@ -527,6 +527,40 @@ const AuthScreen = () => {
             </div>
           </div>
         </Card>
+
+        <nav
+          className="mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs sm:text-sm text-white/85"
+          aria-label="About Meow Meow Frnd"
+        >
+          <button
+            type="button"
+            onClick={() => navigate("/about")}
+            className="hover:text-white underline-offset-2 hover:underline"
+          >
+            About
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate("/how-it-works")}
+            className="hover:text-white underline-offset-2 hover:underline"
+          >
+            How it works
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate("/faq")}
+            className="hover:text-white underline-offset-2 hover:underline"
+          >
+            FAQ
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate("/install")}
+            className="hover:text-white underline-offset-2 hover:underline"
+          >
+            Install app
+          </button>
+        </nav>
       </main>
 
       {/* Floating scroll toggle — helps reach Sign Up button on small screens */}

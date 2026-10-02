@@ -73,11 +73,14 @@ export default defineConfig(({ mode }) => ({
       includeAssets: [
         "favicon.ico",
         "icons/*.png",
+        "icons/*.webp",
         "meow-meow-logo.png",
         "favicon.png",
         "screenshots/*.png",
         "splash/*.png",
         "robots.txt",
+        "llms.txt",
+        "sitemap.xml",
       ],
       manifest: false,
       injectManifest: {
