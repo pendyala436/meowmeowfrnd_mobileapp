@@ -4,40 +4,41 @@ import { Link } from "react-router-dom";
 export default function HowItWorksPage() {
   return (
     <PublicInfoLayout
-      title="How Meow Meow Frnd Works"
-      subtitle="From signup to your first conversation — a simple path designed for safety and clarity."
+      title="How to Make Friends Online with Meow Meow Frnd"
+      subtitle="A simple path to meet new people, start conversations, and build genuine friendships — safely."
     >
       <section>
         <h2 className="text-lg font-semibold mb-2">1. Create your account</h2>
         <p>
           Start at the sign-in page, choose your language and country, then complete basic profile
           details. Depending on your path, you may complete captcha, gender verification, photo
-          upload, and terms agreement before entering the app.
+          upload, and terms agreement before entering the friendship app.
         </p>
       </section>
 
       <section>
-        <h2 className="text-lg font-semibold mb-2">2. Verify & get approved</h2>
+        <h2 className="text-lg font-semibold mb-2">2. Verify for a safer community</h2>
         <p>
-          Verification steps help keep the community safer. Some profiles may wait for approval
+          Verification steps help keep online connections safer. Some profiles may wait for approval
           before full access. Follow on-screen guidance until your dashboard unlocks.
         </p>
       </section>
 
       <section>
-        <h2 className="text-lg font-semibold mb-2">3. Discover people</h2>
+        <h2 className="text-lg font-semibold mb-2">3. Discover like-minded people</h2>
         <p>
-          Use matching and discovery tools to find people who share your language preferences.
-          Online status and filters help you start conversations with people who are available now.
+          Use matching and discovery to meet people who share your language preferences. Online
+          status and filters help you find friends who are available to chat now.
         </p>
       </section>
 
       <section>
-        <h2 className="text-lg font-semibold mb-2">4. Chat, audio & video</h2>
+        <h2 className="text-lg font-semibold mb-2">4. Chat, voice & video</h2>
         <p>
-          Message one-to-one, send media where allowed, or place audio and video calls. Private
-          group call rooms are available when enabled by settings. Always follow community rules —
-          harassment, scams, and sharing personal contact details outside the app may be moderated.
+          Start private messaging, then connect with voice chat or video chat when you are both
+          ready. Private group call rooms may be available when enabled. Keep conversations
+          respectful — harassment, scams, and sharing personal contacts outside the app may be
+          moderated.
         </p>
       </section>
 
@@ -51,20 +52,21 @@ export default function HowItWorksPage() {
       </section>
 
       <section>
-        <h2 className="text-lg font-semibold mb-2">6. Install on your phone</h2>
+        <h2 className="text-lg font-semibold mb-2">6. Install the app</h2>
         <p>
-          Prefer an app icon on your home screen? Visit the{" "}
+          Prefer a home-screen icon? Visit the{" "}
           <Link className="underline" to="/install">
             install guide
           </Link>{" "}
-          for Android, iOS, and desktop PWA instructions.
+          for Android, iOS, and desktop PWA instructions — a modern way to keep your friendship
+          community one tap away.
         </p>
       </section>
 
       <section>
         <h2 className="text-lg font-semibold mb-2">Next steps</h2>
         <p>
-          Questions? See the{" "}
+          Questions about how to meet people online safely? See the{" "}
           <Link className="underline" to="/faq">
             FAQ
           </Link>
@@ -75,8 +77,8 @@ export default function HowItWorksPage() {
           . Otherwise{" "}
           <Link className="underline" to="/auth">
             open the app
-          </Link>
-          .
+          </Link>{" "}
+          and start making friends.
         </p>
       </section>
     </PublicInfoLayout>
