@@ -34,6 +34,8 @@ describe("getMenTabs", () => {
     expect(tabs.find((t) => t.id === "chats")?.locked).toBe(true);
     expect(tabs.find((t) => t.id === "chats")?.badge).toBeUndefined();
     expect(tabs.find((t) => t.id === "groups")?.rechargeBadge).toBe(true);
+    expect(tabs.find((t) => t.id === "history")?.rechargeBadge).toBe(true);
+    expect(tabs.find((t) => t.id === "history")?.locked).toBe(true);
     expect(tabs.find((t) => t.id === "matches")?.rechargeBadge).toBe(true);
     expect(tabs.find((t) => t.id === "matches")?.locked).toBe(true);
     expect(tabs.find((t) => t.id === "matches")?.badge).toBeUndefined();

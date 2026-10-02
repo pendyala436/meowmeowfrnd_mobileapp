@@ -87,7 +87,7 @@ export const getMenTabs = (
   showChat: boolean = true,
   showGroups: boolean = true,
   showHistory: boolean = true,
-  /** Low balance: Chats / Group Call / Matches show ₹ badge and are locked by the dashboard. */
+  /** Low balance: Chats / History / Group Call / Matches show ₹ badge and are locked. */
   needsRecharge: boolean = false,
 ): TabItem[] => {
   const tabs: TabItem[] = [
@@ -103,7 +103,13 @@ export const getMenTabs = (
       locked: needsRecharge,
     });
   if (showHistory)
-    tabs.push({ id: "history", label: "History", icon: <Clock className="w-5 h-5" /> });
+    tabs.push({
+      id: "history",
+      label: "History",
+      icon: <Clock className="w-5 h-5" />,
+      rechargeBadge: needsRecharge,
+      locked: needsRecharge,
+    });
   if (showGroups)
     tabs.push({
       id: "groups",
