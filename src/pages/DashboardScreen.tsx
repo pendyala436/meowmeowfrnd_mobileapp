@@ -74,6 +74,7 @@ import { MatchFiltersPanel, MatchFilters } from "@/components/MatchFiltersPanel"
 import { AppHeader } from "@/components/AppHeader";
 import { AppBottomTabs, getMenTabs } from "@/components/AppBottomTabs";
 import GroupChatTab from "@/components/GroupChatTab";
+import { isMenPaidTab, menNeedsRecharge } from "@/lib/men-wallet-gate";
 
 import { UserContactCard } from "@/components/UserContactCard";
 import { isVisibilityStatusChange } from "@/lib/presence";
@@ -257,6 +258,7 @@ const DashboardScreen = () => {
   const chatsInFlightRef = useRef(false);
   const lastChatsFetchRef = useRef(0);
   const onlineWomenLoadedRef = useRef(false);
+  const menLowBalancePromptedRef = useRef(false);
   const userStatusSnapshotRef = useRef<Map<string, string>>(new Map());
   const [activeChats, setActiveChats] = useState<
     Array<{
@@ -1657,6 +1659,7 @@ const DashboardScreen = () => {
   const onlineCount = sameLanguageWomen.length + indianTranslatedWomen.length;
   const totalUnreadCount = activeChats.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
   const showCallGroups = settings.privateGroupsEnabledMen !== false;
+  const needsMenRecharge = menNeedsRecharge(walletBalance, pricing.ratePerMinute);
   const menTabs = getMenTabs(
     onlineCount || undefined,
     totalUnreadCount || activeChatCount || undefined,
@@ -1665,6 +1668,7 @@ const DashboardScreen = () => {
     settings.chatEnabled !== false,
     showCallGroups,
     settings.historyTabVisible !== false,
+    needsMenRecharge,
   );
   const audioCallsEnabled = settings.audioCallEnabled !== false;
   const videoCallsEnabled = settings.videoCallEnabled !== false;
@@ -1674,6 +1678,26 @@ const DashboardScreen = () => {
       setActiveTab("online");
     }
   }, [settings.historyTabVisible, activeTab]);
+
+  // Prompt recharge while balance is zero / near-zero; clear prompt flag when balance recovers.
+  useEffect(() => {
+    if (!needsMenRecharge) {
+      menLowBalancePromptedRef.current = false;
+      return;
+    }
+    if (!menLowBalancePromptedRef.current) {
+      menLowBalancePromptedRef.current = true;
+      setRechargeDialogOpen(true);
+    }
+  }, [needsMenRecharge]);
+
+  // Bounce off paid tabs while locked.
+  useEffect(() => {
+    if (needsMenRecharge && isMenPaidTab(activeTab)) {
+      setActiveTab("online");
+      setRechargeDialogOpen(true);
+    }
+  }, [needsMenRecharge, activeTab]);
 
   if (isLoading) {
     return (
@@ -1710,6 +1734,10 @@ const DashboardScreen = () => {
   };
 
   const handleTabChange = (tabId: string) => {
+    if (needsMenRecharge && isMenPaidTab(tabId)) {
+      setRechargeDialogOpen(true);
+      return;
+    }
     setActiveTab(tabId);
   };
 

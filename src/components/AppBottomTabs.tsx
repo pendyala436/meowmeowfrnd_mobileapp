@@ -19,6 +19,9 @@ export interface TabItem {
   label: string;
   icon: React.ReactNode;
   badge?: number;
+  /** Shows a persistent "₹" badge (e.g. men low-balance gate). */
+  rechargeBadge?: boolean;
+  locked?: boolean;
 }
 
 interface AppBottomTabsProps {
@@ -48,10 +51,20 @@ export const AppBottomTabs: React.FC<AppBottomTabsProps> = ({ tabs, activeTab, o
               )}
               <div className="relative shrink-0">
                 <span className="[&>svg]:w-[16px] [&>svg]:h-[16px]">{tab.icon}</span>
-                {tab.badge !== undefined && tab.badge > 0 && (
-                  <span className="absolute -top-1 -right-1.5 min-w-[12px] h-[12px] rounded-full bg-primary text-white text-[8px] font-bold flex items-center justify-center px-0.5">
-                    {tab.badge > 99 ? "99+" : tab.badge}
+                {tab.rechargeBadge ? (
+                  <span
+                    className="absolute -top-1 -right-1.5 min-w-[12px] h-[12px] rounded-full bg-amber-500 text-white text-[8px] font-bold flex items-center justify-center px-0.5"
+                    aria-label="Recharge required"
+                  >
+                    ₹
                   </span>
+                ) : (
+                  tab.badge !== undefined &&
+                  tab.badge > 0 && (
+                    <span className="absolute -top-1 -right-1.5 min-w-[12px] h-[12px] rounded-full bg-primary text-white text-[8px] font-bold flex items-center justify-center px-0.5">
+                      {tab.badge > 99 ? "99+" : tab.badge}
+                    </span>
+                  )
                 )}
               </div>
               <span className="text-[8px] leading-none font-medium truncate w-full text-center px-0.5">
@@ -74,6 +87,8 @@ export const getMenTabs = (
   showChat: boolean = true,
   showGroups: boolean = true,
   showHistory: boolean = true,
+  /** Low balance: Chats / Group Call / Matches show ₹ badge and are locked by the dashboard. */
+  needsRecharge: boolean = false,
 ): TabItem[] => {
   const tabs: TabItem[] = [
     { id: "online", label: "Online", icon: <Users className="w-5 h-5" />, badge: onlineBadge },
@@ -83,18 +98,28 @@ export const getMenTabs = (
       id: "chats",
       label: "Chats",
       icon: <MessageCircle className="w-5 h-5" />,
-      badge: chatBadge,
+      badge: needsRecharge ? undefined : chatBadge,
+      rechargeBadge: needsRecharge,
+      locked: needsRecharge,
     });
   if (showHistory)
     tabs.push({ id: "history", label: "History", icon: <Clock className="w-5 h-5" /> });
   if (showGroups)
-    tabs.push({ id: "groups", label: "Group Call", icon: <Video className="w-5 h-5" /> });
+    tabs.push({
+      id: "groups",
+      label: "Group Call",
+      icon: <Video className="w-5 h-5" />,
+      rechargeBadge: needsRecharge,
+      locked: needsRecharge,
+    });
   tabs.push({ id: "groupchat", label: "Group Chat", icon: <Radio className="w-5 h-5" /> });
   tabs.push({
     id: "matches",
     label: "Matches",
     icon: <Heart className="w-5 h-5" />,
-    badge: matchBadge,
+    badge: needsRecharge ? undefined : matchBadge,
+    rechargeBadge: needsRecharge,
+    locked: needsRecharge,
   });
 
   tabs.push({ id: "wallet", label: "Wallet", icon: <Wallet className="w-5 h-5" /> });

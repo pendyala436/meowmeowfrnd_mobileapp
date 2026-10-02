@@ -27,6 +27,17 @@ describe("getMenTabs", () => {
     expect(tabs.find((t) => t.id === "online")?.badge).toBe(5);
     expect(tabs.find((t) => t.id === "chats")?.badge).toBe(3);
   });
+
+  it("marks paid tabs with recharge badge when needsRecharge", () => {
+    const tabs = getMenTabs(5, 3, 1, true, true, true, true, true);
+    expect(tabs.find((t) => t.id === "chats")?.rechargeBadge).toBe(true);
+    expect(tabs.find((t) => t.id === "chats")?.locked).toBe(true);
+    expect(tabs.find((t) => t.id === "chats")?.badge).toBeUndefined();
+    expect(tabs.find((t) => t.id === "groups")?.rechargeBadge).toBe(true);
+    expect(tabs.find((t) => t.id === "matches")?.rechargeBadge).toBe(true);
+    expect(tabs.find((t) => t.id === "online")?.rechargeBadge).toBeFalsy();
+    expect(tabs.find((t) => t.id === "wallet")?.rechargeBadge).toBeFalsy();
+  });
 });
 
 describe("getWomenTabs", () => {
@@ -75,5 +86,20 @@ describe("AppBottomTabs", () => {
     ];
     const { container } = render(<AppBottomTabs tabs={tabs} activeTab="a" onTabChange={vi.fn()} />);
     expect(container.querySelector(".bg-primary.text-primary-foreground")).toBeNull();
+  });
+
+  it("shows recharge badge instead of count badge", () => {
+    const tabs = [
+      {
+        id: "chats",
+        label: "Chats",
+        icon: <span>i</span>,
+        badge: 5,
+        rechargeBadge: true,
+      },
+    ];
+    render(<AppBottomTabs tabs={tabs} activeTab="online" onTabChange={vi.fn()} />);
+    expect(screen.getByLabelText("Recharge required")).toHaveTextContent("₹");
+    expect(screen.queryByText("5")).not.toBeInTheDocument();
   });
 });
