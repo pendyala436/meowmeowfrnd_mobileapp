@@ -35,6 +35,9 @@ import {
   useGroupChatBilling,
   gcLeave,
   gcEndLive,
+  gcEndLiveKeepalive,
+  gcHostHeartbeat,
+  gcCloseIfHostGone,
   gcAnnounce,
   groupChatBothEngaged,
   groupChatActiveMen,
@@ -67,6 +70,9 @@ interface Props {
 const BUCKET = "meowmeow-app-attachment";
 const LEGACY_BUCKET = "chat-attachments";
 const FOLDER_PREFIX = "meowmeow/app/attachment";
+
+/** Deferred host-end timers so React Strict Mode remount does not kill a fresh live room. */
+const hostEndTimers = new Map<string, number>();
 
 function initials(name?: string | null) {
   if (!name) return "U";
@@ -263,20 +269,43 @@ export const GroupChatRoom: React.FC<Props> = ({
       closeRoom("Host ended the live session.");
     };
     const pollEnded = async () => {
-      const [{ data: session }, { data: room }] = await Promise.all([
-        supabase.from("group_chat_sessions").select("ended_at").eq("id", sessionId).maybeSingle(),
+      const [{ data: session }, { data: room }, { data: hostPart }] = await Promise.all([
+        supabase
+          .from("group_chat_sessions")
+          .select("ended_at, host_last_seen_at, started_at, host_id")
+          .eq("id", sessionId)
+          .maybeSingle(),
         supabase
           .from("group_chat_rooms")
           .select("status, current_session_id")
           .eq("id", roomId)
+          .maybeSingle(),
+        supabase
+          .from("group_chat_participants")
+          .select("left_at")
+          .eq("session_id", sessionId)
+          .eq("user_id", hostId)
           .maybeSingle(),
       ]);
       if (session?.ended_at) {
         closeIfEnded(true);
         return;
       }
-      if (room && (room.status !== "live" || room.current_session_id !== sessionId))
+      if (room && (room.status !== "live" || room.current_session_id !== sessionId)) {
         closeIfEnded(true);
+        return;
+      }
+      const hostGone = !hostPart || !!hostPart.left_at;
+      const lastSeenMs = new Date(session?.host_last_seen_at || session?.started_at || 0).getTime();
+      const hostStale = !!lastSeenMs && Date.now() - lastSeenMs > 45_000;
+      if (hostGone || hostStale) {
+        const res = await gcCloseIfHostGone(sessionId);
+        if (res.success) {
+          closeIfEnded(true);
+          return;
+        }
+        if (hostGone) closeIfEnded(true);
+      }
     };
     const ch = supabase
       .channel(`gc_room_end:${roomId}:${Math.random().toString(36).slice(2, 8)}`)
@@ -298,6 +327,18 @@ export const GroupChatRoom: React.FC<Props> = ({
           closeIfEnded(row.status !== "live" || row.current_session_id !== sessionId);
         },
       )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "group_chat_participants",
+          filter: `session_id=eq.${sessionId}`,
+        },
+        () => {
+          void pollEnded();
+        },
+      )
       .subscribe();
     const poll = window.setInterval(() => {
       void pollEnded();
@@ -308,7 +349,56 @@ export const GroupChatRoom: React.FC<Props> = ({
       supabase.removeChannel(ch);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
-  }, [sessionId, roomId, isHost, onClose]);
+  }, [sessionId, roomId, hostId, isHost, onClose]);
+
+  // Host heartbeat + end room on tab close / SPA leave so participants always get closed.
+  useEffect(() => {
+    if (!isHost || !sessionId) return;
+
+    const pending = hostEndTimers.get(sessionId);
+    if (pending) {
+      window.clearTimeout(pending);
+      hostEndTimers.delete(sessionId);
+    }
+
+    void gcHostHeartbeat(sessionId);
+    const beat = window.setInterval(() => {
+      void gcHostHeartbeat(sessionId).then((res) => {
+        if (!res.success && !closedRef.current) {
+          closedRef.current = true;
+          onClose();
+        }
+      });
+    }, 5000);
+
+    const endOnUnload = () => {
+      if (closedRef.current) return;
+      closedRef.current = true;
+      const t = hostEndTimers.get(sessionId);
+      if (t) {
+        window.clearTimeout(t);
+        hostEndTimers.delete(sessionId);
+      }
+      gcEndLiveKeepalive(sessionId);
+    };
+    window.addEventListener("pagehide", endOnUnload);
+    window.addEventListener("beforeunload", endOnUnload);
+
+    return () => {
+      window.clearInterval(beat);
+      window.removeEventListener("pagehide", endOnUnload);
+      window.removeEventListener("beforeunload", endOnUnload);
+      // Defer SPA end so React Strict Mode remount can cancel; real leave still ends quickly.
+      const timer = window.setTimeout(() => {
+        hostEndTimers.delete(sessionId);
+        if (!closedRef.current) {
+          closedRef.current = true;
+          void gcEndLive(sessionId);
+        }
+      }, 400);
+      hostEndTimers.set(sessionId, timer);
+    };
+  }, [isHost, sessionId, onClose]);
 
   const { elapsedSeconds, isBilling, billingActive, activeMenCount, skipReason } =
     useGroupChatBilling({
@@ -502,6 +592,11 @@ export const GroupChatRoom: React.FC<Props> = ({
         return;
       }
       closedRef.current = true;
+      const pending = hostEndTimers.get(sessionId);
+      if (pending) {
+        window.clearTimeout(pending);
+        hostEndTimers.delete(sessionId);
+      }
       onClose();
       return;
     }

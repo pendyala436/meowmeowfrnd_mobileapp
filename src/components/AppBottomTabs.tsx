@@ -87,7 +87,7 @@ export const getMenTabs = (
   showChat: boolean = true,
   showGroups: boolean = true,
   showHistory: boolean = true,
-  /** Low balance: Chats / History / Group Call / Matches show ₹ badge and are locked. */
+  /** Low balance: Chats / History / Group Call / Group Chat / Matches show ₹ badge and are locked. */
   needsRecharge: boolean = false,
 ): TabItem[] => {
   const tabs: TabItem[] = [
@@ -118,7 +118,13 @@ export const getMenTabs = (
       rechargeBadge: needsRecharge,
       locked: needsRecharge,
     });
-  tabs.push({ id: "groupchat", label: "Group Chat", icon: <Radio className="w-5 h-5" /> });
+  tabs.push({
+    id: "groupchat",
+    label: "Group Chat",
+    icon: <Radio className="w-5 h-5" />,
+    rechargeBadge: needsRecharge,
+    locked: needsRecharge,
+  });
   tabs.push({
     id: "matches",
     label: "Matches",

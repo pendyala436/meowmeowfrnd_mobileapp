@@ -493,7 +493,7 @@ export function PrivateGroupCallWindow({
     if (error) toast.error(error);
   }, [error]);
 
-  // Notify participants of host status changes
+  // Notify participants of host status changes — force-close when host left
   const prevHostStatusRef = useRef(hostStatus);
   useEffect(() => {
     if (isOwner) return;
@@ -504,7 +504,14 @@ export function PrivateGroupCallWindow({
     else if (hostStatus === "muted") toast.info("Host muted their mic");
     else if (hostStatus === "camera-off") toast.info("Host turned off camera");
     else if (hostStatus === "live" && prev !== "live") toast.success("Host is back");
-  }, [hostStatus, isOwner]);
+    else if (hostStatus === "left") {
+      toast.info("Host left the call");
+      if (!isStoppingRef.current) {
+        isStoppingRef.current = true;
+        onClose();
+      }
+    }
+  }, [hostStatus, isOwner, onClose]);
 
   // Fetch gifts
   useEffect(() => {

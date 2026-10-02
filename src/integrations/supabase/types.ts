@@ -1248,6 +1248,7 @@ export type Database = {
           created_at: string
           ended_at: string | null
           host_id: string
+          host_last_seen_at: string | null
           id: string
           room_id: string
           started_at: string
@@ -1259,6 +1260,7 @@ export type Database = {
           created_at?: string
           ended_at?: string | null
           host_id: string
+          host_last_seen_at?: string | null
           id?: string
           room_id: string
           started_at?: string
@@ -1270,6 +1272,7 @@ export type Database = {
           created_at?: string
           ended_at?: string | null
           host_id?: string
+          host_last_seen_at?: string | null
           id?: string
           room_id?: string
           started_at?: string
@@ -4477,10 +4480,14 @@ export type Database = {
         Returns: Json
       }
       get_women_wallet_balance: { Args: { p_user_id: string }; Returns: Json }
+      group_chat_close_if_host_gone: { Args: { p_session_id: string }; Returns: Json }
       group_chat_end_live: { Args: { p_session_id: string }; Returns: Json }
+      group_chat_force_end_session: { Args: { p_session_id: string }; Returns: Json }
       group_chat_go_live: { Args: { p_room_id: string }; Returns: Json }
+      group_chat_host_heartbeat: { Args: { p_session_id: string }; Returns: Json }
       group_chat_join: { Args: { p_room_id: string }; Returns: Json }
       group_chat_leave: { Args: { p_session_id: string }; Returns: Json }
+      group_chat_sweep_stale_sessions: { Args: Record<string, never>; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

@@ -2,7 +2,7 @@
  * GroupChatTab — Live women-hosted text-chat group rooms.
  * Men see only LIVE rooms; women see all rooms with Go Live / End Live.
  */
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Search, Radio } from "lucide-react";
 import {
@@ -52,6 +52,15 @@ const GroupChatTab: React.FC<Props> = ({
   }, [rooms, search]);
 
   const liveCount = rooms.filter((r) => r.status === "live").length;
+
+  // If the active room goes offline (host left / sweep), dismiss the open chat for everyone.
+  useEffect(() => {
+    if (!active) return;
+    const room = rooms.find((r) => r.id === active.roomId);
+    if (!room || room.status !== "live" || room.current_session_id !== active.sessionId) {
+      setActive(null);
+    }
+  }, [rooms, active]);
 
   const handleJoin = async (r: GroupChatRoom) => {
     const res = await gcJoin(r.id);

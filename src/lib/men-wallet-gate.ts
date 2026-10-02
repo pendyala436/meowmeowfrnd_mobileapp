@@ -3,7 +3,7 @@
  */
 export const MEN_RECHARGE_MIN_BALANCE = 4;
 
-export const MEN_PAID_TABS = ["chats", "history", "groups", "matches"] as const;
+export const MEN_PAID_TABS = ["chats", "history", "groups", "groupchat", "matches"] as const;
 export type MenPaidTabId = (typeof MEN_PAID_TABS)[number];
 
 /** Fixed ₹4 floor — gate when balance is strictly less than this. */

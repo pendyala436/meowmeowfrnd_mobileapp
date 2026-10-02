@@ -594,6 +594,63 @@ export async function gcEndLive(sessionId: string) {
   }
   return { success: true } as const;
 }
+
+/** Best-effort end on tab close — fire RPC and keepalive fetch. */
+export function gcEndLiveKeepalive(sessionId: string) {
+  try {
+    void supabase.rpc("group_chat_end_live", { p_session_id: sessionId });
+  } catch {
+    /* ignore */
+  }
+  void (async () => {
+    try {
+      const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+      const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
+      if (!url || !key || typeof fetch !== "function") return;
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) return;
+      await fetch(`${url}/rest/v1/rpc/group_chat_end_live`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: key,
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ p_session_id: sessionId }),
+        keepalive: true,
+      });
+    } catch {
+      /* ignore */
+    }
+  })();
+}
+
+export async function gcHostHeartbeat(sessionId: string) {
+  const { data, error } = await supabase.rpc("group_chat_host_heartbeat", {
+    p_session_id: sessionId,
+  });
+  if (error) return { success: false, error: error.message } as const;
+  const r = data as { success?: boolean; error?: string } | null;
+  if (r && r.success === false) {
+    return { success: false, error: r.error || "heartbeat failed" } as const;
+  }
+  return { success: true } as const;
+}
+
+export async function gcCloseIfHostGone(sessionId: string) {
+  const { data, error } = await supabase.rpc("group_chat_close_if_host_gone", {
+    p_session_id: sessionId,
+  });
+  if (error) return { success: false, error: error.message } as const;
+  const r = data as { success?: boolean; error?: string; already_ended?: boolean } | null;
+  if (r && r.success === false) {
+    return { success: false, error: r.error || "host still present" } as const;
+  }
+  return { success: true } as const;
+}
 export async function gcJoin(roomId: string) {
   const { data, error } = await supabase.rpc("group_chat_join", { p_room_id: roomId });
   if (error) return { success: false, error: error.message } as const;
