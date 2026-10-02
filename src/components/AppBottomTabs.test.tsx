@@ -34,10 +34,9 @@ describe("getMenTabs", () => {
     expect(tabs.find((t) => t.id === "chats")?.locked).toBe(true);
     expect(tabs.find((t) => t.id === "chats")?.badge).toBeUndefined();
     expect(tabs.find((t) => t.id === "groups")?.rechargeBadge).toBe(true);
-    // Matches stays usable without recharge
-    expect(tabs.find((t) => t.id === "matches")?.rechargeBadge).toBeFalsy();
-    expect(tabs.find((t) => t.id === "matches")?.locked).toBeFalsy();
-    expect(tabs.find((t) => t.id === "matches")?.badge).toBe(1);
+    expect(tabs.find((t) => t.id === "matches")?.rechargeBadge).toBe(true);
+    expect(tabs.find((t) => t.id === "matches")?.locked).toBe(true);
+    expect(tabs.find((t) => t.id === "matches")?.badge).toBeUndefined();
     expect(tabs.find((t) => t.id === "online")?.rechargeBadge).toBeFalsy();
     expect(tabs.find((t) => t.id === "wallet")?.rechargeBadge).toBeFalsy();
   });

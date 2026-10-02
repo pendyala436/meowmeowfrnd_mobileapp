@@ -4,25 +4,32 @@ import { useAppTheme } from "@/contexts/ThemeContext";
 type ToasterProps = React.ComponentProps<typeof Sonner>;
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { resolvedMode } = useAppTheme();
+  const { resolvedMode, themeId } = useAppTheme();
 
   return (
     <Sonner
-      theme={resolvedMode}
+      key={`${themeId}-${resolvedMode}`}
+      theme="dark"
       className="toaster group !z-[300]"
       position="top-center"
-      richColors
       closeButton
       toastOptions={{
         duration: 5000,
         classNames: {
-          // Surfaces come from theme CSS vars in index.css; keep text white for global contrast rules.
-          toast: "group toast border shadow-lg",
+          toast:
+            "group toast !text-white border shadow-lg !bg-[color-mix(in_srgb,hsl(var(--primary))_58%,#0b0b0b)] !border-white/25",
           title: "!text-white !font-semibold",
-          description: "!text-white/90",
-          actionButton: "!bg-[hsl(var(--primary-foreground))] !text-[hsl(var(--primary))]",
-          cancelButton: "!bg-white/15 !text-white",
-          closeButton: "!bg-white/15 !text-white !border-white/20",
+          description: "!text-white !opacity-95",
+          success:
+            "!bg-[color-mix(in_srgb,hsl(var(--success))_55%,#0b0b0b)] !text-white !border-white/20",
+          error:
+            "!bg-[color-mix(in_srgb,hsl(var(--destructive))_58%,#1a0505)] !text-white !border-white/25",
+          warning:
+            "!bg-[color-mix(in_srgb,hsl(var(--warning))_50%,#1a1200)] !text-white !border-white/20",
+          info: "!bg-[color-mix(in_srgb,hsl(var(--info))_55%,#050a1a)] !text-white !border-white/20",
+          actionButton: "!bg-white !text-[hsl(var(--primary))] !font-semibold",
+          cancelButton: "!bg-white/20 !text-white",
+          closeButton: "!bg-white/20 !text-white !border-white/30",
         },
       }}
       {...props}

@@ -1310,11 +1310,10 @@ const DashboardScreen = () => {
     womanUserId: string,
     womanName: string,
     _reconnectDepth = 0,
-    opts?: { fromMatch?: boolean },
   ) {
     if (isConnecting) return;
-    // Online / cold start: same recharge gate as Chats & Group Call tabs
-    if (!opts?.fromMatch && menNeedsRecharge(walletBalance, pricing.ratePerMinute)) {
+    // Online / Matches / cold start: same recharge gate as Chats & Group Call tabs
+    if (menNeedsRecharge(walletBalance, pricing.ratePerMinute)) {
       setRechargeDialogOpen(true);
       return;
     }
@@ -1345,7 +1344,6 @@ const DashboardScreen = () => {
           action: "start_chat",
           man_user_id: user.id,
           woman_user_id: womanUserId,
-          ...(opts?.fromMatch ? { from_match: true } : {}),
         },
       });
 
@@ -1361,11 +1359,8 @@ const DashboardScreen = () => {
       }
 
       if (!data?.success) {
-        // Insufficient balance - show recharge dialog (skip for Matches-tab free chats)
-        if (
-          !opts?.fromMatch &&
-          (data?.message?.includes("balance") || data?.message?.includes("Insufficient"))
-        ) {
+        // Insufficient balance - show recharge dialog
+        if (data?.message?.includes("balance") || data?.message?.includes("Insufficient")) {
           toast({
             title: "Insufficient Balance",
             description: data.message,
@@ -2285,11 +2280,7 @@ const DashboardScreen = () => {
               state={woman.state}
               country={woman.country}
               isOnline={woman.isOnline}
-              onClick={() =>
-                handleStartChatWithWoman(woman.userId, woman.fullName || "User", 0, {
-                  fromMatch: true,
-                })
-              }
+              onClick={() => handleStartChatWithWoman(woman.userId, woman.fullName || "User")}
               actions={
                 <div className="flex items-center gap-1">
                   {renderOneToOneCallButtons(

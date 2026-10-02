@@ -4002,26 +4002,37 @@ html {
   }
 }
 
-/* Sonner toasts: theme-tinted dark surfaces so forced white text stays readable */
+/* Sonner toasts: theme-tinted dark surfaces + forced white text (readable on every theme) */
 [data-sonner-toaster] [data-sonner-toast] {
-  background: color-mix(in srgb, hsl(var(--primary)) 62%, #000) !important;
-  color: #fff !important;
-  border: 1px solid color-mix(in srgb, hsl(var(--primary-foreground)) 28%, transparent) !important;
+  background: color-mix(in srgb, hsl(var(--primary)) 58%, #0b0b0b) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
 }
 [data-sonner-toaster] [data-sonner-toast][data-type="error"] {
-  background: color-mix(in srgb, hsl(var(--destructive)) 72%, #000) !important;
+  background: color-mix(in srgb, hsl(var(--destructive)) 58%, #1a0505) !important;
+  color: #ffffff !important;
 }
 [data-sonner-toaster] [data-sonner-toast][data-type="success"] {
-  background: color-mix(in srgb, hsl(var(--success)) 65%, #000) !important;
+  background: color-mix(in srgb, hsl(var(--success)) 55%, #0b0b0b) !important;
+  color: #ffffff !important;
 }
 [data-sonner-toaster] [data-sonner-toast][data-type="warning"] {
-  background: color-mix(in srgb, hsl(var(--warning)) 55%, #000) !important;
+  background: color-mix(in srgb, hsl(var(--warning)) 50%, #1a1200) !important;
+  color: #ffffff !important;
 }
 [data-sonner-toaster] [data-sonner-toast][data-type="info"] {
-  background: color-mix(in srgb, hsl(var(--info)) 65%, #000) !important;
+  background: color-mix(in srgb, hsl(var(--info)) 55%, #050a1a) !important;
+  color: #ffffff !important;
 }
 [data-sonner-toaster] [data-sonner-toast] [data-title],
 [data-sonner-toaster] [data-sonner-toast] [data-description],
-[data-sonner-toaster] [data-sonner-toast] [data-content] {
-  color: #fff !important;
+[data-sonner-toaster] [data-sonner-toast] [data-content],
+[data-sonner-toaster] [data-sonner-toast] [data-button],
+[data-sonner-toaster] [data-sonner-toast] [data-close-button],
+[data-sonner-toaster] [data-sonner-toast] [data-icon] {
+  color: #ffffff !important;
+  opacity: 1 !important;
+}
+[data-sonner-toaster] [data-sonner-toast] [data-description] {
+  opacity: 0.95 !important;
 }

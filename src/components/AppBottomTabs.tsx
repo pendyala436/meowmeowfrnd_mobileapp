@@ -87,7 +87,7 @@ export const getMenTabs = (
   showChat: boolean = true,
   showGroups: boolean = true,
   showHistory: boolean = true,
-  /** Low balance: Chats / Group Call show ₹ badge and are locked by the dashboard. Matches stays open. */
+  /** Low balance: Chats / Group Call / Matches show ₹ badge and are locked by the dashboard. */
   needsRecharge: boolean = false,
 ): TabItem[] => {
   const tabs: TabItem[] = [
@@ -117,7 +117,9 @@ export const getMenTabs = (
     id: "matches",
     label: "Matches",
     icon: <Heart className="w-5 h-5" />,
-    badge: matchBadge,
+    badge: needsRecharge ? undefined : matchBadge,
+    rechargeBadge: needsRecharge,
+    locked: needsRecharge,
   });
 
   tabs.push({ id: "wallet", label: "Wallet", icon: <Wallet className="w-5 h-5" /> });

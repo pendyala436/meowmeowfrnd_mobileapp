@@ -131,8 +131,6 @@ interface ChatRequest {
   preferred_language?: string;
   man_country?: string;
   exclude_user_ids?: string[]; // Users to exclude from matching
-  /** When true, skip wallet gate if the pair already has a matches row (Matches tab). */
-  from_match?: boolean;
 }
 
 // Helper to verify authenticated user and extract user ID from JWT
@@ -211,7 +209,7 @@ serve(async (req) => {
     await loadAdminSettings(supabase);
 
     const requestBody = await req.json();
-    const { action, man_user_id, woman_user_id, user_id, chat_id, end_reason, preferred_language, man_country, exclude_user_ids, from_match }: ChatRequest = requestBody;
+    const { action, man_user_id, woman_user_id, user_id, chat_id, end_reason, preferred_language, man_country, exclude_user_ids }: ChatRequest = requestBody;
 
     // SECURITY: Verify the user_id in request matches authenticated user (prevent impersonation)
     // For actions with both man_user_id and woman_user_id (e.g. start_chat), 
@@ -996,41 +994,16 @@ serve(async (req) => {
         // Only check wallet balance for real users (not super users)
         // Check if user is a super user by email - they bypass ALL balance requirements
         const isSuperUser = await checkIsSuperUser(supabase, man_user_id);
-
-        // Matches-tab chats: verified match pairs can chat without a recharge gate
-        let skipBalanceForMatch = false;
-        if (from_match) {
-          const { data: matchRow } = await supabase
-            .from("matches")
-            .select("id")
-            .or(
-              `and(user_id.eq.${man_user_id},matched_user_id.eq.${woman_user_id}),and(user_id.eq.${woman_user_id},matched_user_id.eq.${man_user_id})`,
-            )
-            .limit(1)
-            .maybeSingle();
-          skipBalanceForMatch = !!matchRow;
-          if (skipBalanceForMatch) {
-            console.log(`[START_CHAT] Match pair ${man_user_id}/${woman_user_id} - bypassing balance check`);
-          }
-        }
         
-        if (!isSuperUser && !skipBalanceForMatch) {
+        if (!isSuperUser) {
           const { data: wallet } = await supabase
             .from("wallets")
             .select("balance")
             .eq("user_id", man_user_id)
             .maybeSingle();
 
-          // Get current pricing to calculate minimum balance requirement
-          const { data: pricingData } = await supabase
-            .from("chat_pricing")
-            .select("rate_per_minute")
-            .eq("is_active", true)
-            .maybeSingle();
-          
-          const ratePerMin = pricingData?.rate_per_minute || 4.00;
-          const minRequiredBalance = ratePerMin * 2; // Need at least 2 minutes worth
-
+          // Gate all paid chat starts at ₹4 (matches client men-wallet-gate)
+          const minRequiredBalance = 4;
 
           if (!wallet || wallet.balance < minRequiredBalance) {
             return new Response(
@@ -1043,7 +1016,7 @@ serve(async (req) => {
               { headers: { ...corsHeaders, "Content-Type": "application/json" } }
             );
           }
-        } else if (isSuperUser) {
+        } else {
           console.log(`[START_CHAT] Super user ${man_user_id} - bypassing balance check`);
         }
 

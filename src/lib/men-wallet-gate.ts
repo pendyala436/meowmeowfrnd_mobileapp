@@ -1,18 +1,18 @@
 /**
- * Men wallet gate: zero / near-zero balance blocks paid engagement tabs.
+ * Men wallet gate: balance under ₹4 blocks paid engagement (tabs + online chat start).
  */
-/** Matches stays open so men can chat there without a recharge. */
-export const MEN_PAID_TABS = ["chats", "groups"] as const;
+export const MEN_RECHARGE_MIN_BALANCE = 4;
+
+export const MEN_PAID_TABS = ["chats", "groups", "matches"] as const;
 export type MenPaidTabId = (typeof MEN_PAID_TABS)[number];
 
-/** Need ~2 minutes of 1:1 chat credit; treats true zero and near-zero the same. */
-export function menRechargeThreshold(chatRatePerMinute: number): number {
-  const rate = Number.isFinite(chatRatePerMinute) && chatRatePerMinute > 0 ? chatRatePerMinute : 4;
-  return rate * 2;
+/** Fixed ₹4 floor — gate when balance is strictly less than this. */
+export function menRechargeThreshold(_chatRatePerMinute?: number): number {
+  return MEN_RECHARGE_MIN_BALANCE;
 }
 
-export function menNeedsRecharge(balance: number, chatRatePerMinute: number): boolean {
-  return balance < menRechargeThreshold(chatRatePerMinute);
+export function menNeedsRecharge(balance: number, _chatRatePerMinute?: number): boolean {
+  return balance < MEN_RECHARGE_MIN_BALANCE;
 }
 
 export function isMenPaidTab(tabId: string): tabId is MenPaidTabId {
