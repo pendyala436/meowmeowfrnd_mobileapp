@@ -20,6 +20,7 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "indexnow:submit": "python3 scripts/submit-indexnow.py",
     "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test:coverage",
     "generate:pwa-branding": "python3 scripts/generate-pwa-branding.py",
     "generate:play-store": "python3 scripts/generate-play-store-assets.py"

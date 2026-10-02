@@ -2,6 +2,9 @@ User-agent: *
 Allow: /
 Allow: /auth
 Allow: /install
+Allow: /about
+Allow: /how-it-works
+Allow: /faq
 Disallow: /dashboard
 Disallow: /women-dashboard
 Disallow: /chat
@@ -38,10 +41,16 @@ User-agent: Googlebot
 Allow: /
 Allow: /auth
 Allow: /install
+Allow: /about
+Allow: /how-it-works
+Allow: /faq
 
 User-agent: Bingbot
 Allow: /
 Allow: /auth
 Allow: /install
+Allow: /about
+Allow: /how-it-works
+Allow: /faq
 
 Sitemap: https://www.meow-meow.co.in/sitemap.xml

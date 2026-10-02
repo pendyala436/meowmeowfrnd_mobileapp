@@ -119,6 +119,9 @@ const ProfileDetailScreen = lazyRetry(() => import("@/pages/ProfileDetailScreen"
 
 const SettingsScreen = lazyRetry(() => import("@/pages/SettingsScreen"));
 const InstallApp = lazyRetry(() => import("@/pages/InstallApp"));
+const AboutPage = lazyRetry(() => import("@/pages/AboutPage"));
+const HowItWorksPage = lazyRetry(() => import("@/pages/HowItWorksPage"));
+const FaqPage = lazyRetry(() => import("@/pages/FaqPage"));
 const PrivateGroupsScreen = lazyRetry(() => import("@/pages/PrivateGroupsScreen"));
 
 // Wallet
@@ -436,6 +439,30 @@ const AppShell = () => {
                 element={
                   <RouteSuspense>
                     <InstallApp />
+                  </RouteSuspense>
+                }
+              />
+              <Route
+                path="/about"
+                element={
+                  <RouteSuspense>
+                    <AboutPage />
+                  </RouteSuspense>
+                }
+              />
+              <Route
+                path="/how-it-works"
+                element={
+                  <RouteSuspense>
+                    <HowItWorksPage />
+                  </RouteSuspense>
+                }
+              />
+              <Route
+                path="/faq"
+                element={
+                  <RouteSuspense>
+                    <FaqPage />
                   </RouteSuspense>
                 }
               />

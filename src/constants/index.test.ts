@@ -20,6 +20,10 @@ describe("constants/index", () => {
       expect(ROUTES.WOMEN_DASHBOARD).toBe("/women-dashboard");
       expect(ROUTES.PRIVATE_GROUPS).toBe("/private-groups");
       expect(ROUTES.SETTINGS).toBe("/settings");
+      expect(ROUTES.INSTALL).toBe("/install");
+      expect(ROUTES.ABOUT).toBe("/about");
+      expect(ROUTES.HOW_IT_WORKS).toBe("/how-it-works");
+      expect(ROUTES.FAQ).toBe("/faq");
     });
 
     it("includes admin routes", () => {

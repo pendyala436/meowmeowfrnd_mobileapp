@@ -22,6 +22,9 @@ describe("page.tsx route wiring", () => {
     { path: 'path="/admin"', label: "admin" },
     { path: 'path="/additional-photos"', label: "additional photos registration" },
     { path: 'path="/install"', label: "PWA install" },
+    { path: 'path="/about"', label: "about" },
+    { path: 'path="/how-it-works"', label: "how it works" },
+    { path: 'path="/faq"', label: "faq" },
   ];
 
   it.each(requiredRoutes)("defines route for $label", ({ path }) => {
