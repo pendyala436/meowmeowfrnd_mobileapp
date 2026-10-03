@@ -183,6 +183,7 @@ const DashboardScreen = () => {
   const userLanguageRef = useRef(userLanguage);
   const [userLanguageCode, setUserLanguageCode] = useState("eng_Latn"); // Language language code
   const [walletBalance, setWalletBalance] = useState(0);
+  const [walletReady, setWalletReady] = useState(false);
   const {
     status: callStatus,
     activeCall,
@@ -746,6 +747,7 @@ const DashboardScreen = () => {
       const bd = data as Record<string, number>;
       setWalletBalance(Number(bd.balance) || 0);
     }
+    setWalletReady(true);
   }
 
   async function fetchMatchedWomen(userId: string) {
@@ -970,6 +972,8 @@ const DashboardScreen = () => {
         }
       } catch {
         console.warn("[Dashboard] Wallet balance fetch failed");
+      } finally {
+        setWalletReady(true);
       }
 
       // Fetch stats in parallel - each with individual error handling
@@ -1313,7 +1317,7 @@ const DashboardScreen = () => {
   ) {
     if (isConnecting) return;
     // Online / Matches / cold start: same recharge gate as Chats & Group Call tabs
-    if (menNeedsRecharge(walletBalance, pricing.ratePerMinute)) {
+    if (walletReady && menNeedsRecharge(walletBalance, pricing.ratePerMinute)) {
       setRechargeDialogOpen(true);
       return;
     }
@@ -1664,7 +1668,7 @@ const DashboardScreen = () => {
   const onlineCount = sameLanguageWomen.length + indianTranslatedWomen.length;
   const totalUnreadCount = activeChats.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
   const showCallGroups = settings.privateGroupsEnabledMen !== false;
-  const needsMenRecharge = menNeedsRecharge(walletBalance, pricing.ratePerMinute);
+  const needsMenRecharge = walletReady && menNeedsRecharge(walletBalance, pricing.ratePerMinute);
   const menTabs = getMenTabs(
     onlineCount || undefined,
     totalUnreadCount || activeChatCount || undefined,
@@ -1684,8 +1688,10 @@ const DashboardScreen = () => {
     }
   }, [settings.historyTabVisible, activeTab]);
 
-  // Prompt recharge while balance is zero / near-zero; clear prompt flag when balance recovers.
+  // Prompt recharge only after wallet has loaded — initial balance is 0 and would false-trigger
+  // when remounting the dashboard after exiting a chat.
   useEffect(() => {
+    if (!walletReady) return;
     if (!needsMenRecharge) {
       menLowBalancePromptedRef.current = false;
       return;
@@ -1694,15 +1700,16 @@ const DashboardScreen = () => {
       menLowBalancePromptedRef.current = true;
       setRechargeDialogOpen(true);
     }
-  }, [needsMenRecharge]);
+  }, [needsMenRecharge, walletReady]);
 
   // Bounce off paid tabs while locked.
   useEffect(() => {
+    if (!walletReady) return;
     if (needsMenRecharge && isMenPaidTab(activeTab)) {
       setActiveTab("online");
       setRechargeDialogOpen(true);
     }
-  }, [needsMenRecharge, activeTab]);
+  }, [needsMenRecharge, activeTab, walletReady]);
 
   if (isLoading) {
     return (
