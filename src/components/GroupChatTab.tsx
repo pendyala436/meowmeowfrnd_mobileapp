@@ -2,7 +2,7 @@
  * GroupChatTab — Live women-hosted text-chat group rooms.
  * Men see only LIVE rooms; women see all rooms with Go Live / End Live.
  */
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Search, Radio } from "lucide-react";
 import {
@@ -42,6 +42,7 @@ const GroupChatTab: React.FC<Props> = ({
   const { rooms, loading } = useGroupChatRooms({ onlyLive: isMale });
   const [search, setSearch] = useState("");
   const [active, setActive] = useState<ActiveRoom | null>(null);
+  const activeOpenedAtRef = useRef(new Map<string, number>());
 
   const filtered = useMemo(() => {
     if (!search.trim()) return rooms;
@@ -53,11 +54,18 @@ const GroupChatTab: React.FC<Props> = ({
 
   const liveCount = rooms.filter((r) => r.status === "live").length;
 
-  // If the active room goes offline (host left / sweep), dismiss the open chat for everyone.
+  // Dismiss only when the rooms list positively shows this session ended.
+  // Do not dismiss when the room is missing (transient reload) or still stale
+  // right after Go Live / Join — that was bouncing the chat closed immediately.
   useEffect(() => {
     if (!active) return;
     const room = rooms.find((r) => r.id === active.roomId);
-    if (!room || room.status !== "live" || room.current_session_id !== active.sessionId) {
+    if (!room) return;
+    if (room.status === "live" && room.current_session_id === active.sessionId) return;
+    if (room.status === "offline" || room.current_session_id !== active.sessionId) {
+      // Ignore stale offline snapshot for a short window after opening.
+      const openedAt = activeOpenedAtRef.current.get(active.sessionId) ?? 0;
+      if (Date.now() - openedAt < 5000) return;
       setActive(null);
     }
   }, [rooms, active]);
@@ -68,6 +76,7 @@ const GroupChatTab: React.FC<Props> = ({
       toast({ title: "Cannot join", description: res.error, variant: "destructive" });
       return;
     }
+    activeOpenedAtRef.current.set(res.session_id!, Date.now());
     setActive({
       sessionId: res.session_id!,
       roomId: r.id,
@@ -83,6 +92,7 @@ const GroupChatTab: React.FC<Props> = ({
       toast({ title: "Cannot go live", description: res.error, variant: "destructive" });
       return;
     }
+    activeOpenedAtRef.current.set(res.session_id!, Date.now());
     setActive({
       sessionId: res.session_id!,
       roomId: r.id,

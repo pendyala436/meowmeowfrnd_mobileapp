@@ -30,3 +30,7 @@ dist-ssr
 .keystore-credentials
 android/keystore.properties
 android/.gradle/
+
+/blog
+/meowmeow-states
+/images435

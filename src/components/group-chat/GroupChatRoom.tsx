@@ -272,7 +272,7 @@ export const GroupChatRoom: React.FC<Props> = ({
       const [{ data: session }, { data: room }, { data: hostPart }] = await Promise.all([
         supabase
           .from("group_chat_sessions")
-          .select("ended_at, host_last_seen_at, started_at, host_id")
+          .select("ended_at, started_at, host_id")
           .eq("id", sessionId)
           .maybeSingle(),
         supabase
@@ -295,16 +295,10 @@ export const GroupChatRoom: React.FC<Props> = ({
         closeIfEnded(true);
         return;
       }
-      const hostGone = !hostPart || !!hostPart.left_at;
-      const lastSeenMs = new Date(session?.host_last_seen_at || session?.started_at || 0).getTime();
-      const hostStale = !!lastSeenMs && Date.now() - lastSeenMs > 45_000;
-      if (hostGone || hostStale) {
-        const res = await gcCloseIfHostGone(sessionId);
-        if (res.success) {
-          closeIfEnded(true);
-          return;
-        }
-        if (hostGone) closeIfEnded(true);
+      // Only treat explicit host leave as gone — missing row can be a load race.
+      if (hostPart?.left_at) {
+        await gcCloseIfHostGone(sessionId);
+        closeIfEnded(true);
       }
     };
     const ch = supabase
@@ -349,7 +343,7 @@ export const GroupChatRoom: React.FC<Props> = ({
       supabase.removeChannel(ch);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
-  }, [sessionId, roomId, hostId, isHost, onClose]);
+  }, [sessionId, roomId, hostId, isHost]);
 
   // Host heartbeat + end room on tab close / SPA leave so participants always get closed.
   useEffect(() => {
@@ -361,14 +355,10 @@ export const GroupChatRoom: React.FC<Props> = ({
       hostEndTimers.delete(sessionId);
     }
 
+    // Heartbeat is best-effort — never close the room UI if RPC/migration is unavailable.
     void gcHostHeartbeat(sessionId);
     const beat = window.setInterval(() => {
-      void gcHostHeartbeat(sessionId).then((res) => {
-        if (!res.success && !closedRef.current) {
-          closedRef.current = true;
-          onClose();
-        }
-      });
+      void gcHostHeartbeat(sessionId);
     }, 5000);
 
     const endOnUnload = () => {
@@ -395,10 +385,10 @@ export const GroupChatRoom: React.FC<Props> = ({
           closedRef.current = true;
           void gcEndLive(sessionId);
         }
-      }, 400);
+      }, 750);
       hostEndTimers.set(sessionId, timer);
     };
-  }, [isHost, sessionId, onClose]);
+  }, [isHost, sessionId]);
 
   const { elapsedSeconds, isBilling, billingActive, activeMenCount, skipReason } =
     useGroupChatBilling({
