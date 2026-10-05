@@ -43,6 +43,10 @@ const MeowLogo = ({ className, size = "md", priority = false }: MeowLogoProps) =
 
   const hueRotate = (((primaryHue - LOGO_BASE_HUE) % 360) + 360) % 360;
   const px = SIZE_PX[size];
+  const darkBoost =
+    resolvedMode === "dark"
+      ? "brightness(1.12) saturate(1.15) drop-shadow(0 0 10px hsl(var(--primary) / 0.45))"
+      : "brightness(1)";
 
   const sizeClasses = {
     sm: "w-12 h-12",
@@ -70,7 +74,7 @@ const MeowLogo = ({ className, size = "md", priority = false }: MeowLogoProps) =
         decoding={priority ? "sync" : "async"}
         loading={priority ? "eager" : "lazy"}
         fetchPriority={priority ? "high" : "low"}
-        style={{ filter: `hue-rotate(${hueRotate}deg)` }}
+        style={{ filter: `hue-rotate(${hueRotate}deg) ${darkBoost}` }}
       />
     </div>
   );

@@ -5,6 +5,7 @@ Allow: /install
 Allow: /about
 Allow: /how-it-works
 Allow: /faq
+Allow: /blog
 Allow: /llms.txt
 Disallow: /dashboard
 Disallow: /women-dashboard
@@ -45,6 +46,7 @@ Allow: /install
 Allow: /about
 Allow: /how-it-works
 Allow: /faq
+Allow: /blog
 Allow: /llms.txt
 
 User-agent: Bingbot
@@ -54,6 +56,7 @@ Allow: /install
 Allow: /about
 Allow: /how-it-works
 Allow: /faq
+Allow: /blog
 Allow: /llms.txt
 
 Sitemap: https://www.meow-meow.co.in/sitemap.xml

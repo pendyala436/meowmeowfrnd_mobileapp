@@ -1,5 +1,9 @@
 # Digital Asset Links must stay JSON (not the SPA shell).
 /.well-known/*  /.well-known/:splat  200
 
+# Blog index (static HTML under /public/blog — article files are served as-is).
+/blog   /blog/index.html  200
+/blog/  /blog/index.html  200
+
 # SPA fallback so /auth, /dashboard, etc. load index.html instead of 404.
 /*    /index.html   200

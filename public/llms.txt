@@ -37,6 +37,7 @@
 - About: https://www.meow-meow.co.in/about
 - How it works: https://www.meow-meow.co.in/how-it-works
 - FAQ: https://www.meow-meow.co.in/faq
+- Blog: https://www.meow-meow.co.in/blog/
 - Install PWA: https://www.meow-meow.co.in/install
 
 ## Safety

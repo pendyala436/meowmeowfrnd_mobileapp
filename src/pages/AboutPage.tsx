@@ -138,6 +138,10 @@ export default function AboutPage() {
           <Link className="underline" to="/faq">
             FAQ
           </Link>
+          , explore our{" "}
+          <a className="underline" href="/blog/">
+            blog
+          </a>
           , or{" "}
           <Link className="underline" to="/install">
             install the app

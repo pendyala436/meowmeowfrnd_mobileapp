@@ -553,6 +553,9 @@ const AuthScreen = () => {
           >
             FAQ
           </button>
+          <a href="/blog/" className="hover:text-white underline-offset-2 hover:underline">
+            Blog
+          </a>
           <button
             type="button"
             onClick={() => navigate("/install")}

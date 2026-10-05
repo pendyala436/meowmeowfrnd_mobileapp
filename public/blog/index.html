@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<script>
+(function(){
+  var THEME_KEY='app-theme';
+  var MODE_KEY='app-theme-mode';
+  function resolve(){
+    var themeId='frnd';
+    var mode='system';
+    try{
+      themeId=localStorage.getItem(THEME_KEY)||'frnd';
+      mode=localStorage.getItem(MODE_KEY)||'system';
+    }catch(e){}
+    if(!themeId) themeId='frnd';
+    if(mode!=='light'&&mode!=='dark'&&mode!=='system') mode='system';
+    var dark=mode==='dark'||(mode==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);
+    if(mode==='light') dark=false;
+    var root=document.documentElement;
+    root.setAttribute('data-theme', themeId);
+    root.classList.toggle('dark', dark);
+    root.setAttribute('data-color-mode', dark?'dark':'light');
+    root.style.colorScheme=dark?'dark':'light';
+    var meta=document.querySelector('meta[name="theme-color"]');
+    if(!meta){meta=document.createElement('meta');meta.name='theme-color';document.head.appendChild(meta);}
+    try{
+      var bg=getComputedStyle(root).getPropertyValue('--background').trim();
+      if(bg){
+        var m=bg.match(/^([\d.]+)\s+([\d.]+)%\s+([\d.]+)%/);
+        if(m){
+          var h=+m[1], s=+m[2]/100, l=+m[3]/100;
+          var a=s*Math.min(l,1-l);
+          var f=function(n){var k=(n+h/30)%12;var c=l-a*Math.max(Math.min(k-3,9-k,1),-1);return Math.round(255*c).toString(16).padStart(2,'0');};
+          meta.content='#'+f(0)+f(8)+f(4);
+        }
+      }
+    }catch(e){}
+    document.querySelectorAll('[data-theme-name]').forEach(function(el){ el.textContent=dark?'Dark':'Light'; });
+    document.querySelectorAll('[data-theme-label]').forEach(function(el){
+      el.textContent=dark?'Switch to Light':'Switch to Dark';
+      el.setAttribute('aria-label', dark?'Switch to light mode':'Switch to dark mode');
+    });
+
+    // Match app MeowLogo: hue-rotate pink source art to active --primary
+    try{
+      var LOGO_BASE_HUE=335;
+      var raw=getComputedStyle(root).getPropertyValue('--primary').trim();
+      var primaryHue=parseFloat(raw);
+      if(!Number.isFinite(primaryHue)) primaryHue=LOGO_BASE_HUE;
+      var hueRotate=((primaryHue-LOGO_BASE_HUE)%360+360)%360;
+      var darkBoost=dark
+        ? 'brightness(1.12) saturate(1.15) drop-shadow(0 0 10px hsl(var(--primary) / 0.45))'
+        : 'brightness(1)';
+      document.querySelectorAll('img.app-logo').forEach(function(img){
+        img.style.filter='hue-rotate('+hueRotate+'deg) '+darkBoost;
+      });
+    }catch(e){}
+
+  }
+  resolve();
+  try{
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(){
+      var mode='system';
+      try{mode=localStorage.getItem(MODE_KEY)||'system';}catch(e){}
+      if(mode==='system') resolve();
+    });
+  }catch(e){}
+  window.__mmToggleTheme=function(){
+    var dark=document.documentElement.classList.contains('dark');
+    try{localStorage.setItem(MODE_KEY, dark?'light':'dark');}catch(e){}
+    resolve();
+  };
+})();
+</script>
+<meta charset="utf-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#FF2B85">
+<title>Blog | Meow Meow Frnd App – Make Friends Online</title>
+<link rel="stylesheet" href="app-shell.css">
+<meta name="description" content="Guides on making friends online, safe chat, voice and video calls, and staying safe on Meow Meow Frnd.">
+<meta name="keywords" content="Meow Meow Frnd, make friends online, friendship app, safe chat, voice chat, video chat, private chat, Indian language friends">
+<meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large">
+<link rel="canonical" href="https://www.meow-meow.co.in/blog/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Meow Meow Frnd Blog">
+<meta property="og:description" content="Tips for making friends online with safe chat, voice and video on Meow Meow Frnd.">
+<meta property="og:url" content="https://www.meow-meow.co.in/blog/">
+<meta property="og:image" content="https://www.meow-meow.co.in/blog/img/hero-making-friends.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" href="img/favicon.png">
+
+</head>
+<body>
+<header>
+  <a class="brand" href="/">
+    <span class="logo-wrap" style="width:40px;height:40px"><img class="app-logo" src="/icons/meow-logo-256.webp" width="40" height="40" alt="Meow Meow Friend App" decoding="async"></span>
+    Meow Meow Frnd
+  </a>
+  <div class="header-actions">
+    <a href="/about">About</a>
+    <button type="button" class="theme-toggle" data-theme-label onclick="window.__mmToggleTheme&&window.__mmToggleTheme()">Dark</button>
+  </div>
+</header>
+<main>
+  <div class="theme-banner" role="status">
+  <span>Theme: <strong data-theme-name>Light</strong> · matches app colors</span>
+  <button type="button" class="theme-toggle theme-toggle-lg" data-theme-label onclick="window.__mmToggleTheme&&window.__mmToggleTheme()">Switch to Dark</button>
+</div>
+<h1>Meow Meow Frnd Blog</h1>
+  <p class="lead">Guides for making friends online — safe chat, voice, video, and trust tips.</p>
+  <nav class="links" aria-label="Site">
+    <a href="/">Home</a>
+    <a href="/about">About</a>
+    <a href="/how-it-works">How it works</a>
+    <a href="/faq">FAQ</a>
+    <a href="/install">Install</a>
+  </nav>
+  <div class="grid">
+<a class="card" href="0001-the-complete-guide-to-making-friends-online.html"><img src="img/hero-making-friends.jpg" alt="" width="400" height="210" loading="lazy"><h2>The Complete Guide to making friends online</h2></a>
+    <a class="card" href="0003-10-tips-for-making-friends-online.html"><img src="img/hero-10-tips.jpg" alt="" width="400" height="210" loading="lazy"><h2>10 Tips for making friends online</h2></a>
+    <a class="card" href="0009-making-friends-online-a-safety-checklist.html"><img src="img/hero-safety-checklist.jpg" alt="" width="400" height="210" loading="lazy"><h2>making friends online: A Safety Checklist</h2></a>
+    <a class="card" href="0011-how-meow-meow-frnd-supports-making-friends-online.html"><img src="img/hero-app-brand.png" alt="" width="400" height="210" loading="lazy"><h2>How Meow Meow Frnd Supports making friends online</h2></a>
+    <a class="card" href="0111-how-meow-meow-frnd-supports-voice-chat.html"><img src="img/hero-voice-chat.jpg" alt="" width="400" height="210" loading="lazy"><h2>How Meow Meow Frnd Supports voice chat</h2></a>
+    <a class="card" href="0136-how-meow-meow-frnd-supports-video-calls.html"><img src="img/hero-video-calls.jpg" alt="" width="400" height="210" loading="lazy"><h2>How Meow Meow Frnd Supports video calls</h2></a>
+    <a class="card" href="0186-how-meow-meow-frnd-supports-private-chat.html"><img src="img/hero-private-chat.jpg" alt="" width="400" height="210" loading="lazy"><h2>How Meow Meow Frnd Supports private chat</h2></a>
+    <a class="card" href="0361-how-meow-meow-frnd-supports-staying-safe-on-social-apps.html"><img src="img/hero-staying-safe.jpg" alt="" width="400" height="210" loading="lazy"><h2>How Meow Meow Frnd Supports staying safe on social apps</h2></a>
+    <a class="card" href="0611-how-meow-meow-frnd-supports-reporting-and-blocking.html"><img src="img/hero-report-block.jpg" alt="" width="400" height="210" loading="lazy"><h2>How Meow Meow Frnd Supports reporting and blocking</h2></a>
+    <a class="card" href="0686-how-meow-meow-frnd-supports-moving-from-chat-to-a-call.html"><img src="img/hero-chat-to-call.jpg" alt="" width="400" height="210" loading="lazy"><h2>How Meow Meow Frnd Supports moving from chat to a call</h2></a>
+  </div>
+</main>
+<footer>&copy; 2026 Meow Meow Frnd. Real people. Real connections.</footer>
+</body>
+</html>

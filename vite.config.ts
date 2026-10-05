@@ -1,8 +1,51 @@
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
+import fs from "fs";
 import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
+
+/**
+ * Repo-root `/blog` (SEO pack) shadows `public/blog` for `/blog/` in Vite.
+ * Force the curated themed files from public/blog when present.
+ */
+function preferPublicBlog(): Plugin {
+  const publicBlog = path.resolve(__dirname, "public/blog");
+  return {
+    name: "prefer-public-blog",
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        const raw = req.url || "";
+        const pathname = raw.split("?")[0] || "";
+        const qs = raw.includes("?") ? raw.slice(raw.indexOf("?")) : "";
+
+        const sendPublic = (rel: string) => {
+          const file = path.join(publicBlog, rel);
+          if (!fs.existsSync(file)) return false;
+          res.setHeader("Content-Type", "text/html; charset=utf-8");
+          res.setHeader("Cache-Control", "no-store");
+          fs.createReadStream(file).pipe(res);
+          return true;
+        };
+
+        if (pathname === "/blog" || pathname === "/blog/") {
+          if (sendPublic("index.html")) return;
+        }
+
+        if (pathname.startsWith("/blog/") && pathname.endsWith(".html")) {
+          const base = path.basename(pathname);
+          if (sendPublic(base)) return;
+        }
+
+        // Keep querystring intact for non-handled routes
+        if (pathname === "/blog" || pathname === "/blog/") {
+          req.url = `/blog/index.html${qs}`;
+        }
+        next();
+      });
+    },
+  };
+}
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -62,6 +105,7 @@ export default defineConfig(({ mode }) => ({
     exclude: ["face-api.js", "@huggingface/transformers"],
   },
   plugins: [
+    preferPublicBlog(),
     react(),
     mode === "development" && componentTagger(),
     VitePWA({
@@ -81,6 +125,7 @@ export default defineConfig(({ mode }) => ({
         "robots.txt",
         "llms.txt",
         "sitemap.xml",
+        "blog/**/*",
       ],
       manifest: false,
       injectManifest: {
