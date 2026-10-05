@@ -85,4 +85,9 @@
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
+  <url>
+    <loc>https://www.meow-meow.co.in/legal-documents/csae-standards.txt</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.9</priority>
+  </url>
 </urlset>

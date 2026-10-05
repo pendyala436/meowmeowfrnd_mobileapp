@@ -1,0 +1,73 @@
+MEOW MEOW FRND APP — STANDARDS AGAINST CHILD SEXUAL ABUSE AND EXPLOITATION (CSAE)
+Effective: 26 April 2026
+Last Updated: 26 April 2026
+Public URL: https://www.meow-meow.co.in/legal-documents/csae-standards.txt
+
+This document sets out Meow Meow Frnd App’s externally published standards against child sexual abuse and exploitation (CSAE), including child sexual abuse material (CSAM). It applies to all users, all features (text chat, media, audio calls, video calls, and group calls), and all jurisdictions where the App is available.
+
+1. ZERO TOLERANCE
+We prohibit any conduct or content that sexually exploits, abuses, grooms, or endangers a child (any person under 18), including:
+• Child sexual abuse material (CSAM) — real, simulated, drawn, or AI-generated imagery or video depicting a minor in a sexual context.
+• Grooming, solicitation, or sexualization of minors in chat, calls, profiles, or groups.
+• Attempts to obtain intimate imagery from minors, share such imagery with minors, or arrange offline contact for sexual purposes.
+• Trafficking or commercial sexual exploitation involving minors.
+• Any romantic or sexual engagement with a person the user knows or should know is under 18.
+
+Violations result in immediate permanent account termination, forfeiture of wallet balance and virtual coins where applicable, preservation of evidence, and mandatory reporting to competent authorities.
+
+2. LEGAL FRAMEWORK (NON-EXHAUSTIVE)
+We treat CSAE and CSAM as serious criminal conduct and cooperate with law enforcement under applicable law, including but not limited to:
+• India: Protection of Children from Sexual Offences Act 2012 (POCSO), Information Technology Act 2000 §67B, Bharatiya Nyaya Sanhita 2023, IT (Intermediary Guidelines) Rules 2021.
+• United States: 18 U.S.C. §§2252, 2252A, 2258A (NCMEC reporting).
+• United Kingdom: Protection of Children Act 1978 and related offences.
+• European Union: Directive 2011/93/EU and member-state implementations.
+• INTERPOL International Child Sexual Exploitation (ICSE) framework and equivalent global instruments.
+
+3. AGE GATE AND MINOR EXCLUSION
+• The App is strictly 18+. Registration requires date of birth and live selfie verification with AI-assisted age estimation.
+• Suspected underage accounts are suspended pending government-ID review.
+• Confirmed under-18 accounts are deleted within 7 days. Where a minor may be at risk, we report under POCSO 2012, IT Act §67B, and equivalent laws.
+• Parents or guardians may request removal at safety@meowmeow.app.
+
+4. PREVENTION AND DETECTION
+We use a combination of technical and human measures, including:
+• Pre-publication checks on profiles and uploads where applicable.
+• Real-time and post-publication keyword and pattern filters across 132+ languages.
+• Industry hash-matching and proactive scanning for known CSAM where technically and lawfully available.
+• User reports via in-app Report and email to report@meowmeow.app (review target: 24 hours; CSAM and imminent harm escalated immediately).
+• Live audio/video moderation for abuse; sexual exposure on calls may end the session instantly and trigger permanent ban and referral.
+• Random audits of high-risk accounts.
+
+5. MANDATORY REPORTING AND EVIDENCE HANDLING
+When we obtain actual knowledge of CSAE or CSAM on the platform, we:
+• Preserve relevant account, content, IP, device, payment, and metadata as required by law.
+• Report to appropriate bodies, which may include:
+  – National Cyber Crime Reporting Portal (https://cybercrime.gov.in),
+  – NCMEC CyberTipline (United States),
+  – INTERPOL ICSE,
+  – Local police in the offender’s jurisdiction.
+CSAM-related evidence is retained indefinitely for law enforcement as legally required. Non-CSAM data follows our Data Retention Policy.
+
+6. USER OBLIGATIONS
+Users must:
+• Never attempt to contact, groom, or sexualize minors on or through the App.
+• Never upload, request, or share CSAM or content that sexualizes minors.
+• Report suspected CSAE immediately using in-app tools or report@meowmeow.app.
+• Not use VPN or identity misrepresentation to circumvent age or safety controls.
+
+7. ENFORCEMENT AND APPEALS
+CSAE/CSAM cases are not eligible for reinstatement. For other safety actions, appeals may be sent to appeals@meowmeow.app within 30 days; CSAM reports are excluded from appeal reinstatement.
+
+8. TRANSPARENCY
+We aim to publish an annual transparency report summarising removals, suspensions, government requests, and CSAM-related reports, consistent with our Content Moderation Policy.
+
+9. CONTACT
+• Safety and minor-account removal: safety@meowmeow.app
+• User reports (including CSAM): report@meowmeow.app
+• Grievance officer (India IT Rules): as listed in our in-app Terms of Service
+
+Related published policies:
+• Anti-Sexual Content Policy: https://www.meow-meow.co.in/legal-documents/anti-sexual-content-policy.txt
+• Age Verification Policy: https://www.meow-meow.co.in/legal-documents/age-verification-policy.txt
+• Content Moderation Policy: https://www.meow-meow.co.in/legal-documents/content-moderation-policy.txt
+• Terms of Service: https://www.meow-meow.co.in/legal-documents/terms-of-service.txt

@@ -57,6 +57,13 @@ const legalDocuments = [
     file_name: "anti-sexual-content-policy.txt"
   },
   {
+    name: "CSAE Standards",
+    document_type: "csae_standards",
+    version: "1.0",
+    description: "Externally published standards against child sexual abuse and exploitation",
+    file_name: "csae-standards.txt"
+  },
+  {
     name: "Payments & Payouts",
     document_type: "payments_policy",
     version: "1.0",
