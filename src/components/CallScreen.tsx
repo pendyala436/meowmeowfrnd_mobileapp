@@ -1,5 +1,6 @@
 import type { RealtimeChangePayload, ChatMessageRow } from "@/types/supabase-helpers";
 import { useEffect, useRef, useState, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { Phone, PhoneOff, Mic, MicOff, Video, VideoOff, Volume2 } from "lucide-react";
 import { ActiveCall, CallStatus } from "@/hooks/useAppCall";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -25,6 +26,8 @@ interface CallScreenProps {
   partnerUserId?: string;
   senderName?: string;
   currentUserId?: string;
+  /** Force-hide Cost/Earned (admin free calls). */
+  isFreeCall?: boolean;
 }
 
 // Per-minute rates (synced with chat_pricing defaults)
@@ -48,12 +51,48 @@ export const CallScreen = ({
   partnerUserId,
   senderName = "You",
   currentUserId,
+  isFreeCall = false,
 }: CallScreenProps) => {
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const remoteAudioRef = useRef<HTMLAudioElement>(null);
   const [elapsed, setElapsed] = useState(0);
   const [animatedGifts, setAnimatedGifts] = useState<AnimatedGift[]>([]);
+  const [remoteIsAdmin, setRemoteIsAdmin] = useState(false);
+
+  // Callee may not get isFreeCall from ActiveCall if role lookup failed — resolve via RPC.
+  useEffect(() => {
+    if (isFreeCall || activeCall?.isFreeCall) {
+      setRemoteIsAdmin(true);
+      return;
+    }
+    const remoteId = activeCall?.remoteUserId;
+    if (!remoteId) {
+      setRemoteIsAdmin(false);
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      try {
+        const { data } = await supabase.rpc("has_role", {
+          _user_id: remoteId,
+          _role: "admin",
+        });
+        if (!cancelled) setRemoteIsAdmin(!!data);
+      } catch {
+        if (!cancelled) setRemoteIsAdmin(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isFreeCall, activeCall?.isFreeCall, activeCall?.remoteUserId]);
+
+  const hideBilling =
+    isFreeCall ||
+    !!activeCall?.isFreeCall ||
+    remoteIsAdmin ||
+    activeCall?.remoteName?.trim().toLowerCase() === "admin";
 
   const addAnimatedGift = useCallback(
     (parsed: { emoji: string; name: string; senderName: string }) => {
@@ -155,7 +194,9 @@ export const CallScreen = ({
   const isActive = status === "active";
   const showVideoBackground = isVideo && !!activeCall.remoteStream;
 
-  return (
+  // Portal to body so hang-up works even when CallScreen is mounted inside a
+  // Dialog (translate) or overflow-hidden card — those trap position:fixed.
+  return createPortal(
     <div className="fixed inset-0 z-[9999] bg-background flex flex-col text-foreground">
       {showVideoBackground && (
         <video
@@ -209,6 +250,7 @@ export const CallScreen = ({
         </p>
 
         {isActive &&
+          !hideBilling &&
           (() => {
             const rate = RATES[activeCall.callType][userGender];
             const amount = (rate / 60) * elapsed;
@@ -244,12 +286,14 @@ export const CallScreen = ({
         {isRinging && !activeCall.isInitiator && (
           <div className="flex justify-around items-center">
             <button
+              type="button"
               onClick={onDecline}
               className="w-16 h-16 rounded-full bg-destructive flex items-center justify-center shadow-lg active:scale-95 transition-transform"
             >
               <PhoneOff className="w-7 h-7 text-destructive-foreground" />
             </button>
             <button
+              type="button"
               onClick={onAccept}
               className="w-16 h-16 rounded-full bg-success flex items-center justify-center shadow-lg active:scale-95 transition-transform"
             >
@@ -261,6 +305,7 @@ export const CallScreen = ({
         {isCalling && (
           <div className="flex justify-center">
             <button
+              type="button"
               onClick={onEnd}
               className="w-16 h-16 rounded-full bg-destructive flex items-center justify-center shadow-lg active:scale-95 transition-transform"
             >
@@ -309,6 +354,7 @@ export const CallScreen = ({
             )}
 
             <button
+              type="button"
               onClick={onEnd}
               className="w-16 h-16 rounded-full bg-destructive flex items-center justify-center shadow-lg active:scale-95 transition-transform"
             >
@@ -320,6 +366,7 @@ export const CallScreen = ({
         {status === "connecting" && (
           <div className="flex justify-center">
             <button
+              type="button"
               onClick={onEnd}
               className="w-16 h-16 rounded-full bg-destructive flex items-center justify-center shadow-lg active:scale-95 transition-transform"
             >
@@ -328,7 +375,8 @@ export const CallScreen = ({
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };
 

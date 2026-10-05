@@ -27,16 +27,22 @@ export default function AdminTLScreen() {
 
   return (
     <AdminNav>
-      <div className="space-y-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
-            <Shield className="w-5 h-5 text-primary" /> TL
+      <div className="min-w-0 w-full max-w-full space-y-3 overflow-x-hidden">
+        <div className="min-w-0 max-w-full">
+          <h1 className="text-lg sm:text-2xl font-bold flex items-center gap-2">
+            <Shield className="w-5 h-5 text-primary shrink-0" /> TL
           </h1>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground truncate">
             Shared channel with Team Lead women · free · {adminEmail}
           </p>
         </div>
-        <div className="border border-border rounded-xl bg-card overflow-hidden h-[75vh]">
+        {/* Fit between admin header + bottom tabs; chat scrolls inside. */}
+        <div
+          className="min-w-0 w-full max-w-full border border-border rounded-xl bg-card overflow-hidden
+            h-[calc(100dvh-10.5rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))]
+            sm:h-[calc(100dvh-11rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))]
+            md:h-[75vh] min-h-[20rem]"
+        >
           {adminId ? (
             <TLCommunicationTab currentUserId={adminId} userName="Admin" />
           ) : (

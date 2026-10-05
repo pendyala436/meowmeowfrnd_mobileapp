@@ -327,9 +327,11 @@ const AdminNav = ({ children }: AdminNavProps) => {
         </div>
       </header>
 
-      {/* ── Main Content (full width, scrolls in both axes) ───────── */}
-      <main className="overflow-x-auto overflow-y-auto pb-[calc(72px+env(safe-area-inset-bottom))]">
-        <div className="max-w-7xl mx-auto p-3 sm:p-4 md:p-6 min-w-max">{children}</div>
+      {/* ── Main Content ───────── */}
+      <main className="overflow-x-hidden overflow-y-auto pb-[calc(72px+env(safe-area-inset-bottom))]">
+        <div className="max-w-7xl mx-auto p-3 sm:p-4 md:p-6 w-full min-w-0 overflow-x-hidden">
+          {children}
+        </div>
       </main>
 
       {/* ── WhatsApp-style Bottom Tab Bar (horizontally scrollable) ── */}

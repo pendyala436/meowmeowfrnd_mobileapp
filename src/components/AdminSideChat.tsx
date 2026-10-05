@@ -240,6 +240,7 @@ export function AdminSideChat({ adminId, targetUserId, targetUserName }: Props) 
           partnerUserId={targetUserId}
           senderName="Admin"
           currentUserId={adminId}
+          isFreeCall
         />
       )}
     </div>

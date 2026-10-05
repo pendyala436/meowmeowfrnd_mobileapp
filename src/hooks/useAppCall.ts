@@ -22,6 +22,8 @@ export interface ActiveCall {
   remoteName: string;
   remotePhoto: string | null;
   isInitiator: boolean;
+  /** Admin → user free call — hide cost/earning UI and skip billing. */
+  isFreeCall?: boolean;
   startedAt: Date | null;
   localStream: MediaStream | null;
   remoteStream: MediaStream | null;
@@ -52,6 +54,7 @@ export const useAppCall = (
   const startTimeRef = useRef<Date | null>(null);
   const statusRef = useRef<CallStatus>("idle");
   const endingRef = useRef(false);
+  const activeCallRef = useRef<{ callId: string; callType: CallType } | null>(null);
   const iceCandidateQueueRef = useRef<RTCIceCandidateInit[]>([]);
   const doEndCallRef = useRef<(callId: string, callType: CallType) => Promise<void>>();
   const startCallBillingRef = useRef<(callId: string, callType: CallType) => Promise<void>>();
@@ -90,6 +93,7 @@ export const useAppCall = (
     ringTimerRef.current = null;
     startTimeRef.current = null;
     endingRef.current = false;
+    activeCallRef.current = null;
     iceCandidateQueueRef.current = [];
     if (callBillRef.current.timer) {
       clearInterval(callBillRef.current.timer);
@@ -217,6 +221,8 @@ export const useAppCall = (
 
   const startCallBilling = useCallback(async (callId: string, callType: CallType) => {
     if (currentUserGenderRef.current !== "male") return;
+    // Admin → user calls are free — never start minute billing.
+    if (isAdminCallerRef.current) return;
     if (statusRef.current !== "active") return;
     const { data: row, error } = await supabase
       .from("video_call_sessions")
@@ -279,6 +285,7 @@ export const useAppCall = (
     }
     if (b.settled || !b.sessionUuid || !b.start) return;
     b.settled = true;
+    if (isAdminCallerRef.current) return;
     if (currentUserGenderRef.current !== "male") return;
     const elapsed = (Date.now() - b.start) / 1000;
     if (elapsed < 1) return;
@@ -302,36 +309,48 @@ export const useAppCall = (
       if (endingRef.current) return;
       endingRef.current = true;
       const wasAnswered = statusRef.current === "active" || statusRef.current === "connecting";
-      const shouldBill = statusRef.current === "active" && !!callBillRef.current.start;
-      setStatusSync("ended");
+      const shouldBill =
+        !isAdminCallerRef.current && statusRef.current === "active" && !!callBillRef.current.start;
 
-      channelRef.current?.send({
-        type: "broadcast",
-        event: wasAnswered ? "call_ended" : "call_cancelled",
-        payload: {},
-      });
-      if (!wasAnswered) {
-        channelRef.current?.send({ type: "broadcast", event: "call_ended", payload: {} });
+      try {
+        // Signal peers immediately, then tear down UI/media — never block hangup on billing/DB.
+        try {
+          channelRef.current?.send({
+            type: "broadcast",
+            event: wasAnswered ? "call_ended" : "call_cancelled",
+            payload: {},
+          });
+          if (!wasAnswered) {
+            channelRef.current?.send({ type: "broadcast", event: "call_ended", payload: {} });
+          }
+        } catch (e) {
+          console.warn("[AppCall] end signal failed", e);
+        }
+
+        if (callBillRef.current.timer) {
+          clearInterval(callBillRef.current.timer);
+          callBillRef.current.timer = null;
+        }
+
+        const sessionStatus = shouldBill ? "completed" : wasAnswered ? "ended" : "missed";
+        const endedAt = new Date().toISOString();
+        void (async () => {
+          try {
+            if (shouldBill) await settleCallBilling(callType);
+            const { error } = await supabase
+              .from("video_call_sessions")
+              .update({ status: sessionStatus, ended_at: endedAt })
+              .eq("call_id", callId);
+            if (error) console.error("[AppCall] end update failed", error);
+          } catch (e) {
+            console.error("[AppCall] end session update failed", e);
+          }
+        })();
+      } finally {
+        cleanup();
       }
-
-      if (shouldBill) {
-        await settleCallBilling(callType);
-      } else if (callBillRef.current.timer) {
-        clearInterval(callBillRef.current.timer);
-        callBillRef.current.timer = null;
-      }
-
-      await supabase
-        .from("video_call_sessions")
-        .update({
-          status: shouldBill ? "completed" : wasAnswered ? "ended" : "missed",
-          ended_at: new Date().toISOString(),
-        })
-        .eq("call_id", callId);
-
-      cleanup();
     },
-    [cleanup, setStatusSync, settleCallBilling],
+    [cleanup, settleCallBilling],
   );
 
   // Keep refs in sync so createPC always has latest handlers
@@ -362,6 +381,10 @@ export const useAppCall = (
           variant: "destructive",
         });
         return;
+      }
+      // Recover from a stuck end so the next admin/user call is not blocked.
+      if (statusRef.current === "ended") {
+        cleanup();
       }
       if (statusRef.current !== "idle") {
         toast({ title: "Already in a call", variant: "destructive" });
@@ -458,6 +481,7 @@ export const useAppCall = (
         callType === "audio" ? pricing.audioRatePerMinute || 6 : pricing.videoRatePerMinute || 8;
 
       setStatusSync("calling");
+      activeCallRef.current = { callId, callType };
       setActiveCall({
         callId,
         callType,
@@ -465,6 +489,7 @@ export const useAppCall = (
         remoteName: targetName,
         remotePhoto: targetPhoto,
         isInitiator: true,
+        isFreeCall: isAdminCallerRef.current,
         startedAt: null,
         localStream: stream,
         remoteStream: null,
@@ -613,7 +638,21 @@ export const useAppCall = (
       }
       localStreamRef.current = stream;
 
+      // Admin → woman calls are free — hide earning UI on callee side too.
+      // Use has_role RPC (SECURITY DEFINER); women cannot SELECT other users' user_roles rows.
+      let isFreeCall = false;
+      try {
+        const { data: isAdmin } = await supabase.rpc("has_role", {
+          _user_id: callerUserId,
+          _role: "admin",
+        });
+        isFreeCall = !!isAdmin;
+      } catch {
+        /* non-fatal */
+      }
+
       setStatusSync("connecting");
+      activeCallRef.current = { callId, callType };
       setActiveCall({
         callId,
         callType,
@@ -621,6 +660,7 @@ export const useAppCall = (
         remoteName: callerName,
         remotePhoto: callerPhoto,
         isInitiator: false,
+        isFreeCall,
         startedAt: null,
         localStream: stream,
         remoteStream: null,
@@ -712,10 +752,17 @@ export const useAppCall = (
   );
 
   const endCall = useCallback(() => {
-    if (activeCall) {
-      doEndCall(activeCall.callId, activeCall.callType);
+    const id = activeCallRef.current?.callId ?? activeCall?.callId;
+    const type = activeCallRef.current?.callType ?? activeCall?.callType;
+    if (id && type) {
+      void doEndCall(id, type);
+      return;
     }
-  }, [activeCall, doEndCall]);
+    // Fallback if React state lagged behind media — still force teardown.
+    if (statusRef.current !== "idle") {
+      cleanup();
+    }
+  }, [activeCall, doEndCall, cleanup]);
 
   const toggleMute = useCallback(() => {
     const track = localStreamRef.current?.getAudioTracks()[0];

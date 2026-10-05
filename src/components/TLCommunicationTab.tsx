@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
   Users,
   Send,
@@ -72,6 +73,9 @@ export function TLCommunicationTab({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showMembers, setShowMembers] = useState(false);
   const [isAdminViewer, setIsAdminViewer] = useState(false);
+  const [isMdUp, setIsMdUp] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(min-width: 768px)").matches,
+  );
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const profileCacheRef = useRef<
@@ -91,6 +95,14 @@ export function TLCommunicationTab({
   const inCall = isAdminViewer && callStatus !== "idle" && callStatus !== "ended" && !!activeCall;
 
   useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)");
+    const onChange = () => setIsMdUp(mq.matches);
+    onChange();
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+
+  useEffect(() => {
     if (!currentUserId) return;
     void loadAll();
     const cleanup = subscribe();
@@ -103,7 +115,10 @@ export function TLCommunicationTab({
       .then(({ data }) => {
         const admin = !!data;
         setIsAdminViewer(admin);
-        if (admin) setShowMembers(true);
+        // Desktop: open members sidebar. Mobile uses a sheet on demand.
+        if (admin && window.matchMedia("(min-width: 768px)").matches) {
+          setShowMembers(true);
+        }
       });
     return cleanup;
     // eslint-disable-next-line react-hooks/exhaustive-deps -- stable mount/effect deps; adding would remount chat/billing/call loops
@@ -338,7 +353,7 @@ export function TLCommunicationTab({
 
   if (isLoading) {
     return (
-      <Card className="h-full min-h-0 flex flex-col overflow-hidden">
+      <Card className="h-full min-h-0 flex flex-col overflow-hidden active:scale-100">
         <CardHeader className="pb-3">
           <Skeleton className="h-6 w-48" />
         </CardHeader>
@@ -351,18 +366,76 @@ export function TLCommunicationTab({
     );
   }
 
-  return (
-    <Card className="h-full min-h-0 flex flex-col overflow-hidden">
-      <CardHeader className="pb-3 border-b">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-              <Shield className="w-5 h-5 text-primary" />
+  const renderMembersList = () => (
+    <ScrollArea className="flex-1 min-h-0">
+      <div className="p-2 space-y-1">
+        {members.map((m) => (
+          <div
+            key={m.userId}
+            className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-muted/40"
+          >
+            <div className="relative shrink-0">
+              <Avatar className="w-8 h-8">
+                <AvatarImage src={m.photoUrl || undefined} />
+                <AvatarFallback className="text-[10px]">{m.fullName.charAt(0)}</AvatarFallback>
+              </Avatar>
+              <span
+                className={cn(
+                  "absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-background",
+                  m.isOnline ? "bg-green-500" : "bg-muted-foreground",
+                )}
+              />
             </div>
-            <div className="min-w-0">
-              <CardTitle className="text-lg truncate">TL Communication</CardTitle>
-              <p className="text-xs text-muted-foreground">
-                Admin + Team Leads · free · {members.length} members · {onlineCount} online
+            <span className="text-xs truncate flex-1 min-w-0">{m.fullName}</span>
+            {m.isAdmin && <span className="text-[9px] text-primary shrink-0">Admin</span>}
+            {isAdminViewer && !m.isAdmin && m.userId !== currentUserId && (
+              <div className="flex items-center gap-0.5 shrink-0">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-9 w-9 touch-manipulation"
+                  title={`Audio call ${m.fullName} (free)`}
+                  disabled={inCall}
+                  onClick={() => {
+                    void initiateCall(m.userId, m.fullName, m.photoUrl, "audio");
+                    if (!isMdUp) setShowMembers(false);
+                  }}
+                >
+                  <Phone className="w-4 h-4" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-9 w-9 touch-manipulation"
+                  title={`Video call ${m.fullName} (free)`}
+                  disabled={inCall}
+                  onClick={() => {
+                    void initiateCall(m.userId, m.fullName, m.photoUrl, "video");
+                    if (!isMdUp) setShowMembers(false);
+                  }}
+                >
+                  <Video className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </ScrollArea>
+  );
+
+  return (
+    <Card className="h-full w-full max-w-full min-h-0 flex flex-col overflow-hidden active:scale-100 border-0 rounded-none md:rounded-xl md:border">
+      <CardHeader className="py-3 px-3 sm:px-4 sm:pb-3 border-b shrink-0 space-y-0 min-w-0">
+        <div className="flex items-center justify-between gap-2 min-w-0">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 overflow-hidden">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+              <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+            </div>
+            <div className="min-w-0 flex-1 overflow-hidden">
+              <CardTitle className="text-base sm:text-lg truncate">TL Communication</CardTitle>
+              <p className="text-[11px] sm:text-xs text-muted-foreground truncate">
+                {members.length} members · {onlineCount} online · free
               </p>
             </div>
           </div>
@@ -370,76 +443,101 @@ export function TLCommunicationTab({
             variant="outline"
             size="sm"
             onClick={() => setShowMembers((v) => !v)}
-            className="gap-2 shrink-0"
+            className="gap-1.5 shrink-0 h-9 px-2.5 touch-manipulation"
           >
             <Users className="w-4 h-4" />
-            {showMembers ? "Hide" : "Members"}
+            <span className="hidden sm:inline">{showMembers && isMdUp ? "Hide" : "Members"}</span>
+            <span className="sm:hidden text-xs tabular-nums">{members.length}</span>
           </Button>
         </div>
       </CardHeader>
 
-      <div className="flex-1 flex overflow-hidden min-h-0">
-        <div className={cn("flex-1 flex flex-col min-h-0", showMembers && "md:w-2/3")}>
-          <ScrollArea className="flex-1 p-4">
-            <div className="space-y-4">
+      <div className="flex-1 flex overflow-hidden min-h-0 min-w-0 w-full max-w-full">
+        <div
+          className={cn(
+            "flex-1 flex flex-col min-h-0 min-w-0 max-w-full overflow-hidden",
+            showMembers && isMdUp && "md:min-w-0",
+          )}
+        >
+          <ScrollArea className="flex-1 min-h-0 min-w-0 w-full p-3 sm:p-4">
+            <div className="space-y-3 sm:space-y-4 w-full max-w-full min-w-0">
               {messages.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
+                <div className="text-center py-12 text-muted-foreground px-2">
                   <Shield className="w-12 h-12 mx-auto mb-3 opacity-50" />
                   <p>No messages yet</p>
                   <p className="text-sm">This group stays saved — it is not wiped after 7 days.</p>
                 </div>
               ) : (
                 messages.map((msg) => (
-                  <div key={msg.id} className={cn("flex gap-3", msg.isOwn && "flex-row-reverse")}>
-                    <Avatar className="w-8 h-8 flex-shrink-0">
+                  <div
+                    key={msg.id}
+                    className={cn(
+                      "flex gap-2 sm:gap-3 w-full max-w-full min-w-0",
+                      msg.isOwn && "flex-row-reverse",
+                    )}
+                  >
+                    <Avatar className="w-8 h-8 shrink-0">
                       <AvatarImage src={msg.senderPhoto || undefined} />
                       <AvatarFallback className="text-xs">
                         {msg.senderName.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
-                    <div className={cn("max-w-[70%]", msg.isOwn && "text-right")}>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm font-medium">
+                    {/* max-w accounts for avatar+gap so row never exceeds 100% */}
+                    <div
+                      className={cn(
+                        "min-w-0 max-w-[calc(100%-2.75rem)] sm:max-w-[min(70%,calc(100%-2.75rem))]",
+                        msg.isOwn && "text-right",
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          "flex flex-wrap items-center gap-x-2 gap-y-0.5 mb-1",
+                          msg.isOwn && "justify-end",
+                        )}
+                      >
+                        <span className="text-sm font-medium truncate max-w-[10rem]">
                           {msg.isOwn ? "You" : msg.senderName}
                         </span>
                         {msg.isAdmin && !msg.isOwn && (
-                          <span className="text-[9px] px-1 py-0.5 rounded bg-primary/15 text-primary">
+                          <span className="text-[9px] px-1 py-0.5 rounded bg-primary/15 text-primary shrink-0">
                             Admin
                           </span>
                         )}
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-[10px] sm:text-xs text-muted-foreground shrink-0">
                           {formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })}
                         </span>
                       </div>
                       <div
                         className={cn(
-                          "rounded-lg p-3",
+                          "rounded-lg p-2.5 sm:p-3 text-left overflow-hidden",
                           msg.isOwn ? "bg-primary text-primary-foreground" : "bg-muted",
                         )}
                       >
                         {msg.message && (
-                          <p className="text-sm whitespace-pre-wrap break-words">{msg.message}</p>
+                          <p className="text-sm whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
+                            {msg.message}
+                          </p>
                         )}
                         {msg.fileUrl && (
-                          <div className="mt-2">
+                          <div className="mt-2 min-w-0">
                             {msg.fileType?.startsWith("image/") ? (
                               <img
                                 src={msg.fileUrl}
                                 alt={msg.fileName || "image"}
-                                className="max-h-48 rounded"
+                                className="max-h-48 max-w-full h-auto rounded"
                               />
                             ) : (
                               <a
                                 href={msg.fileUrl}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="inline-flex items-center gap-1 text-xs underline"
+                                className="inline-flex items-center gap-1 text-xs underline max-w-full min-w-0"
                               >
                                 {fileIcon(msg.fileType)}
-                                <span>
+                                <span className="truncate">
                                   {msg.fileName || "File"} {formatFileSize(msg.fileSize)}
                                 </span>
-                                <Download className="w-3 h-3" />
+                                <Download className="w-3 h-3 shrink-0" />
                               </a>
                             )}
                           </div>
@@ -453,21 +551,22 @@ export function TLCommunicationTab({
             </div>
           </ScrollArea>
 
-          <div className="p-3 border-t space-y-2">
+          <div className="p-2 sm:p-3 border-t space-y-2 shrink-0 min-w-0 w-full max-w-full pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:pb-3">
             {selectedFile && (
-              <div className="flex items-center gap-2 text-xs bg-muted rounded px-2 py-1">
-                <Paperclip className="w-3 h-3" />
-                <span className="truncate flex-1">{selectedFile.name}</span>
+              <div className="flex items-center gap-2 text-xs bg-muted rounded px-2 py-1.5 min-w-0">
+                <Paperclip className="w-3 h-3 shrink-0" />
+                <span className="truncate flex-1 min-w-0">{selectedFile.name}</span>
                 <button
                   type="button"
                   onClick={() => setSelectedFile(null)}
                   aria-label="Remove file"
+                  className="p-1 touch-manipulation shrink-0"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
               </div>
             )}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 w-full max-w-full">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -478,6 +577,7 @@ export function TLCommunicationTab({
                 type="button"
                 variant="ghost"
                 size="icon"
+                className="shrink-0 !h-10 !w-10 !min-h-0 !min-w-0 touch-manipulation"
                 onClick={() => fileInputRef.current?.click()}
                 aria-label="Attach file"
               >
@@ -486,7 +586,8 @@ export function TLCommunicationTab({
               <Input
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Message the TL group…"
+                placeholder="Message TL…"
+                className="min-w-0 flex-1 h-10"
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
@@ -498,6 +599,7 @@ export function TLCommunicationTab({
                 onClick={() => void send()}
                 disabled={isSending || (!newMessage.trim() && !selectedFile)}
                 size="icon"
+                className="shrink-0 !h-10 !w-10 !min-h-0 !min-w-0 touch-manipulation"
                 aria-label="Send"
               >
                 <Send className="w-4 h-4" />
@@ -506,64 +608,27 @@ export function TLCommunicationTab({
           </div>
         </div>
 
-        {showMembers && (
-          <div className="hidden md:flex w-1/3 flex-col border-l">
-            <div className="px-3 py-2 text-xs font-semibold border-b">Members</div>
-            <ScrollArea className="flex-1">
-              <div className="p-2 space-y-1">
-                {members.map((m) => (
-                  <div key={m.userId} className="flex items-center gap-2 px-2 py-1.5">
-                    <div className="relative">
-                      <Avatar className="w-7 h-7">
-                        <AvatarImage src={m.photoUrl || undefined} />
-                        <AvatarFallback className="text-[10px]">
-                          {m.fullName.charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span
-                        className={cn(
-                          "absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-background",
-                          m.isOnline ? "bg-green-500" : "bg-muted-foreground",
-                        )}
-                      />
-                    </div>
-                    <span className="text-xs truncate flex-1">{m.fullName}</span>
-                    {m.isAdmin && <span className="text-[9px] text-primary">Admin</span>}
-                    {isAdminViewer && !m.isAdmin && m.userId !== currentUserId && (
-                      <div className="flex items-center gap-0.5 shrink-0">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-7 w-7 text-white hover:bg-white/15"
-                          title={`Audio call ${m.fullName} (free)`}
-                          disabled={inCall}
-                          onClick={() =>
-                            void initiateCall(m.userId, m.fullName, m.photoUrl, "audio")
-                          }
-                        >
-                          <Phone className="w-3.5 h-3.5" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-7 w-7 text-white hover:bg-white/15"
-                          title={`Video call ${m.fullName} (free)`}
-                          disabled={inCall}
-                          onClick={() =>
-                            void initiateCall(m.userId, m.fullName, m.photoUrl, "video")
-                          }
-                        >
-                          <Video className="w-3.5 h-3.5" />
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
+        {/* Desktop members sidebar — no fixed min-width so it can't push past the chat */}
+        {showMembers && isMdUp && (
+          <div className="hidden md:flex w-56 lg:w-64 shrink-0 flex-col border-l min-h-0 min-w-0 overflow-hidden">
+            <div className="px-3 py-2 text-xs font-semibold border-b shrink-0">Members</div>
+            {renderMembersList()}
           </div>
         )}
       </div>
+
+      {/* Mobile members sheet — call buttons live here on small screens */}
+      <Sheet open={showMembers && !isMdUp} onOpenChange={setShowMembers}>
+        <SheetContent side="right" className="w-[85vw] max-w-sm p-0 flex flex-col gap-0">
+          <SheetHeader className="px-4 py-3 border-b space-y-1 text-left">
+            <SheetTitle className="text-base">TL Members</SheetTitle>
+            <p className="text-xs text-muted-foreground font-normal">
+              {onlineCount} online · tap phone/video for free admin call
+            </p>
+          </SheetHeader>
+          {renderMembersList()}
+        </SheetContent>
+      </Sheet>
 
       {isAdminViewer && inCall && (
         <CallScreen
@@ -578,6 +643,7 @@ export function TLCommunicationTab({
           partnerUserId={activeCall?.remoteUserId}
           senderName="Admin"
           currentUserId={currentUserId}
+          isFreeCall
         />
       )}
     </Card>
