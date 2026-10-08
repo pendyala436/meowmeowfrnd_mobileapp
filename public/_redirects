@@ -5,5 +5,8 @@
 /blog   /blog/index.html  200
 /blog/  /blog/index.html  200
 
+# Rewrite root-level blog posts (e.g. /0800-level-up-your-building-trust-online.html) to /blog/
+/:filename([0-9]{4}-*.html)  /blog/:filename  200
+
 # SPA fallback so /auth, /dashboard, etc. load index.html instead of 404.
 /*    /index.html   200

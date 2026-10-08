@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    {
+      "source": "/blog/:match*",
+      "destination": "/blog/:match*"
+    },
+    {
+      "source": "/:filename([0-9]{4}-*.html)",
+      "destination": "/blog/:filename"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

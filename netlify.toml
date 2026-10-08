@@ -1,0 +1,18 @@
+[build]
+  publish = "dist"
+  command = "npm run build"
+
+[[redirects]]
+  from = "/blog/*"
+  to = "/blog/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/:filename([0-9]{4}-*.html)"
+  to = "/blog/:filename"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
