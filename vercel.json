@@ -1,16 +1,19 @@
 {
-  "rewrites": [
+  "routes": [
     {
-      "source": "/blog/:match*",
-      "destination": "/blog/:match*"
+      "src": "/blog/(.*)",
+      "dest": "/blog/$1"
     },
     {
-      "source": "/:filename([0-9]{4}-*.html)",
-      "destination": "/blog/:filename"
+      "src": "/([0-9]{4}-.*\\.html)",
+      "dest": "/blog/$1"
     },
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
 }
