@@ -5,7 +5,7 @@
       "dest": "/blog/$1"
     },
     {
-      "src": "/([0-9]{4}-.*\\.html)",
+      "src": "/(?!index\\.html)([^/]+\\.html)",
       "dest": "/blog/$1"
     },
     {
