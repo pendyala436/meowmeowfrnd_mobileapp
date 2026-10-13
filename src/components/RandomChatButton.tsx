@@ -24,6 +24,7 @@ import { Loader2, Shuffle, MessageCircle, UserCheck, X, Shield, Wallet } from "l
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { isIndianLanguage } from "@/data/supportedLanguages";
+import { fetchBrowsableOppositeProfiles } from "@/lib/profile-queries";
 
 interface RandomChatButtonProps {
   userGender: "male" | "female";
@@ -143,14 +144,14 @@ export const RandomChatButton = ({
 
         const onlineUserIds = onlineStatuses.map((s) => s.user_id);
 
-        // Get men profiles
-        const { data: menProfiles } = await supabase
-          .from("profiles")
-          .select("user_id, full_name, photo_url, primary_language, preferred_language")
-          .in("user_id", onlineUserIds)
-          .or("gender.eq.male,gender.eq.Male");
+        // profiles RLS blocks cross-user SELECT — browse male_profiles instead
+        const menProfiles = await fetchBrowsableOppositeProfiles("male", {
+          userIds: onlineUserIds,
+          requirePhoto: false,
+          limit: 100,
+        });
 
-        if (!menProfiles || menProfiles.length === 0) {
+        if (!menProfiles.length) {
           setSearchStatus("No men available right now. Please try again later.");
           return;
         }

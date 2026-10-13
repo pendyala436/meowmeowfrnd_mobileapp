@@ -35,6 +35,7 @@ import {
   shouldShowProfile,
 } from "@/hooks/useNLLBVisibility";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { fetchBrowsableOppositeProfiles } from "@/lib/profile-queries";
 
 interface MatchableWoman {
   userId: string;
@@ -207,14 +208,12 @@ const MatchingScreen = () => {
         return;
       }
 
-      // Fetch female profiles with country info and AI verification status
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select(
-          "user_id, full_name, photo_url, age, primary_language, preferred_language, country, ai_approved, approval_status",
-        )
-        .ilike("gender", "female")
-        .in("user_id", onlineUserIds);
+      // Browse online women via public_female_profiles (profiles RLS blocks cross-user SELECT)
+      const profiles = await fetchBrowsableOppositeProfiles("female", {
+        userIds: onlineUserIds,
+        requirePhoto: false,
+        limit: 100,
+      });
 
       // Fetch availability status
       const { data: availability } = await supabase
@@ -237,55 +236,49 @@ const MatchingScreen = () => {
         ]) || [],
       );
 
-      type MatchingProfile = {
-        user_id: string;
-        full_name: string | null;
-        photo_url: string | null;
-        age: number | null;
-        primary_language: string | null;
-        preferred_language: string | null;
-        country: string | null;
-        ai_approved: boolean | null;
-        approval_status: string | null;
-      };
+      const profileUserIds = profiles.map((p) => p.user_id);
+      const { data: allLanguages } =
+        profileUserIds.length > 0
+          ? await supabase
+              .from("user_languages")
+              .select("user_id, language_name")
+              .in("user_id", profileUserIds)
+          : { data: [] };
 
-      // Fetch languages for each user
-      const women: MatchableWoman[] = await Promise.all(
-        (profiles || []).map(async (profile: MatchingProfile) => {
-          const { data: languages } = await supabase
-            .from("user_languages")
-            .select("language_name")
-            .eq("user_id", profile.user_id)
-            .limit(1);
+      const languageMap = new Map<string, string>();
+      for (const lang of allLanguages || []) {
+        if (!languageMap.has(lang.user_id)) {
+          languageMap.set(lang.user_id, lang.language_name);
+        }
+      }
 
-          const womanLanguage =
-            languages?.[0]?.language_name ||
-            profile.primary_language ||
-            profile.preferred_language ||
-            "Unknown";
+      const women: MatchableWoman[] = profiles.map((profile) => {
+        const womanLanguage =
+          languageMap.get(profile.user_id) ||
+          profile.primary_language ||
+          profile.preferred_language ||
+          "Unknown";
 
-          const avail = availabilityMap.get(profile.user_id);
-          const isBusy = avail ? avail.current_chat_count >= avail.max_concurrent_chats : false;
-          const aiVerified = profile.ai_approved === true && profile.approval_status === "approved";
-          const profileVisibility = (settingsMap.get(profile.user_id) ||
-            "high") as ProfileVisibility;
+        const avail = availabilityMap.get(profile.user_id);
+        const isBusy = avail ? avail.current_chat_count >= avail.max_concurrent_chats : false;
+        // public_female_profiles already requires approval_status = approved
+        const aiVerified = profile.approval_status === "approved" && profile.ai_approved !== false;
+        const profileVisibility = (settingsMap.get(profile.user_id) || "high") as ProfileVisibility;
 
-          return {
-            userId: profile.user_id,
-            fullName: profile.full_name || "Anonymous",
-            age: profile.age,
-            photoUrl: profile.photo_url,
-            motherTongue: womanLanguage,
-            country: profile.country,
-            isOnline: true,
-            isBusy,
-            currentChatCount: avail?.current_chat_count || 0,
-            aiVerified,
-
-            profileVisibility,
-          };
-        }),
-      );
+        return {
+          userId: profile.user_id,
+          fullName: profile.full_name || "Anonymous",
+          age: profile.age,
+          photoUrl: profile.photo_url,
+          motherTongue: womanLanguage,
+          country: profile.country,
+          isOnline: true,
+          isBusy,
+          currentChatCount: avail?.current_chat_count || 0,
+          aiVerified,
+          profileVisibility,
+        };
+      });
 
       // Apply profile visibility filtering (probability-based)
       const visibilityFilteredWomen = women.filter((w) => {

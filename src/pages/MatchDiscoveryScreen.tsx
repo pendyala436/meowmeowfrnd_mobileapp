@@ -63,6 +63,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 // Match score calculator
 import { calculateMatchScore } from "@/lib/matchScoreCalculator";
+// Secure browsable profiles (profiles table RLS blocks cross-user SELECT)
+import { fetchBrowsableOppositeProfiles, type BrowsableMatchProfile } from "@/lib/profile-queries";
 
 /**
  * MatchUser Interface
@@ -225,170 +227,51 @@ const MatchDiscoveryScreen = () => {
       const oppositeGender =
         userGender === "male" ? "female" : userGender === "female" ? "male" : "";
 
-      // ============= BUILD DATABASE QUERY =============
-
-      // Start building the query with all profile fields we need
-      // MANDATORY: Only show users with photos
-      let profilesQuery = supabase
-        .from("profiles")
-        .select(
-          `
-          user_id, full_name, photo_url, country, state, preferred_language, interests,
-          age, height_cm, body_type, education_level, occupation, religion,
-          marital_status, has_children, smoking_habit, drinking_habit,
-          dietary_preference, fitness_level, pet_preference, travel_frequency,
-          personality_type, zodiac_sign, bio, is_verified, is_premium, last_active_at
-        `,
-        )
-        .neq("user_id", user.id) // Exclude current user from results
-        .not("photo_url", "is", null)
-        .neq("photo_url", ""); // Only users with photos are visible
-
-      // Apply gender filter if we have opposite gender defined
-      if (oppositeGender) {
-        profilesQuery = profilesQuery.eq("gender", oppositeGender);
+      if (!oppositeGender) {
+        setMatches([]);
+        setIsLoading(false);
+        return;
       }
 
-      // ============= APPLY DEMOGRAPHIC FILTERS =============
+      // ============= BROWSE OPPOSITE PROFILES (RLS-safe) =============
+      // Direct `.from("profiles")` only returns the caller's own row after
+      // profiles RLS lockdown — use public_female_profiles / male_profiles.
+      let browsable = await fetchBrowsableOppositeProfiles(oppositeGender, {
+        requirePhoto: true,
+        limit: 100,
+      });
+      browsable = browsable.filter((p) => p.user_id !== user.id);
 
-      // Country filter - exact match
-      if (filters.country !== "all") {
-        profilesQuery = profilesQuery.eq("country", filters.country);
-      }
+      // Client-side demographic / lifestyle filters (fields available on browsable shape)
+      browsable = browsable.filter((p) => {
+        if (filters.country !== "all" && p.country !== filters.country) return false;
+        if (filters.bodyType !== "all" && p.body_type !== filters.bodyType) return false;
+        if (filters.educationLevel !== "all" && p.education_level !== filters.educationLevel)
+          return false;
+        if (filters.occupation !== "all" && p.occupation !== filters.occupation) return false;
+        if (filters.religion !== "all" && p.religion !== filters.religion) return false;
+        if (filters.maritalStatus !== "all" && p.marital_status !== filters.maritalStatus)
+          return false;
+        if (filters.verifiedOnly && !p.is_verified) return false;
+        if (filters.premiumOnly && !p.is_premium) return false;
+        if (filters.hasPhoto && !p.photo_url) return false;
+        if (filters.hasBio && !p.bio) return false;
+        if (p.age != null) {
+          if (p.age < filters.ageRange[0] || p.age > filters.ageRange[1]) return false;
+        }
+        if (p.height_cm != null) {
+          if (p.height_cm < filters.heightRange[0] || p.height_cm > filters.heightRange[1])
+            return false;
+        }
+        if (filters.onlineNow) {
+          if (!p.last_active_at) return false;
+          const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+          if (new Date(p.last_active_at).getTime() < fiveMinutesAgo) return false;
+        }
+        return true;
+      });
 
-      // Body type filter
-      if (filters.bodyType !== "all") {
-        profilesQuery = profilesQuery.eq("body_type", filters.bodyType);
-      }
-
-      // Education level filter
-      if (filters.educationLevel !== "all") {
-        profilesQuery = profilesQuery.eq("education_level", filters.educationLevel);
-      }
-
-      // Occupation filter
-      if (filters.occupation !== "all") {
-        profilesQuery = profilesQuery.eq("occupation", filters.occupation);
-      }
-
-      // Religion filter
-      if (filters.religion !== "all") {
-        profilesQuery = profilesQuery.eq("religion", filters.religion);
-      }
-
-      // Marital status filter
-      if (filters.maritalStatus !== "all") {
-        profilesQuery = profilesQuery.eq("marital_status", filters.maritalStatus);
-      }
-
-      // Has children filter - boolean check
-      if (filters.hasChildren === "yes") {
-        profilesQuery = profilesQuery.eq("has_children", true);
-      } else if (filters.hasChildren === "no") {
-        profilesQuery = profilesQuery.eq("has_children", false);
-      }
-
-      // ============= APPLY LIFESTYLE FILTERS =============
-
-      // Smoking habit filter
-      if (filters.smokingHabit !== "all") {
-        profilesQuery = profilesQuery.eq("smoking_habit", filters.smokingHabit);
-      }
-
-      // Drinking habit filter
-      if (filters.drinkingHabit !== "all") {
-        profilesQuery = profilesQuery.eq("drinking_habit", filters.drinkingHabit);
-      }
-
-      // Dietary preference filter
-      if (filters.dietaryPreference !== "all") {
-        profilesQuery = profilesQuery.eq("dietary_preference", filters.dietaryPreference);
-      }
-
-      // Fitness level filter
-      if (filters.fitnessLevel !== "all") {
-        profilesQuery = profilesQuery.eq("fitness_level", filters.fitnessLevel);
-      }
-
-      // Pet preference filter
-      if (filters.petPreference !== "all") {
-        profilesQuery = profilesQuery.eq("pet_preference", filters.petPreference);
-      }
-
-      // Travel frequency filter
-      if (filters.travelFrequency !== "all") {
-        profilesQuery = profilesQuery.eq("travel_frequency", filters.travelFrequency);
-      }
-
-      // ============= APPLY PERSONALITY FILTERS =============
-
-      // Zodiac sign filter
-      if (filters.zodiacSign !== "all") {
-        profilesQuery = profilesQuery.eq("zodiac_sign", filters.zodiacSign);
-      }
-
-      // Personality type filter (e.g., MBTI types)
-      if (filters.personalityType !== "all") {
-        profilesQuery = profilesQuery.eq("personality_type", filters.personalityType);
-      }
-
-      // ============= APPLY SAFETY & BEHAVIOR FILTERS =============
-
-      // Only show verified users
-      if (filters.verifiedOnly) {
-        profilesQuery = profilesQuery.eq("is_verified", true);
-      }
-
-      // Only show premium users
-      if (filters.premiumOnly) {
-        profilesQuery = profilesQuery.eq("is_premium", true);
-      }
-
-      // Only show users with profile photos
-      if (filters.hasPhoto) {
-        profilesQuery = profilesQuery.not("photo_url", "is", null);
-      }
-
-      // Only show users with bio text
-      if (filters.hasBio) {
-        profilesQuery = profilesQuery.not("bio", "is", null);
-      }
-
-      // Only show users registered in last 7 days
-      if (filters.newUsersOnly) {
-        const weekAgo = new Date();
-        weekAgo.setDate(weekAgo.getDate() - 7);
-        profilesQuery = profilesQuery.gte("created_at", weekAgo.toISOString());
-      }
-
-      // Only show users active in last 5 minutes
-      if (filters.onlineNow) {
-        const fiveMinutesAgo = new Date();
-        fiveMinutesAgo.setMinutes(fiveMinutesAgo.getMinutes() - 5);
-        profilesQuery = profilesQuery.gte("last_active_at", fiveMinutesAgo.toISOString());
-      }
-
-      // Age range filter (server-side)
-      if (filters.ageRange[0] > 18) {
-        profilesQuery = profilesQuery.gte("age", filters.ageRange[0]);
-      }
-      if (filters.ageRange[1] < 60) {
-        profilesQuery = profilesQuery.lte("age", filters.ageRange[1]);
-      }
-
-      // Height range filter (server-side)
-      if (filters.heightRange[0] > 140) {
-        profilesQuery = profilesQuery.gte("height_cm", filters.heightRange[0]);
-      }
-      if (filters.heightRange[1] < 200) {
-        profilesQuery = profilesQuery.lte("height_cm", filters.heightRange[1]);
-      }
-
-      // Execute the query with a limit to prevent unbounded fetches
-      const { data: profiles } = await profilesQuery.limit(100);
-
-      // Handle empty results
-      if (!profiles || profiles.length === 0) {
+      if (browsable.length === 0) {
         setMatches([]);
         setIsLoading(false);
         return;
@@ -409,38 +292,7 @@ const MatchDiscoveryScreen = () => {
 
       // ============= FETCH ONLINE STATUS FOR ALL PROFILES =============
 
-      // Get all user IDs from profiles
-      type DiscoveryProfile = {
-        user_id: string;
-        full_name: string | null;
-        photo_url: string | null;
-        country: string | null;
-        state: string | null;
-        preferred_language: string | null;
-        interests: unknown;
-        age: number | null;
-        height_cm: number | null;
-        body_type: string | null;
-        education_level: string | null;
-        occupation: string | null;
-        religion: string | null;
-        marital_status: string | null;
-        has_children: boolean | null;
-        smoking_habit: string | null;
-        drinking_habit: string | null;
-        dietary_preference: string | null;
-        fitness_level: string | null;
-        pet_preference: string | null;
-        travel_frequency: string | null;
-        personality_type: string | null;
-        zodiac_sign: string | null;
-        bio: string | null;
-        is_verified: boolean | null;
-        is_premium: boolean | null;
-        last_active_at: string | null;
-      };
-      const typedProfiles = profiles as DiscoveryProfile[];
-      const userIds = typedProfiles.map((p: DiscoveryProfile) => p.user_id);
+      const userIds = browsable.map((p) => p.user_id);
 
       // Batch fetch online status
       const { data: onlineStatuses } = await supabase
@@ -465,12 +317,12 @@ const MatchDiscoveryScreen = () => {
       // ============= CALCULATE MATCH SCORES =============
 
       // Pre-filter profiles before processing
-      const eligibleProfiles = typedProfiles.filter(
-        (p: DiscoveryProfile) => !matchedUserIds.has(p.user_id),
+      const eligibleProfiles = browsable.filter(
+        (p: BrowsableMatchProfile) => !matchedUserIds.has(p.user_id),
       );
 
       // Batch-fetch all languages in ONE query instead of N+1
-      const eligibleUserIds = eligibleProfiles.map((p: DiscoveryProfile) => p.user_id);
+      const eligibleUserIds = eligibleProfiles.map((p) => p.user_id);
       const { data: allProfileLanguages } =
         eligibleUserIds.length > 0
           ? await supabase
@@ -488,7 +340,7 @@ const MatchDiscoveryScreen = () => {
       });
 
       // Process each profile synchronously (no more async per-profile)
-      const matchedUsers: MatchUser[] = eligibleProfiles.map((profile: DiscoveryProfile) => {
+      const matchedUsers: MatchUser[] = eligibleProfiles.map((profile) => {
         const theirLanguages = languagesByUserId.get(profile.user_id) || [];
 
         // Add to filter options
@@ -507,17 +359,11 @@ const MatchDiscoveryScreen = () => {
             user_id: profile.user_id,
             country: profile.country,
             preferred_language: profile.preferred_language,
-            interests: profile.interests as string[] | undefined,
+            interests: profile.interests ?? undefined,
             education_level: profile.education_level,
             occupation: profile.occupation,
             religion: profile.religion,
             marital_status: profile.marital_status,
-            smoking_habit: profile.smoking_habit,
-            drinking_habit: profile.drinking_habit,
-            dietary_preference: profile.dietary_preference,
-            fitness_level: profile.fitness_level,
-            pet_preference: profile.pet_preference,
-            zodiac_sign: profile.zodiac_sign,
             age: profile.age,
             bio: profile.bio,
             photo_url: profile.photo_url,
@@ -604,12 +450,23 @@ const MatchDiscoveryScreen = () => {
       // ============= CREATE MATCH RECORD =============
 
       // Insert new match into database
-      await supabase.from("matches").insert({
+      const { error: insertError } = await supabase.from("matches").insert({
         user_id: user.id, // Current user
         matched_user_id: matchUser.userId, // Liked user
         status: "pending", // Match is pending until other user likes back
         match_score: matchUser.matchScore, // Store calculated match score
       });
+
+      if (insertError) {
+        console.error("Error inserting match:", insertError);
+        setSwipeDirection(null);
+        toast({
+          title: "Error",
+          description: "Failed to send like. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
 
       // Show success toast with match score
       toast({

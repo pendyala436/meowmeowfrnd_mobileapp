@@ -18,6 +18,7 @@ import {
   type CarouselApi,
 } from "@/components/ui/carousel";
 import { getQuickMatchScore } from "@/lib/matchScoreCalculator";
+import { fetchBrowsableOppositeProfiles } from "@/lib/profile-queries";
 
 interface OnlineUser {
   userId: string;
@@ -141,19 +142,18 @@ const OnlineUsersScreen = () => {
 
       const onlineUserIds = onlineStatus.map((s: { user_id: string }) => s.user_id);
 
-      // Fetch profiles of online users with opposite gender (must have photo)
-      let query = supabase
-        .from("profiles")
-        .select("user_id, full_name, photo_url, gender, preferred_language")
-        .in("user_id", onlineUserIds)
-        .not("photo_url", "is", null)
-        .neq("photo_url", "");
-
-      if (oppositeGender) {
-        query = query.ilike("gender", oppositeGender);
+      // profiles RLS blocks cross-user SELECT — use browsable views/tables
+      if (oppositeGender !== "male" && oppositeGender !== "female") {
+        setOnlineUsers([]);
+        setIsLoading(false);
+        return;
       }
 
-      const { data: profiles } = await query;
+      const browsable = await fetchBrowsableOppositeProfiles(oppositeGender, {
+        userIds: onlineUserIds,
+        requirePhoto: true,
+        limit: 100,
+      });
 
       type OnlineProfile = {
         user_id: string;
@@ -162,9 +162,15 @@ const OnlineUsersScreen = () => {
         gender: string | null;
         preferred_language: string | null;
       };
-      const validProfiles = ((profiles || []) as OnlineProfile[]).filter(
-        (profile: OnlineProfile) => profile.photo_url && profile.photo_url.trim() !== "",
-      );
+      const validProfiles: OnlineProfile[] = browsable
+        .filter((profile) => profile.photo_url && profile.photo_url.trim() !== "")
+        .map((profile) => ({
+          user_id: profile.user_id,
+          full_name: profile.full_name,
+          photo_url: profile.photo_url,
+          gender: profile.gender,
+          preferred_language: profile.preferred_language,
+        }));
       const validUserIds = validProfiles.map((p: OnlineProfile) => p.user_id);
 
       // Batch fetch languages for all users in a single query
@@ -245,12 +251,22 @@ const OnlineUsersScreen = () => {
       const matchScore = await getQuickMatchScore(supabase, currentUser.id, user.userId);
 
       // Create match with calculated score
-      await supabase.from("matches").insert({
+      const { error: insertError } = await supabase.from("matches").insert({
         user_id: currentUser.id,
         matched_user_id: user.userId,
         status: "pending",
         match_score: matchScore,
       });
+
+      if (insertError) {
+        console.error("Error inserting match:", insertError);
+        toast({
+          title: t("error", "Error"),
+          description: t("failedToSave", "Failed to send like"),
+          variant: "destructive",
+        });
+        return;
+      }
 
       toast({
         title: `${t("liked", "Liked")}! 💕`,
