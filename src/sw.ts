@@ -57,10 +57,7 @@ if (isLovablePreviewWorker) {
   // ========================================
 
   // NEVER let service worker intercept /blog/ requests — let them hit the server directly
-  registerRoute(
-    ({ url }) => url.pathname.startsWith("/blog/"),
-    new NetworkOnly(),
-  );
+  registerRoute(({ url }) => url.pathname.startsWith("/blog/"), new NetworkOnly());
 
   // IMPORTANT (Dev/HMR safety): never cache Vite module URLs.
   // If these get cached, dynamic imports can fail after updates and cause blank screens.
