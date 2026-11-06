@@ -123,6 +123,7 @@ import { translateForViewer, isEnglishLanguage, languagesMatch } from "@/lib/tra
 import { canCallEachOther, fetchCallLanguage, pickCallLanguage } from "@/lib/call-languages";
 import { parseGiftMessage, GIFT_PREFIX } from "@/lib/gift-message";
 import { useAppSettings } from "@/hooks/useAppSettings";
+import { cleanDisplayName } from "@/lib/utils";
 
 // MAX_PARALLEL_CHATS is now loaded dynamically from app_settings
 // Default fallback only used if database is unavailable
@@ -213,6 +214,8 @@ interface ChatPartner {
   avatar: string; // Profile photo URL
   isOnline: boolean; // Current online status
   preferredLanguage: string; // Language for translation target
+  isAi?: boolean; // Whether chat partner is an AI persona
+  personaCode?: string; // AI persona code if applicable
 }
 
 /**
@@ -1411,6 +1414,7 @@ const ChatScreen = () => {
         partnerProfile,
         { data: partnerStatus },
         { data: partnerLanguages },
+        { data: aiPersonaData },
       ] = await Promise.all([
         supabase
           .from("chat_messages")
@@ -1423,6 +1427,12 @@ const ChatScreen = () => {
         fetchPublicProfile(partnerId),
         supabase.from("user_status").select("is_online").eq("user_id", partnerId).maybeSingle(),
         supabase.from("user_languages").select("language_name").eq("user_id", partnerId),
+        supabase
+          .from("ai_personas" as any)
+          .select("persona_code, is_active")
+          .eq("user_id", partnerId)
+          .eq("is_active", true)
+          .maybeSingle(),
       ]);
 
       if (partnerProfile) {
@@ -1434,9 +1444,10 @@ const ChatScreen = () => {
             ),
             partnerProfile.preferred_language,
           ) || "English";
-        const partnerName = partnerProfile.full_name || "Anonymous";
+        const isAiPersona = !!(aiPersonaData as any)?.is_active;
+        const partnerName = cleanDisplayName(partnerProfile.full_name) || "Anonymous";
         const partnerAvatar = partnerProfile.photo_url || "";
-        const isPartnerOnline = partnerStatus?.is_online || false;
+        const isPartnerOnline = isAiPersona ? true : partnerStatus?.is_online || false;
 
         setChatPartner({
           userId: partnerProfile.user_id,
@@ -1444,6 +1455,8 @@ const ChatScreen = () => {
           avatar: partnerAvatar,
           isOnline: isPartnerOnline,
           preferredLanguage: partnerMotherTongue,
+          isAi: isAiPersona,
+          personaCode: (aiPersonaData as any)?.persona_code,
         });
       } else {
         // No partner found - show error
@@ -2724,12 +2737,14 @@ const ChatScreen = () => {
               </div>
 
               <div className="flex-1 min-w-0">
-                <p
-                  className="truncate"
-                  style={{ fontSize: 15, fontWeight: 500, color: CHAT.headerText }}
-                >
-                  {chatPartner.fullName}
-                </p>
+                <div className="flex items-center gap-1.5 truncate">
+                  <p
+                    className="truncate"
+                    style={{ fontSize: 15, fontWeight: 500, color: CHAT.headerText }}
+                  >
+                    {chatPartner.fullName}
+                  </p>
+                </div>
                 <div className="flex items-center gap-1" style={{ color: CHAT.headerSub }}>
                   <PartnerStatusLine
                     state={partnerState}
@@ -2766,16 +2781,19 @@ const ChatScreen = () => {
             </div>
           )}
 
-          {/* Audio & Video Call Buttons — hidden when blocked or call not allowed */}
+          {/* Audio & Video Call Buttons — hidden when blocked, call not allowed, or AI persona */}
           {(() => {
             const notBlocked = !isBlocked && !isBlockedByPartner;
+            const isAi = !!chatPartner?.isAi;
             const showAudioCall =
+              !isAi &&
               notBlocked &&
               currentUserGender === "male" &&
               chatPartner &&
               canPlaceCall &&
               settings.audioCallEnabled !== false;
             const showVideoCall =
+              !isAi &&
               notBlocked &&
               currentUserGender === "male" &&
               chatPartner &&
