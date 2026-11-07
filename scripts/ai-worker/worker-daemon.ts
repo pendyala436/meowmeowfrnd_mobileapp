@@ -12,7 +12,7 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
-import { processIncomingAiMessage } from "./message-processor";
+import { processIncomingAiMessage } from "./message-processor.js";
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
