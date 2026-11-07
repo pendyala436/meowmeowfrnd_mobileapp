@@ -54,7 +54,7 @@ export async function getActivePersonaForUser(
   const { data: femaleProfile, error: fpError } = await supabase
     .from("female_profiles")
     .select(
-      "id, user_id, full_name, age, bio, country, state, city, primary_language, preferred_language, interests, occupation, approval_status, account_status, is_ai_managed"
+      "id, user_id, full_name, age, bio, country, state, primary_language, preferred_language, interests, occupation, approval_status, account_status, is_ai_managed"
     )
     .eq("user_id", userId)
     .maybeSingle();
@@ -84,7 +84,7 @@ export async function getActivePersonaForUser(
         bio: femaleProfile.bio,
         country: femaleProfile.country,
         state: femaleProfile.state,
-        city: (femaleProfile as any).city || null,
+        city: null,
         primary_language: femaleProfile.primary_language,
         preferred_language: femaleProfile.preferred_language,
         interests: femaleProfile.interests,
