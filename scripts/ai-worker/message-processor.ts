@@ -2,7 +2,7 @@
  * AI Message Processor Service
  *
  * Handles atomic job locking, duplicate prevention, dynamic female profile resolution,
- * Ollama inference, and response dispatch to `public.chat_messages`.
+ * conversation memory assembly, Ollama inference, and response dispatch to `public.chat_messages`.
  *
  * Fully scalable: Supports all eligible AI-managed female profiles dynamically
  * without requiring predefined registrations in `ai_personas` or any 100-limit.
@@ -34,6 +34,8 @@ export interface ProcessResult {
   replyId?: string;
   replyText?: string;
 }
+
+const DEFAULT_WORKER_MODEL = process.env.OLLAMA_MODEL || "phoebe-rp:latest";
 
 /**
  * Dynamically resolves whether a recipient user ID is an eligible AI-managed female profile.
@@ -90,9 +92,9 @@ export async function getActivePersonaForUser(
         interests: femaleProfile.interests,
         occupation: femaleProfile.occupation,
         system_prompt: personaOverride?.system_prompt,
-        model_name: personaOverride?.model_name || "qwen3:4b",
+        model_name: personaOverride?.model_name || DEFAULT_WORKER_MODEL,
         temperature: Number(personaOverride?.temperature ?? 0.7),
-        max_tokens: Number(personaOverride?.max_tokens ?? 180),
+        max_tokens: Number(personaOverride?.max_tokens ?? 120),
       };
     }
   }
@@ -122,9 +124,9 @@ export async function getActivePersonaForUser(
     persona_code: legacyPersona.persona_code,
     display_name: legacyPersona.display_name,
     system_prompt: legacyPersona.system_prompt,
-    model_name: legacyPersona.model_name || "qwen3:4b",
+    model_name: legacyPersona.model_name || DEFAULT_WORKER_MODEL,
     temperature: Number(legacyPersona.temperature ?? 0.7),
-    max_tokens: Number(legacyPersona.max_tokens ?? 180),
+    max_tokens: Number(legacyPersona.max_tokens ?? 120),
     primary_language: profile?.primary_language,
     preferred_language: (profile as any)?.preferred_language,
     bio: profile?.bio,
@@ -154,7 +156,6 @@ export async function claimMessageJob(
     status: "processing",
   };
 
-  // If the schema has recipient_id, supply it; also provide persona_id if it requires a UUID
   insertPayload.persona_id = recipientUserId;
   insertPayload.recipient_id = recipientUserId;
 
@@ -225,7 +226,7 @@ export async function processIncomingAiMessage(
   const presenceChannel = supabase.channel(`chat-presence:${chatId}`);
   try {
     await new Promise<void>((resolve) => {
-      const timer = setTimeout(() => resolve(), 3000);
+      const timer = setTimeout(() => resolve(), 2500);
       presenceChannel.subscribe((status) => {
         if (status === "SUBSCRIBED" || status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
           clearTimeout(timer);
@@ -243,7 +244,7 @@ export async function processIncomingAiMessage(
   }
 
   try {
-    // 6. Fetch recent chat history for context
+    // 6. Fetch recent chat history strictly isolated to this conversation
     const { data: rawMessages } = await supabase
       .from("chat_messages")
       .select("id, sender_id, receiver_id, message, created_at")
@@ -251,22 +252,32 @@ export async function processIncomingAiMessage(
       .order("created_at", { ascending: false })
       .limit(10);
 
+    // Filter out the incoming message if it already landed in DB to prevent duplicates
+    const priorDbMessages = (rawMessages || []).filter(
+      (m: MessageRecord) => m.id !== messageId,
+    ) as MessageRecord[];
+
+    const hasPriorMessages = priorDbMessages.length > 0;
+
     const history = formatConversationHistory(
-      (rawMessages || []) as MessageRecord[],
+      priorDbMessages,
       persona.user_id,
+      { id: messageId, text: messageText, senderId },
       8,
     );
 
-    // If latest incoming message wasn't in DB yet when queried, append it
-    if (!history.some((h) => h.content === messageText.trim())) {
-      history.push({ role: "user", content: messageText.trim() });
-    }
+    // 7. Build individualized system prompt with context awareness & call Ollama
+    const systemPrompt = buildSystemPrompt(persona, {
+      incomingMessageId: messageId,
+      currentMessageText: messageText,
+      isOngoingConversation: hasPriorMessages,
+    });
 
-    // 7. Build individualized system prompt & call Ollama
-    const systemPrompt = buildSystemPrompt(persona);
+    const targetModel = modelOverride || persona.model_name || DEFAULT_WORKER_MODEL;
+
     const ollamaResponse = await generateOllamaReply(
       {
-        model: modelOverride || persona.model_name || "qwen3:4b",
+        model: targetModel,
         systemPrompt,
         messages: history,
         temperature: persona.temperature,

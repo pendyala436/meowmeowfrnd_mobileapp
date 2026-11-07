@@ -20,13 +20,24 @@ describe("prompt-builder", () => {
   it("builds a system prompt containing disclosure and rules", () => {
     const prompt = buildSystemPrompt(persona);
     expect(prompt).toContain("Maya");
-    expect(prompt).toContain("virtual companion on Meow Meow");
-    expect(prompt).toContain("NEVER speak like an automated customer service bot");
-    expect(prompt).toContain("strictly 1 to 2 sentences");
-    expect(prompt).toContain("Your primary language is Hindi");
+    expect(prompt).toContain("companion on Meow Meow");
+    expect(prompt).toContain("NEVER speak like an automated customer service assistant");
+    expect(prompt).toContain("Strictly 1 to 2 short, expressive sentences");
+    expect(prompt).toContain("Your native language is Hindi");
   });
 
-  it("supports different regional personas with their own language and background", () => {
+  it("prioritizes custom persona prompt override over generated defaults", () => {
+    const customPrompt = "SPECIAL INSTRUCTION: Speak with poetic metaphors about rains and tea.";
+    const customPersona: PersonaProfileData = {
+      ...persona,
+      system_prompt: customPrompt,
+    };
+    const prompt = buildSystemPrompt(customPersona);
+    expect(prompt).toContain("SPECIAL IDENTITY & CHARACTER GUIDELINES (HIGHEST PRIORITY)");
+    expect(prompt).toContain(customPrompt);
+  });
+
+  it("supports regional personas with distinct language and background", () => {
     const bengaliPersona: PersonaProfileData = {
       id: "persona-uuid-2",
       user_id: "user-ai-2",
@@ -38,7 +49,7 @@ describe("prompt-builder", () => {
       country: "India",
       bio: "Kolkata girl who loves poetry and warm tea.",
       interests: ["Rabindra Sangeet", "Poetry", "Tea"],
-      model_name: "qwen3:4b",
+      model_name: "phoebe-rp:latest",
       temperature: 0.7,
       max_tokens: 60,
     };
@@ -46,8 +57,34 @@ describe("prompt-builder", () => {
     const prompt = buildSystemPrompt(bengaliPersona);
     expect(prompt).toContain("Ananya");
     expect(prompt).toContain("West Bengal, India");
-    expect(prompt).toContain("Your primary language is Bengali");
+    expect(prompt).toContain("Your native language is Bengali");
     expect(prompt).toContain("Rabindra Sangeet, Poetry, Tea");
+  });
+
+  it("configures Telugu personas to use natural Telugish and Indian English", () => {
+    const teluguPersona: PersonaProfileData = {
+      id: "persona-uuid-3",
+      user_id: "user-ai-3",
+      persona_code: "swathi_hyd",
+      display_name: "Swathi",
+      primary_language: "Telugu",
+      city: "Hyderabad",
+      state: "Telangana",
+      country: "India",
+      bio: "Software engineer who loves Hyderabadi biryani and filter coffee.",
+      interests: ["Coffee", "Coding", "Movies"],
+    };
+
+    const prompt = buildSystemPrompt(teluguPersona);
+    expect(prompt).toContain("Your native language is Telugu");
+    expect(prompt).toContain("Telugish");
+    expect(prompt).toContain("Hyderabad, Telangana, India");
+  });
+
+  it("instructs persona not to reintroduce itself when conversation is already ongoing", () => {
+    const ongoingPrompt = buildSystemPrompt(persona, { isOngoingConversation: true });
+    expect(ongoingPrompt).toContain("This conversation is already established and ongoing. DO NOT introduce yourself by name again");
+    expect(ongoingPrompt).toContain("DO NOT say \"I am Maya\"");
   });
 
   it("dynamically generates personality for female profiles without predefined ai_personas entries", () => {
@@ -72,7 +109,7 @@ describe("prompt-builder", () => {
     expect(prompt).toContain("Jaipur, Rajasthan, India");
     expect(prompt).toContain("Kathak, Cooking, Travel");
     expect(prompt).toContain("Graphic Designer");
-    expect(prompt).toContain("Your primary language is Hindi");
+    expect(prompt).toContain("Your native language is Hindi");
   });
 
   it("formats conversation history chronologically with user/assistant roles", () => {
@@ -103,7 +140,7 @@ describe("prompt-builder", () => {
       },
     ];
 
-    const history = formatConversationHistory(messages, aiId, 10);
+    const history = formatConversationHistory(messages, aiId, undefined, 10);
     expect(history).toEqual([
       { role: "user", content: "Hello Maya!" },
       { role: "assistant", content: "Namaste! How are you doing today?" },
@@ -111,7 +148,41 @@ describe("prompt-builder", () => {
     ]);
   });
 
-  it("limits history to maxHistory count", () => {
+  it("appends current incoming message without duplicating if already present in messages by id", () => {
+    const aiId = "user-ai-1";
+    const humanId = "user-human-2";
+
+    const messages: MessageRecord[] = [
+      {
+        id: "msg-1",
+        sender_id: humanId,
+        receiver_id: aiId,
+        message: "Hello Maya!",
+        created_at: "2026-10-20T10:00:00Z",
+      },
+      {
+        id: "msg-incoming",
+        sender_id: humanId,
+        receiver_id: aiId,
+        message: "What are your plans today?",
+        created_at: "2026-10-20T10:02:00Z",
+      },
+    ];
+
+    const history = formatConversationHistory(
+      messages,
+      aiId,
+      { id: "msg-incoming", text: "What are your plans today?", senderId: humanId },
+      10,
+    );
+
+    // msg-incoming should appear exactly once
+    expect(history.length).toBe(2);
+    expect(history[0].content).toBe("Hello Maya!");
+    expect(history[1].content).toBe("What are your plans today?");
+  });
+
+  it("limits history to maxHistory count preserving chronological order", () => {
     const aiId = "user-ai-1";
     const humanId = "user-human-2";
     const msgs: MessageRecord[] = Array.from({ length: 15 }, (_, i) => ({
@@ -122,7 +193,7 @@ describe("prompt-builder", () => {
       created_at: new Date(Date.now() + i * 1000).toISOString(),
     }));
 
-    const history = formatConversationHistory(msgs, aiId, 5);
+    const history = formatConversationHistory(msgs, aiId, undefined, 5);
     expect(history.length).toBe(5);
     expect(history[4].content).toBe("Message 14");
   });
