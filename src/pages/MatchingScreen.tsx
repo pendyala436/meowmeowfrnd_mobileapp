@@ -193,14 +193,16 @@ const MatchingScreen = () => {
 
       setCurrentUserLanguage(motherTongue);
 
-      // Fetch online women (exclude busy = currently in audio/video/group call)
-      const { data: onlineStatus } = await supabase
-        .from("user_status")
-        .select("user_id, is_online, status_text")
-        .eq("is_online", true)
-        .neq("status_text", "busy");
+      // Fetch online women via get_online_woman_user_ids RPC
+      const { data: onlineIdRows } = await supabase.rpc(
+        "get_online_woman_user_ids",
+        {
+          p_language: motherTongue,
+          p_limit: 50,
+        },
+      );
 
-      const onlineUserIds = onlineStatus?.map((s: { user_id: string }) => s.user_id) || [];
+      const onlineUserIds = (onlineIdRows || []).map((s: { user_id: string }) => s.user_id);
 
       if (onlineUserIds.length === 0) {
         setMatchableWomen([]);

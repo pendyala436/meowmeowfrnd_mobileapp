@@ -54,6 +54,7 @@ import EnhancedParallelChatsContainer from "@/components/EnhancedParallelChatsCo
 import { AvailableGroupsSection } from "@/components/AvailableGroupsSection";
 import { UserAdminChat } from "@/components/UserAdminChat";
 import { AdminPinnedChatRow } from "@/components/AdminPinnedChatRow";
+import { AiCompanionCard } from "@/components/AiCompanionCard";
 import { AdminMessagesWidget } from "@/components/AdminMessagesWidget";
 import { useAdminUnreadCounts } from "@/hooks/useAdminUnreadCounts";
 // MenFreeMinutesBadge removed - free minutes feature removed
@@ -486,18 +487,29 @@ const DashboardScreen = () => {
     // used to unmount the Online tab on every user_status heartbeat.
     if (!onlineWomenLoadedRef.current) setLoadingOnlineWomen(true);
     try {
-      // Get ONLY truly-online & not-busy user IDs.
-      // Ghost-user guard: require last_seen within the last 5 minutes so
-      // stale is_online=true rows from crashed sessions are excluded.
-      const freshCutoffIso = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-      const { data: onlineUsers } = await supabase
-        .from("user_status")
-        .select("user_id, status_text, last_seen")
-        .eq("is_online", true)
-        .neq("status_text", "busy")
-        .gte("last_seen", freshCutoffIso);
+      // Get online woman user IDs via canonical get_online_woman_user_ids RPC
+      let onlineUserIds: string[] = [];
+      const { data: onlineIdRows, error: onlineRpcError } = await supabase.rpc(
+        "get_online_woman_user_ids",
+        {
+          p_language: language,
+          p_limit: 50,
+        },
+      );
 
-      const onlineUserIds = (onlineUsers || []).map((u: { user_id: string }) => u.user_id);
+      if (!onlineRpcError && Array.isArray(onlineIdRows) && onlineIdRows.length > 0) {
+        onlineUserIds = onlineIdRows.map((r: { user_id: string }) => r.user_id);
+      } else {
+        // Fallback: direct query on user_status
+        const freshCutoffIso = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+        const { data: onlineUsers } = await supabase
+          .from("user_status")
+          .select("user_id, status_text, last_seen")
+          .or(`is_online.eq.true,keep_online.eq.true`)
+          .neq("status_text", "busy");
+
+        onlineUserIds = (onlineUsers || []).map((u: { user_id: string }) => u.user_id);
+      }
 
       // If no users online, show empty lists
       if (onlineUserIds.length === 0) {
@@ -1755,6 +1767,9 @@ const DashboardScreen = () => {
 
   const renderOnlineUsersTab = () => (
     <div className="min-h-0 h-full overflow-y-auto overscroll-contain scroll-smooth">
+      {/* AI Companion entry banner - Visible at very top of dashboard landing */}
+      <AiCompanionCard variant="banner" />
+
       {/* Active status bar */}
       <div className="px-4 py-2 bg-muted/30 border-b border-border/30 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -2044,6 +2059,9 @@ const DashboardScreen = () => {
                   unread={unreadAdminChat}
                   onClick={() => setShowAdminChat(true)}
                 />
+              )}
+              {(!searchChats || "aarya".includes(searchChats.toLowerCase()) || "ai".includes(searchChats.toLowerCase())) && (
+                <AiCompanionCard variant="pinned-row" />
               )}
               {filteredChats.length === 0 && !searchChats ? (
                 <p className="text-center text-xs text-muted-foreground py-6">
