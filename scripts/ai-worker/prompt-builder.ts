@@ -2,11 +2,13 @@
  * Persona Prompt & Context Builder
  *
  * Dynamically assembles contextual message history, emotional intelligence,
- * language adaptation, and system prompts for AI-managed female profiles.
+ * language adaptation, long-term personal memory, and system prompts for AI-managed female profiles.
  *
  * Supports an unlimited number of profiles with distinct, consistent personalities
  * derived from database profile attributes, with custom persona prompts taking precedence.
  */
+
+import type { AiUserMemory } from "./memory-service.js";
 
 export interface MessageRecord {
   id: string;
@@ -40,11 +42,13 @@ export interface ContextOptions {
   incomingMessageId?: string;
   currentMessageText?: string;
   isOngoingConversation?: boolean;
+  memories?: AiUserMemory[];
 }
 
 /**
  * Builds a dynamic, natural Indian-style personality prompt tailored to
- * the specific profile's identity, age, location, language, and interests.
+ * the specific profile's identity, age, location, language, and interests,
+ * seamlessly weaving in verified long-term memory for the specific user.
  */
 export function buildSystemPrompt(
   persona: PersonaProfileData,
@@ -93,6 +97,23 @@ export function buildSystemPrompt(
 - Mirror the user's language smoothly without awkward sudden switches.`;
   }
 
+  // Long-term memories specifically about THIS user in THIS relationship
+  let memoriesSection = "";
+  if (options?.memories && options.memories.length > 0) {
+    const memoryLines = options.memories
+      .filter((m) => m.is_active && m.memory_content)
+      .slice(0, 5)
+      .map((m) => `- ${m.memory_content}`)
+      .join("\n");
+
+    if (memoryLines) {
+      memoriesSection = `
+WHAT YOU REMEMBER ABOUT THIS USER (Use naturally when relevant, never recite blindly or recite as a robotic list):
+${memoryLines}
+`;
+    }
+  }
+
   const ongoingContextNote = options?.isOngoingConversation
     ? `- This conversation is already established and ongoing. DO NOT introduce yourself by name again, and DO NOT say "I am ${name}". Continue naturally from the current topic.`
     : `- If this is the start of a conversation, a light warm greeting is fine, but do not force your bio or life story into the first sentence.`;
@@ -101,7 +122,7 @@ export function buildSystemPrompt(
 ${bioStr}
 ${occupationStr}
 ${interestsStr}
-${customSection}
+${customSection}${memoriesSection}
 CONVERSATIONAL STYLE & PERSONALITY:
 1. Speak like a real, sweet, one-on-one companion having an authentic, intimate chat with someone you care about.
 2. STRICTLY NEVER speak like an automated customer service assistant or AI bot.

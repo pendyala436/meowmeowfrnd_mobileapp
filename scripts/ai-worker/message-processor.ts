@@ -2,7 +2,7 @@
  * AI Message Processor Service
  *
  * Handles atomic job locking, duplicate prevention, dynamic female profile resolution,
- * conversation memory assembly, Ollama inference, and response dispatch to `public.chat_messages`.
+ * long-term memory retrieval, command processing, Ollama inference, and response dispatch.
  *
  * Fully scalable: Supports all eligible AI-managed female profiles dynamically
  * without requiring predefined registrations in `ai_personas` or any 100-limit.
@@ -16,6 +16,12 @@ import {
   type PersonaProfileData,
   type MessageRecord,
 } from "./prompt-builder.js";
+import {
+  getActiveMemoriesForUser,
+  handleMemoryCommandIfPresent,
+  extractMemoriesFromText,
+  saveOrUpdateMemory,
+} from "./memory-service.js";
 
 export interface ProcessIncomingMessageParams {
   messageId: string;
@@ -244,51 +250,85 @@ export async function processIncomingAiMessage(
   }
 
   try {
-    // 6. Fetch recent chat history strictly isolated to this conversation
-    const { data: rawMessages } = await supabase
-      .from("chat_messages")
-      .select("id, sender_id, receiver_id, message, created_at")
-      .eq("chat_id", chatId)
-      .order("created_at", { ascending: false })
-      .limit(10);
-
-    // Filter out the incoming message if it already landed in DB to prevent duplicates
-    const priorDbMessages = (rawMessages || []).filter(
-      (m: MessageRecord) => m.id !== messageId,
-    ) as MessageRecord[];
-
-    const hasPriorMessages = priorDbMessages.length > 0;
-
-    const history = formatConversationHistory(
-      priorDbMessages,
+    // 6. Check for explicit memory commands (Remember, Recall, Forget, Do not remember)
+    // senderId is the human user, receiverId (persona.user_id) is the AI companion
+    const commandResult = await handleMemoryCommandIfPresent(
+      supabase,
+      senderId,
       persona.user_id,
-      { id: messageId, text: messageText, senderId },
-      8,
+      persona.display_name,
+      messageText,
+      messageId,
     );
 
-    // 7. Build individualized system prompt with context awareness & call Ollama
-    const systemPrompt = buildSystemPrompt(persona, {
-      incomingMessageId: messageId,
-      currentMessageText: messageText,
-      isOngoingConversation: hasPriorMessages,
-    });
+    let replyText = "";
 
-    const targetModel = modelOverride || persona.model_name || DEFAULT_WORKER_MODEL;
+    if (commandResult.handled && commandResult.replyText) {
+      replyText = commandResult.replyText;
+    } else {
+      // 7. Normal conversational flow: Retrieve long-term memory for this specific user
+      const memories = await getActiveMemoriesForUser(supabase, senderId, persona.user_id, 5);
 
-    const ollamaResponse = await generateOllamaReply(
-      {
-        model: targetModel,
-        systemPrompt,
-        messages: history,
-        temperature: persona.temperature,
-        maxTokens: persona.max_tokens,
-      },
-      ollamaBaseUrl,
-    );
+      // Fetch recent chat history strictly isolated to this conversation
+      const { data: rawMessages } = await supabase
+        .from("chat_messages")
+        .select("id, sender_id, receiver_id, message, created_at")
+        .eq("chat_id", chatId)
+        .order("created_at", { ascending: false })
+        .limit(10);
 
-    const replyText = ollamaResponse.reply.trim();
-    if (!replyText) {
-      throw new Error("Ollama returned an empty response");
+      // Filter out the incoming message if it already landed in DB to prevent duplicates
+      const priorDbMessages = (rawMessages || []).filter(
+        (m: MessageRecord) => m.id !== messageId,
+      ) as MessageRecord[];
+
+      const hasPriorMessages = priorDbMessages.length > 0;
+
+      const history = formatConversationHistory(
+        priorDbMessages,
+        persona.user_id,
+        { id: messageId, text: messageText, senderId },
+        8,
+      );
+
+      // Build individualized system prompt with memory & context awareness
+      const systemPrompt = buildSystemPrompt(persona, {
+        incomingMessageId: messageId,
+        currentMessageText: messageText,
+        isOngoingConversation: hasPriorMessages,
+        memories,
+      });
+
+      const targetModel = modelOverride || persona.model_name || DEFAULT_WORKER_MODEL;
+
+      const ollamaResponse = await generateOllamaReply(
+        {
+          model: targetModel,
+          systemPrompt,
+          messages: history,
+          temperature: persona.temperature,
+          maxTokens: persona.max_tokens,
+        },
+        ollamaBaseUrl,
+      );
+
+      replyText = ollamaResponse.reply.trim();
+      if (!replyText) {
+        throw new Error("Ollama returned an empty response");
+      }
+
+      // Asynchronously extract and persist useful long-term memories in background
+      // so user response is never delayed
+      setTimeout(async () => {
+        try {
+          const candidateMemories = extractMemoriesFromText(messageText);
+          for (const mem of candidateMemories) {
+            await saveOrUpdateMemory(supabase, senderId, persona.user_id, mem, messageId);
+          }
+        } catch (memErr) {
+          console.warn("[AI Worker Memory] Background memory extraction error:", memErr);
+        }
+      }, 0);
     }
 
     // 8. Insert reply into chat_messages strictly under the female profile's user_id
