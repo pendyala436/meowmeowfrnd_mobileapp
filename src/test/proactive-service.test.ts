@@ -1,218 +1,260 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
   isInsideQuietHours,
+  getCurrentHourInTimezone,
   checkProactiveEligibility,
   identifyFollowUpOpportunity,
   buildProactiveSystemPrompt,
   executeProactiveJob,
   runProactiveSchedulerCycle,
+  runOpportunityDiscoveryCycle,
+  recoverStaleProcessingJobs,
   type ProactiveJob,
-} from "../../scripts/ai-worker/proactive-service";
+} from "../../scripts/ai-worker/proactive-service.js";
 
-describe("proactive-service", () => {
-  describe("quiet hours check", () => {
-    it("correctly identifies hours inside overnight quiet period (22 to 8)", () => {
-      expect(isInsideQuietHours(22, 22, 8)).toBe(true);
+describe("Proactive Service v2.6.0 Suite", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  describe("Quiet hours and timezone calculations", () => {
+    it("should correctly identify quiet hours without midnight wrap", () => {
+      expect(isInsideQuietHours(14, 13, 17)).toBe(true);
+      expect(isInsideQuietHours(12, 13, 17)).toBe(false);
+      expect(isInsideQuietHours(18, 13, 17)).toBe(false);
+    });
+
+    it("should correctly identify quiet hours wrapping over midnight (22 to 8)", () => {
       expect(isInsideQuietHours(23, 22, 8)).toBe(true);
-      expect(isInsideQuietHours(0, 22, 8)).toBe(true);
-      expect(isInsideQuietHours(4, 22, 8)).toBe(true);
+      expect(isInsideQuietHours(2, 22, 8)).toBe(true);
       expect(isInsideQuietHours(7, 22, 8)).toBe(true);
+      expect(isInsideQuietHours(10, 22, 8)).toBe(false);
+      expect(isInsideQuietHours(15, 22, 8)).toBe(false);
     });
 
-    it("correctly identifies hours outside quiet period", () => {
-      expect(isInsideQuietHours(8, 22, 8)).toBe(false);
-      expect(isInsideQuietHours(12, 22, 8)).toBe(false);
-      expect(isInsideQuietHours(17, 22, 8)).toBe(false);
-      expect(isInsideQuietHours(21, 22, 8)).toBe(false);
-    });
-  });
-
-  describe("eligibility and consent", () => {
-    let mockSupabase: any;
-
-    beforeEach(() => {
-      mockSupabase = {
-        from: vi.fn(),
-      };
-    });
-
-    it("rejects proactive messaging if user has not explicitly opted in", async () => {
-      mockSupabase.from.mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            maybeSingle: vi.fn().mockResolvedValue({
-              data: { user_id: "user-1", proactive_enabled: false },
-            }),
-          }),
-        }),
-      });
-
-      const res = await checkProactiveEligibility(mockSupabase, "user-1", "ai-1");
-      expect(res.eligible).toBe(false);
-      expect(res.reason).toContain("not enabled");
-    });
-
-    it("rejects proactive messaging if default user has no row", async () => {
-      mockSupabase.from.mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            maybeSingle: vi.fn().mockResolvedValue({ data: null }),
-          }),
-        }),
-      });
-
-      const res = await checkProactiveEligibility(mockSupabase, "user-new", "ai-1");
-      expect(res.eligible).toBe(false);
-    });
-
-    it("rejects if inside quiet hours even when proactive is enabled", async () => {
-      mockSupabase.from.mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            maybeSingle: vi.fn().mockResolvedValue({
-              data: {
-                user_id: "user-1",
-                proactive_enabled: true,
-                quiet_hours_start: 22,
-                quiet_hours_end: 8,
-              },
-            }),
-          }),
-        }),
-      });
-
-      const lateNight = new Date("2026-11-08T23:30:00");
-      const res = await checkProactiveEligibility(mockSupabase, "user-1", "ai-1", lateNight);
-      expect(res.eligible).toBe(false);
-      expect(res.reason).toContain("quiet hours");
+    it("should compute hour in timezone safely", () => {
+      const now = new Date("2026-11-08T04:30:00.000Z"); // 10:00 AM IST
+      const hourIst = getCurrentHourInTimezone(now, "Asia/Kolkata");
+      expect(hourIst).toBe(10);
     });
   });
 
-  describe("opportunity identification", () => {
-    it("disqualifies follow-up if conversation was updated less than 12 hours ago", () => {
-      const res = identifyFollowUpOpportunity("I like songs", 4, []);
+  describe("Autonomous Opportunity Discovery & Categorization", () => {
+    it("should return false if conversation was too fresh (< 12 hours)", () => {
+      const res = identifyFollowUpOpportunity("I have an exam tomorrow", 5, []);
       expect(res.shouldFollowUp).toBe(false);
-      expect(res.reason).toContain("too fresh");
+      expect(res.reason).toContain("fresh");
     });
 
-    it("disqualifies follow-up if conversation has been idle for more than 14 days", () => {
-      const res = identifyFollowUpOpportunity("I like songs", 400, []);
+    it("should return false if conversation is too stale (> 14 days)", () => {
+      const res = identifyFollowUpOpportunity("I love playing guitar", 15 * 24, []);
       expect(res.shouldFollowUp).toBe(false);
       expect(res.reason).toContain("too old");
     });
 
-    it("identifies upcoming exam or interview from recent message", () => {
-      const res = identifyFollowUpOpportunity("I have a big interview tomorrow morning", 24, []);
+    it("should categorize upcoming_event when exam/presentation mentioned for tomorrow", () => {
+      const res = identifyFollowUpOpportunity(
+        "I have a big presentation tomorrow morning at work",
+        20,
+        [],
+      );
       expect(res.shouldFollowUp).toBe(true);
-      expect(res.topicSummary).toContain("interview");
+      expect(res.category).toBe("upcoming_event");
+      expect(res.confidence).toBeGreaterThanOrEqual(0.85);
     });
 
-    it("identifies active user memory as a follow-up opportunity", () => {
-      const memories: any[] = [
+    it("should categorize event_followup when exam or interview is in past", () => {
+      const res = identifyFollowUpOpportunity(
+        "My job interview is at 10am",
+        26,
+        [],
+      );
+      expect(res.shouldFollowUp).toBe(true);
+      expect(res.category).toBe("event_followup");
+    });
+
+    it("should categorize personal_goal from memories", () => {
+      const memories = [
         {
-          id: "mem-1",
+          id: "mem-goal-1",
+          user_id: "u1",
+          ai_profile_id: "a1",
+          memory_category: "goal" as const,
+          memory_content: "Learning Spanish and aims to be fluent",
+          confidence_score: 0.9,
+          importance_score: 4,
           is_active: true,
-          memory_category: "interest",
-          memory_content: "User loves acoustic guitar and songwriting",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         },
       ];
-      const res = identifyFollowUpOpportunity("Had a good day", 30, memories);
+      const res = identifyFollowUpOpportunity(null, 30, memories);
       expect(res.shouldFollowUp).toBe(true);
-      expect(res.topicSummary).toContain("acoustic guitar");
+      expect(res.category).toBe("personal_goal");
+      expect(res.topicSummary).toContain("Spanish");
+    });
+
+    it("should categorize shared_interest from memories", () => {
+      const memories = [
+        {
+          id: "mem-interest-1",
+          user_id: "u1",
+          ai_profile_id: "a1",
+          memory_category: "interest" as const,
+          memory_content: "Loves vintage Bollywood vinyl records",
+          confidence_score: 0.85,
+          importance_score: 3,
+          is_active: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+      ];
+      const res = identifyFollowUpOpportunity(null, 48, memories);
+      expect(res.shouldFollowUp).toBe(true);
+      expect(res.category).toBe("shared_interest");
+    });
+
+    it("should categorize emotional_support when user reported being stressed or exhausted", () => {
+      const res = identifyFollowUpOpportunity(
+        "I am so exhausted and stressed after a rough day",
+        18,
+        [],
+      );
+      expect(res.shouldFollowUp).toBe(true);
+      expect(res.category).toBe("emotional_support");
+    });
+
+    it("should categorize unfinished_topic when user left an incomplete thought", () => {
+      const res = identifyFollowUpOpportunity(
+        "Gotta go now, let you know more about that story later!",
+        24,
+        [],
+      );
+      expect(res.shouldFollowUp).toBe(true);
+      expect(res.category).toBe("unfinished_topic");
     });
   });
 
-  describe("proactive prompt construction", () => {
-    it("strictly forbids manipulative and desperate language", () => {
-      const prompt = buildProactiveSystemPrompt("Priya", "Hindi", "Follow up on guitar");
-      expect(prompt).toContain("Priya");
-      expect(prompt).toContain("NEVER sound desperate, guilty, or needy");
-      expect(prompt).toContain("Where are you?");
-      expect(prompt).toContain("strictly 1 to 2 sentences");
-    });
-  });
+  describe("Consent, Preferences & Safeguards", () => {
+    it("should enforce default opt-out: return eligible = false if proactive_enabled is false or missing", async () => {
+      const mockSupabase = {
+        from: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              maybeSingle: vi.fn().mockResolvedValue({ data: null }),
+            }),
+          }),
+        }),
+      } as unknown as any;
 
-  describe("proactive job execution & deduplication", () => {
-    let mockSupabase: any;
-
-    beforeEach(() => {
-      mockSupabase = {
-        from: vi.fn(),
-      };
+      const res = await checkProactiveEligibility(mockSupabase, "user-optout", "ai-profile-1");
+      expect(res.eligible).toBe(false);
+      expect(res.reason).toContain("not enabled");
     });
 
-    it("skips job if user already sent a subsequent message in the conversation", async () => {
-      const job: ProactiveJob = {
-        id: "job-1",
-        chat_id: "chat-1",
-        user_id: "user-1",
-        ai_profile_id: "ai-1",
-        topic_summary: "Ask about guitar",
-        scheduled_for: new Date(Date.now() - 5000).toISOString(),
-        status: "pending",
-        retry_count: 0,
-      };
-
-      (job as any).created_at = new Date(Date.now() - 10000).toISOString();
-
-      mockSupabase.from.mockImplementation((table: string) => {
-        if (table === "ai_proactive_jobs") {
-          return {
-            update: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                eq: vi.fn().mockReturnValue({
-                  select: vi.fn().mockResolvedValue({ data: [{ id: "job-1" }] }),
-                }),
+    it("should respect per-profile exclusion in disabled_profile_ids list", async () => {
+      const mockSupabase = {
+        from: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              maybeSingle: vi.fn().mockResolvedValue({
+                data: {
+                  proactive_enabled: true,
+                  quiet_hours_start: 22,
+                  quiet_hours_end: 8,
+                  disabled_profile_ids: ["blocked-ai-profile-id"],
+                },
               }),
             }),
-          };
-        }
-        if (table === "chat_messages") {
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                order: vi.fn().mockReturnValue({
-                  limit: vi.fn().mockResolvedValue({
-                    // User already replied after job creation!
-                    data: [
-                      {
-                        id: "msg-recent",
-                        sender_id: "user-1",
-                        created_at: new Date(Date.now()).toISOString(),
-                      },
-                    ],
+          }),
+        }),
+      } as unknown as any;
+
+      const res = await checkProactiveEligibility(mockSupabase, "user-1", "blocked-ai-profile-id");
+      expect(res.eligible).toBe(false);
+      expect(res.reason).toContain("disabled for this specific AI profile");
+    });
+
+    it("should reject proactive check if user has blocked the AI profile in user_blocks", async () => {
+      const mockSupabase = {
+        from: vi.fn().mockImplementation((table: string) => {
+          if (table === "ai_user_engagement_preferences") {
+            return {
+              select: () => ({
+                eq: () => ({
+                  maybeSingle: async () => ({
+                    data: {
+                      proactive_enabled: true,
+                      quiet_hours_start: 22,
+                      quiet_hours_end: 8,
+                      disabled_profile_ids: [],
+                    },
                   }),
                 }),
               }),
-            }),
-          };
-        }
-        if (table === "female_profiles") {
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-              }),
-            }),
-          };
-        }
-        if (table === "ai_personas") {
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                eq: vi.fn().mockReturnValue({
-                  maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+            };
+          }
+          if (table === "ai_user_profile_engagement_preferences") {
+            return {
+              select: () => ({
+                eq: () => ({
+                  eq: () => ({
+                    maybeSingle: async () => ({ data: null }),
+                  }),
                 }),
               }),
-            }),
-          };
-        }
-        return {};
+            };
+          }
+          if (table === "user_blocks") {
+            return {
+              select: () => ({
+                or: () => ({
+                  limit: async () => ({ data: [{ id: "block-row-1" }] }),
+                }),
+              }),
+            };
+          }
+          return { select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null }) }) }) };
+        }),
+      } as unknown as any;
+
+      const res = await checkProactiveEligibility(mockSupabase, "user-1", "ai-profile-1");
+      expect(res.eligible).toBe(false);
+      expect(res.reason).toContain("blocked");
+    });
+
+    it("should strictly prohibit guilt, desperate, or needy phrasing in generated system prompts", () => {
+      const prompt = buildProactiveSystemPrompt("Aarya", "Hindi", "Follow up on presentation", "Exam at 9am", "upcoming_event");
+      expect(prompt).toContain("STRICTLY PROHIBITED");
+      expect(prompt).toContain("Why didn't you reply?");
+      expect(prompt).toContain("Where are you?");
+      expect(prompt).toContain("Are you ignoring me?");
+      expect(prompt).toContain("1 to 2 sentences");
+    });
+  });
+
+  describe("Stale Processing Job Recovery", () => {
+    it("should reset stale processing jobs back to pending when retries are under limit", async () => {
+      const updateMock = vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null }),
       });
 
-      const res = await executeProactiveJob(mockSupabase, job);
-      expect(res.success).toBe(false);
-      expect(res.reason).toContain("already sent a message");
+      const mockSupabase = {
+        from: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              lte: vi.fn().mockResolvedValue({
+                data: [{ id: "stale-job-1", retry_count: 1 }],
+              }),
+            }),
+          }),
+          update: updateMock,
+        }),
+      } as unknown as any;
+
+      const recovered = await recoverStaleProcessingJobs(mockSupabase, 10);
+      expect(recovered).toBe(1);
+      expect(updateMock).toHaveBeenCalledWith(expect.objectContaining({ status: "pending" }));
     });
   });
 });

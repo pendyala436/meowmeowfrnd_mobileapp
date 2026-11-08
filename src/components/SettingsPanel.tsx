@@ -42,6 +42,7 @@ import { ThemeSelector } from "@/components/ThemeSelector";
 import { useAppTheme, ThemeMode } from "@/contexts/ThemeContext";
 import { useParallelChatSettings } from "@/hooks/useParallelChatSettings";
 import { AccountDeletionSection } from "@/components/settings/AccountDeletionSection";
+import { AiEngagementSettingsSection } from "@/components/settings/AiEngagementSettingsSection";
 
 interface UserSettings {
   theme: string;
@@ -658,6 +659,9 @@ export const SettingsPanel = ({ compact = false }: SettingsPanelProps) => {
           </Button>
         </CardContent>
       </Card>
+
+      {/* AI Companion Follow-ups & Engagement Settings */}
+      <AiEngagementSettingsSection />
 
       {/* Account Deletion */}
       <AccountDeletionSection compact={compact} />

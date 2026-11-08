@@ -10,13 +10,17 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { processIncomingAiMessage } from "./message-processor.js";
-import { runProactiveSchedulerCycle } from "./proactive-service.js";
+import {
+  runProactiveSchedulerCycle,
+  runOpportunityDiscoveryCycle,
+} from "./proactive-service.js";
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || "http://127.0.0.1:11434";
 const MAX_CONCURRENT_JOBS = parseInt(process.env.MAX_CONCURRENT_JOBS || "2", 10);
 const PROACTIVE_POLL_INTERVAL_MS = parseInt(process.env.PROACTIVE_POLL_INTERVAL_MS || "60000", 10); // 1 minute
+const DISCOVERY_POLL_INTERVAL_MS = parseInt(process.env.DISCOVERY_POLL_INTERVAL_MS || "300000", 10); // 5 minutes
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
   console.error("[AI Worker FATAL] Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY environment variables.");
@@ -98,9 +102,11 @@ const channel = supabase
     console.log(`[AI Worker] Realtime subscription status: ${status}`);
   });
 
-// 2. Periodic Proactive Engagement Scheduler
+// 2. Periodic Proactive Engagement Scheduler & Autonomous Discovery
 let proactiveSchedulerTimer: NodeJS.Timeout | null = null;
+let discoveryTimer: NodeJS.Timeout | null = null;
 let isProactiveCycleRunning = false;
+let isDiscoveryRunning = false;
 
 async function executeProactiveCycle() {
   if (isProactiveCycleRunning || activeJobCount >= MAX_CONCURRENT_JOBS) {
@@ -121,15 +127,42 @@ async function executeProactiveCycle() {
   }
 }
 
-// Start bounded proactive poll interval
+async function executeDiscoveryCycle() {
+  if (isDiscoveryRunning || activeJobCount >= MAX_CONCURRENT_JOBS) {
+    return;
+  }
+  isDiscoveryRunning = true;
+  try {
+    const res = await runOpportunityDiscoveryCycle(supabase, 10);
+    if (res.opportunitiesFound > 0) {
+      console.log(
+        `[Opportunity Discovery] Evaluated ${res.evaluated} users, discovered ${res.opportunitiesFound} opportunities, scheduled ${res.jobsCreated} jobs`,
+      );
+    }
+  } catch (err) {
+    console.error("[Opportunity Discovery] Error during discovery cycle:", err);
+  } finally {
+    isDiscoveryRunning = false;
+  }
+}
+
+// Start bounded proactive poll interval and opportunity discovery
 proactiveSchedulerTimer = setInterval(executeProactiveCycle, PROACTIVE_POLL_INTERVAL_MS);
+discoveryTimer = setInterval(executeDiscoveryCycle, DISCOVERY_POLL_INTERVAL_MS);
 console.log(`[AI Worker] Proactive engagement scheduler initialized (interval: ${PROACTIVE_POLL_INTERVAL_MS}ms)`);
+console.log(`[AI Worker] Autonomous opportunity discovery engine initialized (interval: ${DISCOVERY_POLL_INTERVAL_MS}ms)`);
+
+// Run an initial discovery pass after brief 10s warmup
+setTimeout(executeDiscoveryCycle, 10000);
 
 // 3. Graceful termination
 function shutdown() {
   console.log("\n[AI Worker] Shutting down daemon...");
   if (proactiveSchedulerTimer) {
     clearInterval(proactiveSchedulerTimer);
+  }
+  if (discoveryTimer) {
+    clearInterval(discoveryTimer);
   }
   supabase.removeChannel(channel).finally(() => {
     process.exit(0);
