@@ -76,6 +76,24 @@ describe("derivePresence", () => {
     const row = baseRow({ last_seen: new Date(now - 6 * 60_000).toISOString() });
     expect(derivePresence(row, { now }).status).toBe("away");
   });
+
+  it("returns online for keep_online rows even if last_seen is old", () => {
+    const row = baseRow({
+      keep_online: true,
+      is_online: true,
+      last_seen: new Date(now - 30 * 24 * 60 * 60_000).toISOString(),
+    });
+    expect(derivePresence(row, { now }).status).toBe("online");
+  });
+
+  it("returns offline for keep_online rows if is_online is explicitly false", () => {
+    const row = baseRow({
+      keep_online: true,
+      is_online: false,
+      last_seen: new Date(now - 30 * 24 * 60 * 60_000).toISOString(),
+    });
+    expect(derivePresence(row, { now }).status).toBe("offline");
+  });
 });
 
 describe("PRESENCE_LABEL", () => {

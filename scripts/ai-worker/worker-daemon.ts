@@ -21,6 +21,7 @@ const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || "http://127.0.0.1:11434";
 const MAX_CONCURRENT_JOBS = parseInt(process.env.MAX_CONCURRENT_JOBS || "2", 10);
 const PROACTIVE_POLL_INTERVAL_MS = parseInt(process.env.PROACTIVE_POLL_INTERVAL_MS || "60000", 10); // 1 minute
 const DISCOVERY_POLL_INTERVAL_MS = parseInt(process.env.DISCOVERY_POLL_INTERVAL_MS || "300000", 10); // 5 minutes
+const PRESENCE_HEARTBEAT_INTERVAL_MS = 60000; // 1 minute presence heartbeat for AI profiles
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
   console.error("[AI Worker FATAL] Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY environment variables.");
@@ -105,8 +106,44 @@ const channel = supabase
 // 2. Periodic Proactive Engagement Scheduler & Autonomous Discovery
 let proactiveSchedulerTimer: NodeJS.Timeout | null = null;
 let discoveryTimer: NodeJS.Timeout | null = null;
+let presenceHeartbeatTimer: NodeJS.Timeout | null = null;
 let isProactiveCycleRunning = false;
 let isDiscoveryRunning = false;
+let isPresenceHeartbeatRunning = false;
+
+/**
+ * Periodic presence heartbeat for approved, active AI-managed profiles.
+ * Ensures Aarya and dynamic AI profiles have fresh `last_seen` timestamps and `is_online = true`.
+ */
+async function executePresenceHeartbeat() {
+  if (isPresenceHeartbeatRunning) return;
+  isPresenceHeartbeatRunning = true;
+  try {
+    const { data: aiProfiles } = await supabase
+      .from("female_profiles")
+      .select("user_id")
+      .eq("is_ai_managed", true)
+      .eq("approval_status", "approved")
+      .eq("account_status", "active");
+
+    const ids = (aiProfiles || []).map((p) => p.user_id);
+    if (ids.length > 0) {
+      await supabase
+        .from("user_status")
+        .update({
+          is_online: true,
+          keep_online: true,
+          last_seen: new Date().toISOString(),
+          status_text: "Available",
+        })
+        .in("user_id", ids);
+    }
+  } catch (err) {
+    console.error("[AI Worker] Error updating AI presence heartbeat:", err);
+  } finally {
+    isPresenceHeartbeatRunning = false;
+  }
+}
 
 async function executeProactiveCycle() {
   if (isProactiveCycleRunning || activeJobCount >= MAX_CONCURRENT_JOBS) {
@@ -149,10 +186,13 @@ async function executeDiscoveryCycle() {
 // Start bounded proactive poll interval and opportunity discovery
 proactiveSchedulerTimer = setInterval(executeProactiveCycle, PROACTIVE_POLL_INTERVAL_MS);
 discoveryTimer = setInterval(executeDiscoveryCycle, DISCOVERY_POLL_INTERVAL_MS);
+presenceHeartbeatTimer = setInterval(executePresenceHeartbeat, PRESENCE_HEARTBEAT_INTERVAL_MS);
 console.log(`[AI Worker] Proactive engagement scheduler initialized (interval: ${PROACTIVE_POLL_INTERVAL_MS}ms)`);
 console.log(`[AI Worker] Autonomous opportunity discovery engine initialized (interval: ${DISCOVERY_POLL_INTERVAL_MS}ms)`);
+console.log(`[AI Worker] AI presence heartbeat initialized (interval: ${PRESENCE_HEARTBEAT_INTERVAL_MS}ms)`);
 
-// Run an initial discovery pass after brief 10s warmup
+// Run an initial presence update immediately and discovery pass after brief 10s warmup
+executePresenceHeartbeat();
 setTimeout(executeDiscoveryCycle, 10000);
 
 // 3. Graceful termination
@@ -163,6 +203,9 @@ function shutdown() {
   }
   if (discoveryTimer) {
     clearInterval(discoveryTimer);
+  }
+  if (presenceHeartbeatTimer) {
+    clearInterval(presenceHeartbeatTimer);
   }
   supabase.removeChannel(channel).finally(() => {
     process.exit(0);

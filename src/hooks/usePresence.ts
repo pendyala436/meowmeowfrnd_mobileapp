@@ -9,7 +9,7 @@ import {
 } from "@/lib/presence";
 
 const COLUMNS =
-  "user_id,is_online,last_seen,status,status_text,active_call_count,active_chat_count";
+  "user_id,is_online,keep_online,last_seen,status,status_text,active_call_count,active_chat_count";
 
 interface PresenceResult {
   status: PresenceStatus;

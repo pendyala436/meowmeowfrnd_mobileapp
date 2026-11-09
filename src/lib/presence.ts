@@ -17,6 +17,7 @@ export type PresenceStatus =
 export interface UserStatusRow {
   user_id: string;
   is_online: boolean | null;
+  keep_online?: boolean | null;
   last_seen: string | null;
   status: string | null; // 'available' | 'busy' | ...
   status_text?: string | null;
@@ -44,6 +45,12 @@ export function derivePresence(
   if (opts?.isTyping) return { status: "typing", lastSeen };
   if ((row.active_call_count ?? 0) > 0) return { status: "in_call", lastSeen };
   if (row.status === "busy") return { status: "busy", lastSeen };
+
+  // Catalog keep_online profiles stay online unless marked offline or busy
+  if (row.keep_online) {
+    if (row.is_online === false) return { status: "offline", lastSeen };
+    return { status: "online", lastSeen: lastSeen ?? new Date(now) };
+  }
 
   if (!row.is_online || age > STALE_WINDOW_MS) {
     return { status: "offline", lastSeen };

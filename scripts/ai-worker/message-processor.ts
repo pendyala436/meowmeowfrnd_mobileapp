@@ -222,6 +222,17 @@ export async function processIncomingAiMessage(
     return { status: "skipped", reason: "Receiver is not an active AI persona" };
   }
 
+  // 3b. Check if the user has blocked the AI profile or AI has blocked the user
+  const { data: blockRow } = await supabase
+    .from("user_blocks")
+    .select("id")
+    .or(`and(blocked_by.eq.${senderId},blocked_user_id.eq.${receiverId}),and(blocked_by.eq.${receiverId},blocked_user_id.eq.${senderId})`)
+    .limit(1);
+
+  if (blockRow && blockRow.length > 0) {
+    return { status: "skipped", reason: "User or AI profile is blocked" };
+  }
+
   // 4. Atomically claim the message job to guarantee idempotency and prevent duplicates
   const claimed = await claimMessageJob(supabase, messageId, chatId, persona.user_id, senderId);
   if (!claimed) {
