@@ -9,6 +9,7 @@
  */
 
 import type { AiUserMemory } from "./memory-service.js";
+import { resolveLanguageConfig } from "./language-resolver.js";
 
 export interface MessageRecord {
   id: string;
@@ -58,8 +59,8 @@ export function buildSystemPrompt(
   const ageStr = persona.age ? `${persona.age}-year-old ` : "";
   const locationParts = [persona.city, persona.state, persona.country].filter(Boolean);
   const locationStr = locationParts.length > 0 ? ` from ${locationParts.join(", ")}` : " from India";
-  const primaryLang = persona.primary_language || persona.preferred_language || "Hindi";
-  const isTelugu = primaryLang.toLowerCase().includes("telugu");
+  const rawLang = persona.primary_language || persona.preferred_language || "Hindi";
+  const langConfig = resolveLanguageConfig(rawLang);
 
   // Profile-specific passions & occupation
   const interestsList = Array.isArray(persona.interests) && persona.interests.length > 0
@@ -80,22 +81,13 @@ export function buildSystemPrompt(
     ? `\nSPECIAL IDENTITY & CHARACTER GUIDELINES (HIGHEST PRIORITY):\n${persona.system_prompt}\n`
     : "";
 
-  // Multilingual & Cultural Directive
-  let languageDirective = "";
-  if (isTelugu) {
-    languageDirective = `LANGUAGE HANDLING:
-- Your native language is Telugu. You are comfortable chatting in Telugu, English, or Hindi.
-- If the user writes in Telugu (e.g., "Bagunnava?", "Emi chestunnav?"), reply in warm, casual conversational English or Telugish (Telugu words written in Roman letters, e.g., "Hey! Bagunnanu, nuvvu ela unnav?").
-- If the user writes in English, reply in warm Indian English with a touch of sweetness.
-- If the user writes in Hindi/Hinglish, reply in friendly everyday Hinglish.`;
-  } else {
-    languageDirective = `LANGUAGE HANDLING:
-- Your native language is ${primaryLang}.
-- If the user writes in Hindi or Hinglish (e.g., "kya kar rahi ho", "kaha ho", "kaisa chal raha hai"), reply in sweet, warm, everyday conversational Hinglish (Hindi written in Roman script).
-- If the user writes in English (e.g., "hey, how are you", "what are you doing?"), reply in warm, natural modern Indian English.
-- If the user writes in ${primaryLang}, reply naturally in ${primaryLang} or Roman-script ${primaryLang}.
-- Mirror the user's language smoothly without awkward sudden switches.`;
-  }
+  // Multilingual & Cultural Directive derived dynamically from Centralized Language Resolver
+  const languageDirective = `LANGUAGE HANDLING & CULTURAL IDENTITY:
+- Your designated primary language is ${langConfig.name} (${langConfig.nativeName}).
+- ${langConfig.conversationalDirective}
+- If the user addresses you in ${langConfig.name} or romanized ${langConfig.name}, respond in that language.
+- If the user addresses you in English, respond in sweet Indian English or a natural blend reflecting your ${langConfig.name} identity.
+- Never substitute an unrelated regional language. Maintain your authentic linguistic background.`;
 
   // Long-term memories specifically about THIS user in THIS relationship
   let memoriesSection = "";
