@@ -57,27 +57,98 @@ console.log("[AI Worker] Starting Meow Meow AI Persona Worker Daemon (v2.5.0)...
 console.log(`[AI Worker] Connected to Supabase at: ${SUPABASE_URL}`);
 console.log(`[AI Worker] Using Ollama at: ${OLLAMA_BASE_URL} (max concurrency: ${MAX_CONCURRENT_JOBS})`);
 
-// 1. Subscribe to new incoming chat_messages across all chats
-const channel = supabase
-  .channel("ai-worker-chat-messages")
-  .on(
-    "postgres_changes",
-    {
-      event: "INSERT",
-      schema: "public",
-      table: "chat_messages",
-    },
-    async (payload) => {
-      const msg = payload.new as {
-        id: string;
-        chat_id: string;
-        sender_id: string;
-        receiver_id: string;
-        message: string;
-      };
+// 1. Subscribe to new incoming chat_messages across all chats with auto-reconnect
+let channel = supabase.channel("ai-worker-chat-messages");
 
-      if (!msg || !msg.id || !msg.receiver_id) return;
+function setupRealtimeListener() {
+  channel = supabase
+    .channel("ai-worker-chat-messages")
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "chat_messages",
+      },
+      async (payload) => {
+        const msg = payload.new as {
+          id: string;
+          chat_id: string;
+          sender_id: string;
+          receiver_id: string;
+          message: string;
+        };
 
+        if (!msg || !msg.id || !msg.receiver_id) return;
+
+        enqueueJob(async () => {
+          try {
+            const res = await processIncomingAiMessage({
+              messageId: msg.id,
+              chatId: msg.chat_id,
+              senderId: msg.sender_id,
+              receiverId: msg.receiver_id,
+              messageText: msg.message,
+              supabase,
+              ollamaBaseUrl: OLLAMA_BASE_URL,
+            });
+
+            if (res.status === "processed") {
+              console.log(`[AI Worker] Successfully generated reply for chat ${msg.chat_id}`);
+            }
+          } catch (err) {
+            console.error(`[AI Worker] Error handling message ${msg.id}:`, err);
+          }
+        });
+      },
+    )
+    .subscribe((status) => {
+      console.log(`[AI Worker] Realtime subscription status: ${status}`);
+    });
+}
+
+setupRealtimeListener();
+
+// Fail-safe Message Ingestion Polling Loop (guarantees zero dropped messages even if Realtime reconnects)
+let isPollingUnprocessedMessages = false;
+async function pollUnprocessedMessages() {
+  if (isPollingUnprocessedMessages || activeJobCount >= MAX_CONCURRENT_JOBS) return;
+  isPollingUnprocessedMessages = true;
+
+  try {
+    // 1. Check for messages received in the last 2 minutes addressed to active AI profiles
+    // that do not have an entry in ai_message_jobs
+    const cutoff = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+    const { data: recentMessages, error } = await supabase
+      .from("chat_messages")
+      .select("id, chat_id, sender_id, receiver_id, message, created_at")
+      .gte("created_at", cutoff)
+      .order("created_at", { ascending: true })
+      .limit(20);
+
+    if (error || !recentMessages || recentMessages.length === 0) return;
+
+    for (const msg of recentMessages) {
+      // Check if message already claimed or completed in ai_message_jobs
+      const { data: existingJob } = await supabase
+        .from("ai_message_jobs")
+        .select("id, status")
+        .eq("message_id", msg.id)
+        .maybeSingle();
+
+      if (existingJob) continue;
+
+      // Check if recipient is an AI profile
+      const { data: aiProfile } = await supabase
+        .from("female_profiles")
+        .select("user_id")
+        .eq("user_id", msg.receiver_id)
+        .eq("is_ai_managed", true)
+        .maybeSingle();
+
+      if (!aiProfile) continue;
+
+      // Dispatch job
       enqueueJob(async () => {
         try {
           const res = await processIncomingAiMessage({
@@ -91,17 +162,21 @@ const channel = supabase
           });
 
           if (res.status === "processed") {
-            console.log(`[AI Worker] Successfully generated reply for chat ${msg.chat_id}`);
+            console.log(`[AI Worker Poller] Successfully processed message for chat ${msg.chat_id}`);
           }
         } catch (err) {
-          console.error(`[AI Worker] Error handling message ${msg.id}:`, err);
+          console.error(`[AI Worker Poller] Error processing message ${msg.id}:`, err);
         }
       });
-    },
-  )
-  .subscribe((status) => {
-    console.log(`[AI Worker] Realtime subscription status: ${status}`);
-  });
+    }
+  } catch (pollErr) {
+    console.error("[AI Worker Poller] Error polling unprocessed messages:", pollErr);
+  } finally {
+    isPollingUnprocessedMessages = false;
+  }
+}
+
+const messagePollerTimer = setInterval(pollUnprocessedMessages, 2500); // Poll every 2.5 seconds
 
 // 2. Periodic Proactive Engagement Scheduler & Autonomous Discovery
 let proactiveSchedulerTimer: NodeJS.Timeout | null = null;

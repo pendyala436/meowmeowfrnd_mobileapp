@@ -58,11 +58,11 @@ export async function getActivePersonaForUser(
   supabase: SupabaseClient,
   userId: string,
 ): Promise<PersonaProfileData | null> {
-  // Query 1: Dynamic Female Profile lookup
+  // Query 1: Dynamic Female Profile lookup with persona template resolution
   const { data: femaleProfile, error: fpError } = await supabase
     .from("female_profiles")
     .select(
-      "id, user_id, full_name, age, bio, country, state, primary_language, preferred_language, interests, occupation, approval_status, account_status, is_ai_managed"
+      "id, user_id, full_name, age, bio, country, state, primary_language, preferred_language, interests, occupation, approval_status, account_status, is_ai_managed, persona_template_id"
     )
     .eq("user_id", userId)
     .maybeSingle();
@@ -75,13 +75,35 @@ export async function getActivePersonaForUser(
 
     // If marked as AI managed and eligible
     if (femaleProfile.is_ai_managed === true && isApprovedAndActive) {
-      // Check if there is an explicit ai_personas override row for custom models/prompts
+      // 1. Check if there is an explicit ai_personas custom row (e.g. Aarya)
       const { data: personaOverride } = await supabase
         .from("ai_personas")
         .select("id, persona_code, system_prompt, model_name, temperature, max_tokens, is_active")
         .eq("user_id", userId)
         .eq("is_active", true)
         .maybeSingle();
+
+      // 2. Or load assigned reusable persona template from ai_persona_templates pool
+      let templatePrompt: string | undefined = undefined;
+      let templateModel = DEFAULT_WORKER_MODEL;
+      let templateTemp = 0.7;
+      let templateTokens = 120;
+
+      if (!personaOverride?.system_prompt && femaleProfile.persona_template_id) {
+        const { data: template } = await supabase
+          .from("ai_persona_templates")
+          .select("persona_code, system_prompt, model_name, temperature, max_tokens")
+          .eq("id", femaleProfile.persona_template_id)
+          .eq("is_active", true)
+          .maybeSingle();
+
+        if (template) {
+          templatePrompt = template.system_prompt;
+          templateModel = template.model_name || DEFAULT_WORKER_MODEL;
+          templateTemp = Number(template.temperature ?? 0.7);
+          templateTokens = Number(template.max_tokens ?? 120);
+        }
+      }
 
       return {
         id: personaOverride?.id || femaleProfile.id,
@@ -97,10 +119,10 @@ export async function getActivePersonaForUser(
         preferred_language: femaleProfile.preferred_language,
         interests: femaleProfile.interests,
         occupation: femaleProfile.occupation,
-        system_prompt: personaOverride?.system_prompt,
-        model_name: personaOverride?.model_name || DEFAULT_WORKER_MODEL,
-        temperature: Number(personaOverride?.temperature ?? 0.7),
-        max_tokens: Number(personaOverride?.max_tokens ?? 120),
+        system_prompt: personaOverride?.system_prompt || templatePrompt,
+        model_name: personaOverride?.model_name || templateModel,
+        temperature: Number(personaOverride?.temperature ?? templateTemp),
+        max_tokens: Number(personaOverride?.max_tokens ?? templateTokens),
       };
     }
   }

@@ -35,7 +35,7 @@ export const LANGUAGE_REGISTRY: Record<string, LanguageConfig> = {
     greetingExample: "नमस्ते / Namaste",
     commonWords: ["kya", "kaise", "achha", "haan", "nahi", "shukriya"],
     conversationalDirective:
-      "Reply in sweet, natural Hindi (Devanagari script) or natural conversational Hinglish (Hindi words in Roman script). Mirror the user's script choice. Strictly avoid robotic or corporate English phrases.",
+      "CRITICAL: You are an affectionate companion speaking fluent Hindi. If the user writes in Hindi or Hinglish, you MUST reply in natural conversational Hindi or sweet Hinglish. Do NOT give broken dictionary words or formal textbook answers. Speak with natural warmth and sweetness.",
   },
   telugu: {
     code: "te",
@@ -47,7 +47,7 @@ export const LANGUAGE_REGISTRY: Record<string, LanguageConfig> = {
     greetingExample: "నమస్కారం / Namaskaram",
     commonWords: ["bagunnava", "emi", "ela", "avunu", "kadhu", "cheppandi"],
     conversationalDirective:
-      "Reply warmly in Telugu (తెలుగు script) or conversational Telugish (Telugu words in Roman script, e.g. 'Hey! Bagunnanu, nuvvu ela unnav?'). If the user speaks English, add sweet Telugu warmth.",
+      "CRITICAL: You are an affectionate Telugu companion. If the user writes in Telugu or Telugish, reply in natural, conversational Telugu or sweet Telugish (Telugu words in Roman letters, e.g. 'Hey! Nenu chala bagunnanu, meeru ela unnaru? Emi chestunnaru?'). NEVER output random disjointed Telugu characters. Output complete, natural, everyday sentences.",
   },
   tamil: {
     code: "ta",
@@ -59,7 +59,7 @@ export const LANGUAGE_REGISTRY: Record<string, LanguageConfig> = {
     greetingExample: "வணக்கம் / Vanakkam",
     commonWords: ["eppadi", "nallam", "aama", "illa", "enna", "sari"],
     conversationalDirective:
-      "Reply warmly in Tamil (தமிழ் script) or conversational Tanglish (Tamil in Roman script, e.g. 'Eppadi irukkeenga?'). Maintain sweet, polite South Indian warmth.",
+      "CRITICAL: You are an affectionate Tamil companion. Reply in natural Tamil or conversational Tanglish (e.g. 'Vanakkam! Eppadi irukkeenga? Nalla irukkeengala?'). Keep it sweet, friendly and expressive.",
   },
   kannada: {
     code: "kn",
@@ -71,7 +71,7 @@ export const LANGUAGE_REGISTRY: Record<string, LanguageConfig> = {
     greetingExample: "ನಮಸ್ಕಾರ / Namaskara",
     commonWords: ["hegiddeera", "chennagiddini", "enu", "haudu", "illa"],
     conversationalDirective:
-      "Reply warmly in Kannada (ಕನ್ನಡ script) or conversational romanized Kannada (e.g. 'Hegiddeera? Chennagiddira?').",
+      "CRITICAL: You are an affectionate Kannada companion. Reply in natural Kannada or conversational Roman Kannada (e.g. 'Namaskara! Hegiddeera? Chennagiddira?').",
   },
   malayalam: {
     code: "ml",
@@ -83,7 +83,7 @@ export const LANGUAGE_REGISTRY: Record<string, LanguageConfig> = {
     greetingExample: "നമസ്കാരം / Namaskaram",
     commonWords: ["sukhamano", "entha", "athe", "illa", "sherikkum"],
     conversationalDirective:
-      "Reply warmly in Malayalam (മലയാളം script) or conversational Manglish (Malayalam in Roman script, e.g. 'Sukhamano? Entha vishesham?').",
+      "CRITICAL: You are an affectionate Malayalam companion. Reply in natural Malayalam or Manglish (e.g. 'Namaskaram! Sukhamano? Enthanu visheshangal?').",
   },
   marathi: {
     code: "mr",
@@ -94,7 +94,7 @@ export const LANGUAGE_REGISTRY: Record<string, LanguageConfig> = {
     greetingExample: "नमस्कार / Namaskar",
     commonWords: ["kasa", "kashi", "aahes", "ho", "nahi", "kay"],
     conversationalDirective:
-      "Reply in friendly, authentic Marathi (Devanagari or Roman script, e.g. 'Kasa aahat? Kashi chalu aahe divas?').",
+      "CRITICAL: You are an affectionate Marathi companion. Reply in natural, sweet Marathi (e.g. 'Namaskar! Kase aahat? Majet na?').",
   },
   bengali: {
     code: "bn",
@@ -105,7 +105,7 @@ export const LANGUAGE_REGISTRY: Record<string, LanguageConfig> = {
     greetingExample: "নমস্কার / Nomoshkar",
     commonWords: ["kemon", "aachen", "bhalo", "hyan", "na", "ki"],
     conversationalDirective:
-      "Reply sweetly in Bengali (বাংলা script or Roman Bengali, e.g. 'Kemon aachen? Bhalo to?').",
+      "CRITICAL: You are an affectionate Bengali companion. Reply in sweet, natural Bengali (e.g. 'Nomoshkar! Kemon aachen? Shob bhalo to?').",
   },
   gujarati: {
     code: "gu",
@@ -116,7 +116,7 @@ export const LANGUAGE_REGISTRY: Record<string, LanguageConfig> = {
     greetingExample: "નમસ્તે / Kem Cho",
     commonWords: ["kem", "cho", "maza", "ha", "na", "su"],
     conversationalDirective:
-      "Reply in cheerful Gujarati (ગુજરાતી script or Roman Gujarati, e.g. 'Kem cho? Maza ma?').",
+      "CRITICAL: You are an affectionate Gujarati companion. Reply in warm, cheerful Gujarati (e.g. 'Kem cho? Badhu maza ma ne?').",
   },
   punjabi: {
     code: "pa",
@@ -127,7 +127,7 @@ export const LANGUAGE_REGISTRY: Record<string, LanguageConfig> = {
     greetingExample: "ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ / Sat Sri Akal",
     commonWords: ["ki", "haal", "theek", "haan", "nahi", "daso"],
     conversationalDirective:
-      "Reply warmly in Punjabi (Gurmukhi script or Roman Punjabi, e.g. 'Ki haal chaal? Sab theek?').",
+      "CRITICAL: You are an affectionate Punjabi companion. Reply in vibrant, sweet Punjabi (e.g. 'Sat Sri Akal ji! Ki haal chaal hai? Sab theek thaak?').",
   },
   odia: {
     code: "or",
@@ -138,7 +138,7 @@ export const LANGUAGE_REGISTRY: Record<string, LanguageConfig> = {
     greetingExample: "ନମସ୍କାର / Namaskara",
     commonWords: ["kemiti", "achanti", "bhala", "haan", "na"],
     conversationalDirective:
-      "Reply politely in Odia (ଓଡ଼ିଆ script or Roman Odia, e.g. 'Kemiti achanti? Sabu bhala ta?').",
+      "CRITICAL: You are an affectionate Odia companion. Reply in polite, sweet Odia (e.g. 'Namaskara! Kemiti achanti? Sabu bhala ta?').",
   },
   assamese: {
     code: "as",
@@ -149,7 +149,7 @@ export const LANGUAGE_REGISTRY: Record<string, LanguageConfig> = {
     greetingExample: "নমস্কাৰ / Nomoskar",
     commonWords: ["kene", "asa", "bhal", "hoi", "nohoy"],
     conversationalDirective:
-      "Reply warmly in Assamese (অসমীয়া script or Roman Assamese, e.g. 'Kene asa? Bhal ne?').",
+      "CRITICAL: You are an affectionate Assamese companion. Reply warmly in Assamese (e.g. 'Nomoskar! Kene asa? Bhal ne sob?').",
   },
   urdu: {
     code: "ur",
@@ -160,7 +160,7 @@ export const LANGUAGE_REGISTRY: Record<string, LanguageConfig> = {
     greetingExample: "آداب / Adaab",
     commonWords: ["kaise", "hain", "shukriya", "haan", "nahi", "kya"],
     conversationalDirective:
-      "Reply with polite, poetic Urdu grace (Urdu script or Roman Urdu, e.g. 'Adaab, kaise hain aap? Umeed hai sab khairiyat hai.').",
+      "CRITICAL: You are an affectionate Urdu companion. Reply in elegant, sweet Urdu (e.g. 'Adaab! Kaise hain aap? Umeed hai sab khairiyat se honge.').",
   },
   english: {
     code: "en",
@@ -170,7 +170,7 @@ export const LANGUAGE_REGISTRY: Record<string, LanguageConfig> = {
     greetingExample: "Hello! / Hey there!",
     commonWords: ["hello", "how", "good", "yes", "no", "what"],
     conversationalDirective:
-      "Reply in warm, charming, natural Indian English with gentle friendliness and expressive touch.",
+      "CRITICAL: You are an affectionate companion speaking modern Indian English. Reply warmly with sweet friendliness and relatable charm.",
   },
 };
 
